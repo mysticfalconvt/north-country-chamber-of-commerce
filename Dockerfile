@@ -35,32 +35,41 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --chown=nextjs:nodejs . .
 
 # Create entrypoint script that builds, migrates, and starts the app
-RUN echo '#!/bin/sh' > /app/docker-entrypoint.sh && \
-    echo 'set -e' >> /app/docker-entrypoint.sh && \
-    echo '' >> /app/docker-entrypoint.sh && \
-    echo 'echo "Waiting for database to be ready..."' >> /app/docker-entrypoint.sh && \
-    echo 'sleep 5' >> /app/docker-entrypoint.sh && \
-    echo '' >> /app/docker-entrypoint.sh && \
-    echo '# Check if we need to build' >> /app/docker-entrypoint.sh && \
-    echo 'if [ ! -d ".next/standalone" ]; then' >> /app/docker-entrypoint.sh && \
-    echo '  echo "Running Next.js build with database access..."' >> /app/docker-entrypoint.sh && \
-    echo '  pnpm run build' >> /app/docker-entrypoint.sh && \
-    echo 'else' >> /app/docker-entrypoint.sh && \
-    echo '  echo "Build already exists, skipping..."' >> /app/docker-entrypoint.sh && \
-    echo 'fi' >> /app/docker-entrypoint.sh && \
-    echo '' >> /app/docker-entrypoint.sh && \
-    echo 'echo "Running Payload migrations..."' >> /app/docker-entrypoint.sh && \
-    echo 'node node_modules/@payloadcms/db-postgres/dist/bin.js || echo "Migrations complete"' >> /app/docker-entrypoint.sh && \
-    echo '' >> /app/docker-entrypoint.sh && \
-    echo 'echo "Starting application..."' >> /app/docker-entrypoint.sh && \
-    echo 'exec node .next/standalone/server.js' >> /app/docker-entrypoint.sh && \
-    chmod +x /app/docker-entrypoint.sh
+# Note: We run as root initially to fix .next permissions, then drop to nextjs user
+RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'set -e' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo 'echo "Waiting for database to be ready..."' >> /docker-entrypoint.sh && \
+    echo 'sleep 5' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo '# Ensure .next directory exists and is writable by nextjs user' >> /docker-entrypoint.sh && \
+    echo 'mkdir -p /app/.next' >> /docker-entrypoint.sh && \
+    echo 'chown -R nextjs:nodejs /app/.next' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo '# Switch to nextjs user and run remaining commands' >> /docker-entrypoint.sh && \
+    echo 'su-exec nextjs sh <<'\''EOSU'\''' >> /docker-entrypoint.sh && \
+    echo '# Check if we need to build' >> /docker-entrypoint.sh && \
+    echo 'if [ ! -d "/app/.next/standalone" ]; then' >> /docker-entrypoint.sh && \
+    echo '  echo "Running Next.js build with database access..."' >> /docker-entrypoint.sh && \
+    echo '  cd /app && pnpm run build' >> /docker-entrypoint.sh && \
+    echo 'else' >> /docker-entrypoint.sh && \
+    echo '  echo "Build already exists, skipping..."' >> /docker-entrypoint.sh && \
+    echo 'fi' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo 'echo "Running Payload migrations..."' >> /docker-entrypoint.sh && \
+    echo 'cd /app && node node_modules/@payloadcms/db-postgres/dist/bin.js || echo "Migrations complete"' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting application..."' >> /docker-entrypoint.sh && \
+    echo 'cd /app && exec node .next/standalone/server.js' >> /docker-entrypoint.sh && \
+    echo 'EOSU' >> /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
-USER nextjs
+# Install su-exec for dropping privileges
+RUN apk add --no-cache su-exec
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
