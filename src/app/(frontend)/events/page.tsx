@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Calendar, Clock, MapPin } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function EventsPage() {
   const payload = await getPayload({ config })
 
