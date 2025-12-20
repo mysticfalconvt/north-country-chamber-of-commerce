@@ -18,11 +18,26 @@ const collections: CollectionSlug[] = [
   'forms',
   'form-submissions',
   'search',
+  'businesses',
+  'events',
+  'announcements',
+  'signature-events',
 ]
 
 const globals: GlobalSlug[] = ['header', 'footer']
 
-const categories = ['Technology', 'News', 'Finance', 'Design', 'Software', 'Engineering']
+const categories = [
+  { name: 'Retail & Shopping', slug: 'retail-shopping', icon: 'store' },
+  { name: 'Food & Beverage', slug: 'food-beverage', icon: 'utensils' },
+  { name: 'Accommodations', slug: 'accommodations', icon: 'bed' },
+  { name: 'Health & Wellness', slug: 'health-wellness', icon: 'heart-pulse' },
+  { name: 'Professional Services', slug: 'professional-services', icon: 'briefcase' },
+  { name: 'Home & Garden', slug: 'home-garden', icon: 'home' },
+  { name: 'Arts & Entertainment', slug: 'arts-entertainment', icon: 'palette' },
+  { name: 'Automotive', slug: 'automotive', icon: 'car' },
+  { name: 'Construction & Trades', slug: 'construction-trades', icon: 'hammer' },
+  { name: 'Real Estate', slug: 'real-estate', icon: 'building' },
+]
 
 // Next.js revalidation errors are normal when seeding the database without a server running
 // i.e. running `yarn seed` locally instead of using the admin UI within an active app
@@ -76,7 +91,7 @@ export const seed = async ({
     depth: 0,
     where: {
       email: {
-        equals: 'demo-author@example.com',
+        equals: 'admin@northcountrychamber.com',
       },
     },
   })
@@ -98,13 +113,29 @@ export const seed = async ({
     ),
   ])
 
+  payload.logger.info(`— Seeding categories...`)
+
+  const categoryDocs = await Promise.all(
+    categories.map((category) =>
+      payload.create({
+        collection: 'categories',
+        data: {
+          name: category.name,
+          slug: category.slug,
+          icon: category.icon,
+        },
+      }),
+    ),
+  )
+
   const [demoAuthor, image1Doc, image2Doc, image3Doc, imageHomeDoc] = await Promise.all([
     payload.create({
       collection: 'users',
       data: {
-        name: 'Demo Author',
-        email: 'demo-author@example.com',
+        name: 'Chamber Admin',
+        email: 'admin@northcountrychamber.com',
         password: 'password',
+        role: 'admin',
       },
     }),
     payload.create({
@@ -127,15 +158,6 @@ export const seed = async ({
       data: imageHero1,
       file: hero1Buffer,
     }),
-    categories.map((category) =>
-      payload.create({
-        collection: 'categories',
-        data: {
-          title: category,
-          slug: category,
-        },
-      }),
-    ),
   ])
 
   payload.logger.info(`— Seeding posts...`)
@@ -192,6 +214,306 @@ export const seed = async ({
     },
   })
 
+  payload.logger.info(`— Seeding businesses...`)
+
+  const [business1, business2, business3] = await Promise.all([
+    payload.create({
+      collection: 'businesses',
+      data: {
+        name: 'Mountain View Inn',
+        slug: 'mountain-view-inn',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'A cozy inn nestled in the heart of the North Country, offering comfortable accommodations and breathtaking mountain views.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        category: [categoryDocs[2].id], // Accommodations
+        address: '123 Main Street, Newport, VT 05855',
+        phone: '(802) 555-1234',
+        email: 'info@mountainviewinn.com',
+        website: 'https://mountainviewinn.com',
+        memberSince: '2020-01-15',
+        featured: true,
+        membershipStatus: 'active',
+      },
+    }),
+    payload.create({
+      collection: 'businesses',
+      data: {
+        name: 'North Country Coffee Roasters',
+        slug: 'north-country-coffee-roasters',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Locally roasted coffee and fresh pastries. A community gathering place in downtown Newport.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        category: [categoryDocs[1].id], // Food & Beverage
+        address: '45 Main Street, Newport, VT 05855',
+        phone: '(802) 555-5678',
+        email: 'hello@nccroasters.com',
+        website: 'https://nccroasters.com',
+        memberSince: '2018-06-01',
+        featured: true,
+        membershipStatus: 'active',
+        socialLinks: [
+          { platform: 'facebook', url: 'https://facebook.com/nccroasters' },
+          { platform: 'instagram', url: 'https://instagram.com/nccroasters' },
+        ],
+      },
+    }),
+    payload.create({
+      collection: 'businesses',
+      data: {
+        name: 'Green Mountain Hardware',
+        slug: 'green-mountain-hardware',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Your local hardware store serving the community since 1965. Tools, paint, plumbing, and friendly advice.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        category: [categoryDocs[5].id], // Home & Garden
+        address: '78 Coventry Street, Newport, VT 05855',
+        phone: '(802) 555-9012',
+        email: 'sales@greenmountainhardware.com',
+        memberSince: '2015-03-20',
+        featured: false,
+        membershipStatus: 'active',
+      },
+    }),
+  ])
+
+  payload.logger.info(`— Seeding events...`)
+
+  await Promise.all([
+    payload.create({
+      collection: 'events',
+      data: {
+        title: 'Monthly Business Networking Breakfast',
+        slug: 'monthly-business-networking-breakfast',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Join fellow chamber members for coffee, networking, and a brief presentation on business topics relevant to our community.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        date: new Date('2025-01-15').toISOString(),
+        startTime: '8:00 AM',
+        endTime: '9:30 AM',
+        location: 'North Country Coffee Roasters',
+        business: business2.id,
+        category: 'networking',
+        featured: true,
+        eventStatus: 'published',
+      },
+    }),
+    payload.create({
+      collection: 'events',
+      data: {
+        title: 'Winter Festival',
+        slug: 'winter-festival',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Annual winter celebration featuring ice sculptures, sledding, hot chocolate, and local vendors.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        date: new Date('2025-02-08').toISOString(),
+        startTime: '10:00 AM',
+        endTime: '4:00 PM',
+        location: 'Downtown Newport',
+        category: 'community',
+        featured: true,
+        eventStatus: 'published',
+      },
+    }),
+  ])
+
+  payload.logger.info(`— Seeding announcements...`)
+
+  await Promise.all([
+    payload.create({
+      collection: 'announcements',
+      data: {
+        title: 'Chamber Annual Meeting - Save the Date',
+        content: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Our annual meeting will be held on March 15th at the Newport Opera House. More details coming soon!',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        publishDate: new Date().toISOString(),
+        featured: true,
+      },
+    }),
+    payload.create({
+      collection: 'announcements',
+      data: {
+        title: 'New Member Spotlight: Mountain View Inn',
+        content: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Please join us in welcoming Mountain View Inn to the North Country Chamber of Commerce!',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        publishDate: new Date().toISOString(),
+        featured: false,
+      },
+    }),
+  ])
+
+  payload.logger.info(`— Seeding signature events...`)
+
+  await Promise.all([
+    payload.create({
+      collection: 'signature-events',
+      data: {
+        name: 'Hot Rod ChiliFest',
+        slug: 'hot-rod-chilifest',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Annual chili cook-off and car show featuring classic cars, delicious chili, and family fun.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        year: 2025,
+        eventStatus: 'upcoming',
+        schedule: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  { type: 'text', text: '10:00 AM - Gates Open' },
+                ],
+              },
+              {
+                type: 'paragraph',
+                children: [
+                  { type: 'text', text: '11:00 AM - Chili Tasting Begins' },
+                ],
+              },
+              {
+                type: 'paragraph',
+                children: [
+                  { type: 'text', text: '2:00 PM - Awards Ceremony' },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    }),
+    payload.create({
+      collection: 'signature-events',
+      data: {
+        name: 'AquaFest',
+        slug: 'aquafest',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'Celebrate summer on Lake Memphremagog with water activities, live music, food vendors, and fireworks.',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        year: 2025,
+        eventStatus: 'upcoming',
+      },
+    }),
+  ])
+
   payload.logger.info(`— Seeding contact form...`)
 
   const contactForm = await payload.create({
@@ -225,8 +547,29 @@ export const seed = async ({
           {
             link: {
               type: 'custom',
-              label: 'Posts',
-              url: '/posts',
+              label: 'Businesses',
+              url: '/businesses',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'Events',
+              url: '/events',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'News',
+              url: '/news',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'About',
+              url: '/about',
             },
           },
           {
@@ -249,27 +592,59 @@ export const seed = async ({
           {
             link: {
               type: 'custom',
-              label: 'Admin',
-              url: '/admin',
+              label: 'Home',
+              url: '/',
             },
           },
           {
             link: {
               type: 'custom',
-              label: 'Source Code',
-              newTab: true,
-              url: 'https://github.com/payloadcms/payload/tree/main/templates/website',
+              label: 'Businesses',
+              url: '/businesses',
             },
           },
           {
             link: {
               type: 'custom',
-              label: 'Payload',
-              newTab: true,
-              url: 'https://payloadcms.com/',
+              label: 'Events',
+              url: '/events',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'News',
+              url: '/news',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'About',
+              url: '/about',
+            },
+          },
+          {
+            link: {
+              type: 'reference',
+              label: 'Contact',
+              reference: {
+                relationTo: 'pages',
+                value: contactPage.id,
+              },
             },
           },
         ],
+        contactInfo: {
+          address: '150 Main Street, Newport, VT 05855',
+          phone: '(802) 334-7782',
+          email: 'info@northcountrychamber.com',
+        },
+        socialLinks: [
+          { platform: 'facebook', url: 'https://facebook.com/vnccoc' }
+
+        ],
+        copyright: '© 2025 North Country Chamber of Commerce. All rights reserved.',
       },
     }),
   ])
