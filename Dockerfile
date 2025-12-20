@@ -30,6 +30,11 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Set a dummy PAYLOAD_SECRET for build time only
+# The real secret will be provided at runtime via environment variables
+ENV PAYLOAD_SECRET="build-time-secret-key-min-32-characters-long-placeholder"
+ENV DATABASE_URI="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
