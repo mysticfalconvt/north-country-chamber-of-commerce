@@ -22,6 +22,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Enable corepack as root before switching users
+RUN corepack enable pnpm
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -41,19 +44,13 @@ RUN echo '#!/bin/sh' > /app/docker-entrypoint.sh && \
     echo '# Check if we need to build' >> /app/docker-entrypoint.sh && \
     echo 'if [ ! -d ".next/standalone" ]; then' >> /app/docker-entrypoint.sh && \
     echo '  echo "Running Next.js build with database access..."' >> /app/docker-entrypoint.sh && \
-    echo '  if [ -f pnpm-lock.yaml ]; then' >> /app/docker-entrypoint.sh && \
-    echo '    corepack enable pnpm && pnpm run build' >> /app/docker-entrypoint.sh && \
-    echo '  elif [ -f package-lock.json ]; then' >> /app/docker-entrypoint.sh && \
-    echo '    npm run build' >> /app/docker-entrypoint.sh && \
-    echo '  elif [ -f yarn.lock ]; then' >> /app/docker-entrypoint.sh && \
-    echo '    yarn run build' >> /app/docker-entrypoint.sh && \
-    echo '  fi' >> /app/docker-entrypoint.sh && \
+    echo '  pnpm run build' >> /app/docker-entrypoint.sh && \
     echo 'else' >> /app/docker-entrypoint.sh && \
     echo '  echo "Build already exists, skipping..."' >> /app/docker-entrypoint.sh && \
     echo 'fi' >> /app/docker-entrypoint.sh && \
     echo '' >> /app/docker-entrypoint.sh && \
     echo 'echo "Running Payload migrations..."' >> /app/docker-entrypoint.sh && \
-    echo 'node node_modules/@payloadcms/db-postgres/dist/migrate.js || echo "Migrations complete"' >> /app/docker-entrypoint.sh && \
+    echo 'node node_modules/@payloadcms/db-postgres/dist/bin.js || echo "Migrations complete"' >> /app/docker-entrypoint.sh && \
     echo '' >> /app/docker-entrypoint.sh && \
     echo 'echo "Starting application..."' >> /app/docker-entrypoint.sh && \
     echo 'exec node .next/standalone/server.js' >> /app/docker-entrypoint.sh && \
