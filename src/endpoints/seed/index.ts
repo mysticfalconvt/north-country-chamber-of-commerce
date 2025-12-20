@@ -216,7 +216,7 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding businesses...`)
 
-  const [business1, business2, business3] = await Promise.all([
+  const [_business1, business2, _business3] = await Promise.all([
     payload.create({
       collection: 'businesses',
       data: {
@@ -234,8 +234,13 @@ export const seed = async ({
                     text: 'A cozy inn nestled in the heart of the North Country, offering comfortable accommodations and breathtaking mountain views.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         category: [categoryDocs[2].id], // Accommodations
@@ -265,8 +270,13 @@ export const seed = async ({
                     text: 'Locally roasted coffee and fresh pastries. A community gathering place in downtown Newport.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         category: [categoryDocs[1].id], // Food & Beverage
@@ -300,8 +310,13 @@ export const seed = async ({
                     text: 'Your local hardware store serving the community since 1965. Tools, paint, plumbing, and friendly advice.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         category: [categoryDocs[5].id], // Home & Garden
@@ -335,8 +350,13 @@ export const seed = async ({
                     text: 'Join fellow chamber members for coffee, networking, and a brief presentation on business topics relevant to our community.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         date: new Date('2025-01-15').toISOString(),
@@ -366,8 +386,13 @@ export const seed = async ({
                     text: 'Annual winter celebration featuring ice sculptures, sledding, hot chocolate, and local vendors.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         date: new Date('2025-02-08').toISOString(),
@@ -386,8 +411,10 @@ export const seed = async ({
   await Promise.all([
     payload.create({
       collection: 'announcements',
+      draft: false,
       data: {
         title: 'Chamber Annual Meeting - Save the Date',
+        slug: 'chamber-annual-meeting-save-the-date',
         content: {
           root: {
             type: 'root',
@@ -400,8 +427,13 @@ export const seed = async ({
                     text: 'Our annual meeting will be held on March 15th at the Newport Opera House. More details coming soon!',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         publishDate: new Date().toISOString(),
@@ -410,8 +442,10 @@ export const seed = async ({
     }),
     payload.create({
       collection: 'announcements',
+      draft: false,
       data: {
         title: 'New Member Spotlight: Mountain View Inn',
+        slug: 'new-member-spotlight-mountain-view-inn',
         content: {
           root: {
             type: 'root',
@@ -424,8 +458,13 @@ export const seed = async ({
                     text: 'Please join us in welcoming Mountain View Inn to the North Country Chamber of Commerce!',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         publishDate: new Date().toISOString(),
@@ -454,8 +493,13 @@ export const seed = async ({
                     text: 'Annual chili cook-off and car show featuring classic cars, delicious chili, and family fun.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         year: 2025,
@@ -469,20 +513,27 @@ export const seed = async ({
                 children: [
                   { type: 'text', text: '10:00 AM - Gates Open' },
                 ],
+                version: 1,
               },
               {
                 type: 'paragraph',
                 children: [
                   { type: 'text', text: '11:00 AM - Chili Tasting Begins' },
                 ],
+                version: 1,
               },
               {
                 type: 'paragraph',
                 children: [
                   { type: 'text', text: '2:00 PM - Awards Ceremony' },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
       },
@@ -504,8 +555,13 @@ export const seed = async ({
                     text: 'Celebrate summer on Lake Memphremagog with water activities, live music, food vendors, and fireworks.',
                   },
                 ],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         year: 2025,

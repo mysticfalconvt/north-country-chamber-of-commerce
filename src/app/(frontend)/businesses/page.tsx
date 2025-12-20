@@ -47,12 +47,12 @@ export default async function BusinessesPage() {
                       </h3>
                       {business.category && Array.isArray(business.category) && business.category.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {business.category.map((cat: any) => (
+                          {business.category.map((cat) => (
                             <span
-                              key={typeof cat === 'string' ? cat : cat.id}
+                              key={typeof cat === 'string' || typeof cat === 'number' ? cat : cat.id}
                               className="text-xs bg-muted px-2 py-1 rounded"
                             >
-                              {typeof cat === 'string' ? cat : cat.name}
+                              {typeof cat === 'string' || typeof cat === 'number' ? cat : cat.name}
                             </span>
                           ))}
                         </div>

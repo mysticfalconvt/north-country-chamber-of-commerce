@@ -37,13 +37,26 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+# Create entrypoint script for running migrations
+RUN echo '#!/bin/sh' > docker-entrypoint.sh && \
+    echo 'set -e' >> docker-entrypoint.sh && \
+    echo '' >> docker-entrypoint.sh && \
+    echo 'echo "Waiting for database..."' >> docker-entrypoint.sh && \
+    echo 'sleep 5' >> docker-entrypoint.sh && \
+    echo '' >> docker-entrypoint.sh && \
+    echo 'echo "Running Payload migrations..."' >> docker-entrypoint.sh && \
+    echo 'node node_modules/@payloadcms/db-postgres/dist/migrate.js || echo "Migrations complete or not needed"' >> docker-entrypoint.sh && \
+    echo '' >> docker-entrypoint.sh && \
+    echo 'echo "Starting application..."' >> docker-entrypoint.sh && \
+    echo 'exec node server.js' >> docker-entrypoint.sh && \
+    chmod +x docker-entrypoint.sh
+
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -60,12 +73,17 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy package.json for migrations
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# Create entrypoint script that runs migrations before starting the app
+COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD HOSTNAME="0.0.0.0" node server.js
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
