@@ -27,6 +27,7 @@ services:
       - '3997:3000'
     volumes:
       - /mnt/user/appdata/chamber_of_commerce/media:/app/public/media
+      - /mnt/user/appdata/chamber_of_commerce/next-build:/app/.next
     environment:
       # Database
       DATABASE_URI: postgresql://postgres:password@chamber_of_commerce_postgres:5432/chamber_of_commerce

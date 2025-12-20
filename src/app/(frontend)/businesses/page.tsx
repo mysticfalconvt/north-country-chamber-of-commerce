@@ -5,8 +5,6 @@ import config from '@payload-config'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 
-export const dynamic = 'force-dynamic'
-
 export default async function BusinessesPage() {
   const payload = await getPayload({ config })
 

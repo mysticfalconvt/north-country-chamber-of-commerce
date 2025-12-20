@@ -70,30 +70,19 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
 }
 
 export async function generateStaticParams() {
-  // Skip static generation during Docker builds when database is not available
-  if (process.env.DATABASE_URI?.includes('placeholder')) {
-    return []
+  const payload = await getPayload({ config: configPromise })
+  const { totalDocs } = await payload.count({
+    collection: 'posts',
+    overrideAccess: false,
+  })
+
+  const totalPages = Math.ceil(totalDocs / 10)
+
+  const pages: { pageNumber: string }[] = []
+
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push({ pageNumber: String(i) })
   }
 
-  try {
-    const payload = await getPayload({ config: configPromise })
-    const { totalDocs } = await payload.count({
-      collection: 'posts',
-      overrideAccess: false,
-    })
-
-    const totalPages = Math.ceil(totalDocs / 10)
-
-    const pages: { pageNumber: string }[] = []
-
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push({ pageNumber: String(i) })
-    }
-
-    return pages
-  } catch (error) {
-    // If database connection fails, return empty array to skip static generation
-    console.warn('Failed to generate static params for post pages, will render dynamically:', error)
-    return []
-  }
+  return pages
 }

@@ -1,11 +1,8 @@
-# To use this Dockerfile, you have to set `output: 'standalone'` in your next.config.js file.
-# From https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
-
+# Runtime build Dockerfile - builds Next.js when container starts with database access
 FROM node:22.17.0-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -18,45 +15,7 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-# Set a dummy PAYLOAD_SECRET for build time only
-# The real secret will be provided at runtime via environment variables
-ENV PAYLOAD_SECRET="build-time-secret-key-min-32-characters-long-placeholder"
-ENV DATABASE_URI="postgresql://placeholder:placeholder@localhost:5432/placeholder"
-
-RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Create entrypoint script for running migrations
-RUN echo '#!/bin/sh' > docker-entrypoint.sh && \
-    echo 'set -e' >> docker-entrypoint.sh && \
-    echo '' >> docker-entrypoint.sh && \
-    echo 'echo "Waiting for database..."' >> docker-entrypoint.sh && \
-    echo 'sleep 5' >> docker-entrypoint.sh && \
-    echo '' >> docker-entrypoint.sh && \
-    echo 'echo "Running Payload migrations..."' >> docker-entrypoint.sh && \
-    echo 'node node_modules/@payloadcms/db-postgres/dist/migrate.js || echo "Migrations complete or not needed"' >> docker-entrypoint.sh && \
-    echo '' >> docker-entrypoint.sh && \
-    echo 'echo "Starting application..."' >> docker-entrypoint.sh && \
-    echo 'exec node server.js' >> docker-entrypoint.sh && \
-    chmod +x docker-entrypoint.sh
-
-# Production image, copy all the files and run next
+# Production image - will build at runtime
 FROM base AS runner
 WORKDIR /app
 
@@ -66,23 +25,39 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Remove this line if you do not have this folder
-COPY --from=builder /app/public ./public
+# Copy dependencies from deps stage
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Copy all source files (needed for runtime build)
+COPY --chown=nextjs:nodejs . .
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy package.json for migrations
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-
-# Create entrypoint script that runs migrations before starting the app
-COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
+# Create entrypoint script that builds, migrates, and starts the app
+RUN echo '#!/bin/sh' > /app/docker-entrypoint.sh && \
+    echo 'set -e' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Waiting for database to be ready..."' >> /app/docker-entrypoint.sh && \
+    echo 'sleep 5' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo '# Check if we need to build' >> /app/docker-entrypoint.sh && \
+    echo 'if [ ! -d ".next/standalone" ]; then' >> /app/docker-entrypoint.sh && \
+    echo '  echo "Running Next.js build with database access..."' >> /app/docker-entrypoint.sh && \
+    echo '  if [ -f pnpm-lock.yaml ]; then' >> /app/docker-entrypoint.sh && \
+    echo '    corepack enable pnpm && pnpm run build' >> /app/docker-entrypoint.sh && \
+    echo '  elif [ -f package-lock.json ]; then' >> /app/docker-entrypoint.sh && \
+    echo '    npm run build' >> /app/docker-entrypoint.sh && \
+    echo '  elif [ -f yarn.lock ]; then' >> /app/docker-entrypoint.sh && \
+    echo '    yarn run build' >> /app/docker-entrypoint.sh && \
+    echo '  fi' >> /app/docker-entrypoint.sh && \
+    echo 'else' >> /app/docker-entrypoint.sh && \
+    echo '  echo "Build already exists, skipping..."' >> /app/docker-entrypoint.sh && \
+    echo 'fi' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Running Payload migrations..."' >> /app/docker-entrypoint.sh && \
+    echo 'node node_modules/@payloadcms/db-postgres/dist/migrate.js || echo "Migrations complete"' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Starting application..."' >> /app/docker-entrypoint.sh && \
+    echo 'exec node .next/standalone/server.js' >> /app/docker-entrypoint.sh && \
+    chmod +x /app/docker-entrypoint.sh
 
 USER nextjs
 
