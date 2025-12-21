@@ -5,8 +5,14 @@ import config from '@payload-config'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Calendar, Clock, MapPin } from 'lucide-react'
+import { headers } from 'next/headers'
+import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 
 export default async function EventsPage() {
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
+
   const payload = await getPayload({ config })
 
   const events = await payload.find({
@@ -19,11 +25,12 @@ export default async function EventsPage() {
     limit: 100,
     sort: 'date',
     depth: 1,
+    locale,
   })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -31,21 +38,39 @@ export default async function EventsPage() {
     })
   }
 
+  const translations = {
+    en: {
+      title: 'Events',
+      description:
+        'Stay connected with upcoming events, networking opportunities, and community gatherings in the Northeast Kingdom.',
+      noEvents: 'No upcoming events at this time.',
+    },
+    fr: {
+      title: 'Événements',
+      description:
+        'Restez connecté avec les événements à venir, les opportunités de réseautage et les rassemblements communautaires dans le Northeast Kingdom.',
+      noEvents: 'Aucun événement à venir pour le moment.',
+    },
+  }
+
+  const t = translations[locale]
+
   return (
     <Container className="py-12 md:py-16">
       <div className="space-y-8">
         <div className="space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Events</h1>
-          <p className="text-lg text-muted-foreground max-w-3xl">
-            Stay connected with upcoming events, networking opportunities, and community gatherings
-            in the Northeast Kingdom.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{t.title}</h1>
+          <p className="text-lg text-muted-foreground max-w-3xl">{t.description}</p>
         </div>
 
         {events.docs.length > 0 ? (
           <div className="grid gap-6 lg:grid-cols-2">
             {events.docs.map((event) => (
-              <Link key={event.id} href={`/events/${event.slug}`} className="group">
+              <Link
+                key={event.id}
+                href={addLocaleToPathname(`/events/${event.slug}`, locale)}
+                className="group"
+              >
                 <Card className="h-full p-6 transition-all hover:shadow-lg">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -87,7 +112,7 @@ export default async function EventsPage() {
           </div>
         ) : (
           <div className="rounded-lg border bg-card p-8 text-center">
-            <p className="text-muted-foreground">No upcoming events at this time.</p>
+            <p className="text-muted-foreground">{t.noEvents}</p>
           </div>
         )}
       </div>
@@ -95,10 +120,23 @@ export default async function EventsPage() {
   )
 }
 
-export function generateMetadata() {
-  return {
-    title: 'Events | North Country Chamber of Commerce',
-    description:
-      "Discover upcoming chamber events, networking opportunities, and community gatherings in Vermont's Northeast Kingdom.",
+export async function generateMetadata() {
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
+
+  const metadata = {
+    en: {
+      title: 'Events | North Country Chamber of Commerce',
+      description:
+        "Discover upcoming chamber events, networking opportunities, and community gatherings in Vermont's Northeast Kingdom.",
+    },
+    fr: {
+      title: 'Événements | Chambre de commerce du North Country',
+      description:
+        'Découvrez les événements à venir de la chambre, les opportunités de réseautage et les rassemblements communautaires dans le Northeast Kingdom du Vermont.',
+    },
   }
+
+  return metadata[locale]
 }

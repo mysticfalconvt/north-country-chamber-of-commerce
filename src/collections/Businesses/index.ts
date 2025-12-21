@@ -13,6 +13,7 @@ export const Businesses: CollectionConfig = {
     read: authenticatedOrPublished,
     update: isAdminOrOwner,
   },
+  hooks: {},
   admin: {
     defaultColumns: ['name', 'category', 'membershipStatus', 'memberSince'],
     useAsTitle: 'name',

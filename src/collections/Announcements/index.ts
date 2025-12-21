@@ -12,6 +12,7 @@ export const Announcements: CollectionConfig = {
     read: authenticatedOrPublished,
     update: chamberStaffOrAdmin,
   },
+  hooks: {},
   admin: {
     defaultColumns: ['title', 'publishDate', 'featured', '_status'],
     useAsTitle: 'title',

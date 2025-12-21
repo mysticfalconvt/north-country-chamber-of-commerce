@@ -1,0 +1,107 @@
+.translation-button {
+  margin: 1rem 0;
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__button {
+    padding: 0.5rem 1rem;
+    background: var(--theme-elevation-500);
+    border: 1px solid var(--theme-elevation-700);
+    border-radius: var(--base-border-radius);
+    color: var(--theme-text);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--theme-elevation-600);
+      border-color: var(--theme-elevation-800);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    span {
+      user-select: none;
+    }
+  }
+
+  &__message {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--base-border-radius);
+    font-size: var(--font-size-sm);
+
+    &--success {
+      background: var(--theme-success-50);
+      border: 1px solid var(--theme-success-500);
+      color: var(--theme-success-900);
+    }
+
+    &--error {
+      background: var(--theme-error-50);
+      border: 1px solid var(--theme-error-500);
+      color: var(--theme-error-900);
+    }
+  }
+
+  &__progress {
+    margin-top: 1rem;
+    border: 1px solid var(--theme-elevation-400);
+    border-radius: var(--base-border-radius);
+    padding: 0.5rem;
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0.5rem;
+      user-select: none;
+
+      &:hover {
+        background: var(--theme-elevation-150);
+      }
+    }
+  }
+
+  &__progress-log {
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    padding: 0.5rem;
+    background: var(--theme-elevation-50);
+    border-radius: var(--base-border-radius);
+    margin-top: 0.5rem;
+
+    div {
+      padding: 0.25rem 0;
+      color: var(--theme-elevation-800);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  }
+}

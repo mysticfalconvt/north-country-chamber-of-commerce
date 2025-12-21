@@ -16,6 +16,7 @@ export const SignatureEvents: CollectionConfig = {
     read: authenticatedOrPublished,
     update: chamberStaffOrAdmin,
   },
+  hooks: {},
   admin: {
     defaultColumns: ['name', 'year', 'eventStatus'],
     useAsTitle: 'name',

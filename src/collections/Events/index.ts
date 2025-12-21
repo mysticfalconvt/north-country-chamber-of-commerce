@@ -13,6 +13,7 @@ export const Events: CollectionConfig = {
     read: authenticatedOrPublished,
     update: authenticated,
   },
+  hooks: {},
   admin: {
     defaultColumns: ['title', 'date', 'category', 'eventStatus'],
     useAsTitle: 'title',

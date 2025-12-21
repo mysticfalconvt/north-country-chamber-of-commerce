@@ -32,6 +32,18 @@ const nextConfig = {
   },
   reactStrictMode: true,
   redirects,
+  async rewrites() {
+    return [
+      {
+        source: '/fr',
+        destination: '/',
+      },
+      {
+        source: '/fr/:path*',
+        destination: '/:path*',
+      },
+    ]
+  },
 }
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })
