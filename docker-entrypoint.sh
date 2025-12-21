@@ -47,8 +47,18 @@ if [ "$NEED_BUILD" = "1" ]; then
     else
       echo "================================"
       echo "WARNING: Migration command succeeded but no SQL detected!"
+      echo "Migration output:"
       echo "================================"
       cat /tmp/migrate.log
+      echo "================================"
+      echo "This likely means migrations need to be run differently"
+      echo "Attempting alternative: pnpm payload migrate"
+      echo "================================"
+
+      if ! pnpm payload migrate; then
+        echo "Alternative migration also failed!"
+        exit 1
+      fi
     fi
 
     # Check if database needs seeding by checking if header/footer globals exist
