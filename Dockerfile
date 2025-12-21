@@ -50,6 +50,8 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
     echo 'su-exec nextjs sh <<'\''EOSU'\''' >> /docker-entrypoint.sh && \
     echo '# Check if we need to build' >> /docker-entrypoint.sh && \
     echo 'if [ ! -d "/app/.next/standalone" ]; then' >> /docker-entrypoint.sh && \
+    echo '  echo "Running database migrations..."' >> /docker-entrypoint.sh && \
+    echo '  cd /app && pnpm payload migrate' >> /docker-entrypoint.sh && \
     echo '  echo "Running Next.js build with database access..."' >> /docker-entrypoint.sh && \
     echo '  cd /app && pnpm run build' >> /docker-entrypoint.sh && \
     echo '  echo "Copying public and static files for standalone mode..."' >> /docker-entrypoint.sh && \
@@ -60,7 +62,7 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
     echo '  echo "Build already exists, skipping..."' >> /docker-entrypoint.sh && \
     echo 'fi' >> /docker-entrypoint.sh && \
     echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting application (Payload will auto-migrate)..."' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting application..."' >> /docker-entrypoint.sh && \
     echo 'cd /app/.next/standalone && exec node server.js' >> /docker-entrypoint.sh && \
     echo 'EOSU' >> /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
