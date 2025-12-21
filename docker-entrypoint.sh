@@ -39,6 +39,48 @@ if [ "$NEED_BUILD" = "1" ]; then
     echo "Migrations completed successfully"
     echo "================================"
 
+    # Check if database needs seeding by checking if header/footer globals exist
+    echo "Checking if database needs seeding..."
+    NEEDS_SEED=$(node -e "
+      const { getPayload } = require('payload');
+      (async () => {
+        const config = await import('./src/payload.config.ts').then(m => m.default);
+        const payload = await getPayload({ config: await config });
+        try {
+          const header = await payload.findGlobal({ slug: 'header' });
+          // If header has navItems, assume database is seeded
+          if (header && header.navItems && header.navItems.length > 0) {
+            console.log('false');
+          } else {
+            console.log('true');
+          }
+        } catch (e) {
+          console.log('true');
+        }
+        process.exit(0);
+      })();
+    " 2>/dev/null || echo "true")
+
+    if [ "$NEEDS_SEED" = "true" ]; then
+      echo "================================"
+      echo "Seeding database..."
+      echo "================================"
+
+      # Run seed script to populate globals and initial data
+      if ! node scripts/seed.js; then
+        echo "================================"
+        echo "ERROR: Seeding failed!"
+        echo "================================"
+        exit 1
+      fi
+
+      echo "================================"
+      echo "Seeding completed successfully"
+      echo "================================"
+    else
+      echo "Database already seeded, skipping..."
+    fi
+
     echo "Running Next.js build with database access..."
 
     if ! pnpm run build; then

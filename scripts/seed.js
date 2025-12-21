@@ -1,0 +1,27 @@
+const { getPayload } = require('payload')
+const { seed } = require('../src/endpoints/seed')
+
+async function runSeed() {
+  console.log('Loading Payload config...')
+  const config = await import('../src/payload.config.ts').then(m => m.default)
+
+  console.log('Initializing Payload...')
+  const payload = await getPayload({ config: await config })
+
+  console.log('Running seed function...')
+  // Create a fake request object for the seed function
+  const req = {
+    payload,
+    user: null,
+    locale: 'en',
+  }
+
+  await seed({ payload, req })
+  console.log('Seed completed!')
+  process.exit(0)
+}
+
+runSeed().catch((error) => {
+  console.error('Seed failed:', error)
+  process.exit(1)
+})
