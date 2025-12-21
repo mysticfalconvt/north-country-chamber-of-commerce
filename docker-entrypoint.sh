@@ -26,25 +26,17 @@ if [ "$NEED_BUILD" = "1" ]; then
     echo "Running database migrations..."
     echo "================================"
 
-    # Run payload CLI directly via node
-    # Note: pnpm sometimes reports exit code 1 even when migrations succeed
-    # We check for actual SQL output to verify success
-    node ./node_modules/payload/dist/bin/index.js migrate 2>&1 | tee /tmp/migrate.log || true
-
-    # Check if migrations actually ran by looking for CREATE or ALTER statements
-    if grep -q "CREATE\|ALTER\|No pending migrations" /tmp/migrate.log; then
+    # Run migrations with pnpm - let it fail loudly if there are real issues
+    if pnpm payload migrate; then
       echo "================================"
       echo "Migrations completed successfully"
       echo "================================"
     else
+      MIGRATE_EXIT_CODE=$?
       echo "================================"
-      echo "WARNING: No migration SQL detected!"
-      echo "Migration output:"
+      echo "ERROR: Migration failed with exit code $MIGRATE_EXIT_CODE"
       echo "================================"
-      cat /tmp/migrate.log
-      echo "================================"
-      echo "This likely means no migrations are pending"
-      echo "================================"
+      exit 1
     fi
 
     # Check if database needs seeding by checking if header/footer globals exist

@@ -5008,9 +5008,9 @@
           "notNull": false,
           "default": false
         },
-        "status": {
-          "name": "status",
-          "type": "enum_businesses_status",
+        "membership_status": {
+          "name": "membership_status",
+          "type": "enum_businesses_membership_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -5549,9 +5549,9 @@
           "notNull": false,
           "default": false
         },
-        "version_status": {
-          "name": "version_status",
-          "type": "enum__businesses_v_version_status",
+        "version_membership_status": {
+          "name": "version_membership_status",
+          "type": "enum__businesses_v_version_membership_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -6139,13 +6139,13 @@
           "notNull": false,
           "default": false
         },
-        "status": {
-          "name": "status",
-          "type": "enum_events_status",
+        "event_status": {
+          "name": "event_status",
+          "type": "enum_events_event_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'draft'"
+          "default": "'published'"
         },
         "generate_slug": {
           "name": "generate_slug",
@@ -6455,13 +6455,13 @@
           "notNull": false,
           "default": false
         },
-        "version_status": {
-          "name": "version_status",
-          "type": "enum__events_v_version_status",
+        "version_event_status": {
+          "name": "version_event_status",
+          "type": "enum__events_v_version_event_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'draft'"
+          "default": "'published'"
         },
         "version_generate_slug": {
           "name": "version_generate_slug",
@@ -7639,9 +7639,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "status": {
-          "name": "status",
-          "type": "enum_signature_events_status",
+        "event_status": {
+          "name": "event_status",
+          "type": "enum_signature_events_event_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -8023,9 +8023,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "version_status": {
-          "name": "version_status",
-          "type": "enum__signature_events_v_version_status",
+        "version_event_status": {
+          "name": "version_event_status",
+          "type": "enum__signature_events_v_version_event_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -15312,6 +15312,14 @@
         "youtube"
       ]
     },
+    "public.enum_businesses_membership_status": {
+      "name": "enum_businesses_membership_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive"
+      ]
+    },
     "public.enum_businesses_status": {
       "name": "enum_businesses_status",
       "schema": "public",
@@ -15329,6 +15337,14 @@
         "twitter",
         "linkedin",
         "youtube"
+      ]
+    },
+    "public.enum__businesses_v_version_membership_status": {
+      "name": "enum__businesses_v_version_membership_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive"
       ]
     },
     "public.enum__businesses_v_version_status": {
@@ -15359,6 +15375,14 @@
         "other"
       ]
     },
+    "public.enum_events_event_status": {
+      "name": "enum_events_event_status",
+      "schema": "public",
+      "values": [
+        "published",
+        "cancelled"
+      ]
+    },
     "public.enum_events_status": {
       "name": "enum_events_status",
       "schema": "public",
@@ -15377,6 +15401,14 @@
         "fundraiser",
         "social",
         "other"
+      ]
+    },
+    "public.enum__events_v_version_event_status": {
+      "name": "enum__events_v_version_event_status",
+      "schema": "public",
+      "values": [
+        "published",
+        "cancelled"
       ]
     },
     "public.enum__events_v_version_status": {
@@ -15419,12 +15451,30 @@
         "fr"
       ]
     },
+    "public.enum_signature_events_event_status": {
+      "name": "enum_signature_events_event_status",
+      "schema": "public",
+      "values": [
+        "upcoming",
+        "active",
+        "archived"
+      ]
+    },
     "public.enum_signature_events_status": {
       "name": "enum_signature_events_status",
       "schema": "public",
       "values": [
         "draft",
         "published"
+      ]
+    },
+    "public.enum__signature_events_v_version_event_status": {
+      "name": "enum__signature_events_v_version_event_status",
+      "schema": "public",
+      "values": [
+        "upcoming",
+        "active",
+        "archived"
       ]
     },
     "public.enum__signature_events_v_version_status": {
@@ -15537,6 +15587,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "02ae8e2d-ebbd-4ba2-9533-5f45bd68a56b",
+  "id": "02750e39-8555-4c47-913e-08ad9d0c47cf",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
