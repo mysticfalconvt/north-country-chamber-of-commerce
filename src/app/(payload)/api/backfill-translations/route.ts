@@ -255,6 +255,47 @@ export async function POST(req: Request) {
               }
             }
 
+            // Check and translate hero
+            if (page.hero) {
+              const heroNeedsTranslation = force || !(await checkFrenchField(payload, 'pages', page.id, 'hero', force))
+              
+              if (heroNeedsTranslation) {
+                const translatedHero: any = { ...page.hero }
+
+                // Translate hero richText (localized)
+                if (page.hero.richText) {
+                  sendProgress(controller, `  Translating page "${pageTitle || page.id}" hero richText...`)
+                  translatedHero.richText = await translateLexicalJSON(page.hero.richText)
+                }
+
+                // Translate hero links (link.label is localized)
+                if (page.hero.links && Array.isArray(page.hero.links)) {
+                  sendProgress(controller, `  Translating page "${pageTitle || page.id}" hero links (${page.hero.links.length} links)...`)
+                  translatedHero.links = await Promise.all(
+                    page.hero.links.map(async (linkItem: any) => {
+                      const translatedLink = { ...linkItem }
+                      if (linkItem.link?.label) {
+                        // When fetching with locale 'en', label is a string
+                        const label = typeof linkItem.link.label === 'string' 
+                          ? linkItem.link.label 
+                          : (linkItem.link.label as { en?: string })?.en
+                        if (label) {
+                          translatedLink.link = {
+                            ...linkItem.link,
+                            label: await translateToFrench(label),
+                          }
+                        }
+                      }
+                      return translatedLink
+                    })
+                  )
+                }
+
+                updateData.hero = removeIds(translatedHero)
+                needsUpdate = true
+              }
+            }
+
             // Check layout
             if (page.layout && Array.isArray(page.layout) && page.layout.length > 0) {
               // Check if French layout exists (only if not forcing)
