@@ -46,7 +46,7 @@ import { getPayload } from 'payload'
 
 (async () => {
   try {
-    const configModule = await import('./src/payload.config.ts')
+    const configModule = await import('./src/payload.config.js')
     const config = configModule.default
     const payload = await getPayload({ config: await config })
     const header = await payload.findGlobal({ slug: 'header' })

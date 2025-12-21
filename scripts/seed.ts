@@ -4,7 +4,7 @@ import type { PayloadRequest } from 'payload'
 
 async function runSeed() {
   console.log('Loading Payload config...')
-  const configModule = await import('../src/payload.config.ts')
+  const configModule = await import('../src/payload.config.js')
   const config = configModule.default
 
   console.log('Initializing Payload...')
