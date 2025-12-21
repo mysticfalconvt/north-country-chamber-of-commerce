@@ -26,10 +26,15 @@ if [ "$NEED_BUILD" = "1" ]; then
     echo "Running database migrations..."
     echo "================================"
 
-    if ! pnpm payload migrate; then
+    # Run migrations and capture full output
+    pnpm payload migrate 2>&1 | tee /tmp/migrate.log
+    MIGRATE_EXIT=${PIPESTATUS[0]}
+
+    if [ $MIGRATE_EXIT -ne 0 ]; then
       echo "================================"
-      echo "ERROR: Migration failed!"
+      echo "ERROR: Migration failed with exit code $MIGRATE_EXIT"
       echo "================================"
+      cat /tmp/migrate.log
       exit 1
     fi
 
