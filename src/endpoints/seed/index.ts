@@ -79,9 +79,38 @@ export const seed = async ({
     }),
   )
 
-  await Promise.all(
-    collections.map((collection) => payload.db.deleteMany({ collection, req, where: {} })),
-  )
+  // Delete collections sequentially to avoid deadlocks from foreign key constraints
+  // Delete dependent collections first, then the ones they depend on
+  // Order: posts, pages, events, businesses, announcements, signature-events (depend on media/categories)
+  //        then: media, categories, forms, form-submissions, users, search, redirects
+  const deletionOrder = [
+    'posts', // references media
+    'pages', // references media, posts
+    'events', // references media, businesses
+    'businesses', // references media, categories
+    'announcements', // references media
+    'signature-events', // references media
+    'form-submissions', // references forms
+    'media', // referenced by others
+    'categories', // referenced by others
+    'forms', // referenced by form-submissions
+    'users', // referenced by posts
+    'search',
+    'redirects',
+  ]
+
+  // Delete in order, filtering to only collections that exist
+  for (const collection of deletionOrder) {
+    if (collections.includes(collection as CollectionSlug)) {
+      try {
+        await payload.db.deleteMany({ collection: collection as CollectionSlug, req, where: {} })
+      } catch (error) {
+        payload.logger.warn(
+          `Failed to delete ${collection}, continuing anyway: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      }
+    }
+  }
 
   // Delete versions - catch errors in case schema is out of sync
   await Promise.all(
