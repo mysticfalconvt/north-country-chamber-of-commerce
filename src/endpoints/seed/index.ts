@@ -58,20 +58,25 @@ export const seed = async ({
   // the custom `/api/seed` endpoint does not
   payload.logger.info(`— Clearing collections and globals...`)
 
-  // clear the database
+  // clear the database (skip globals if they don't exist yet)
   await Promise.all(
-    globals.map((global) =>
-      payload.updateGlobal({
-        slug: global,
-        data: {
-          navItems: [],
-        },
-        depth: 0,
-        context: {
-          disableRevalidate: true,
-        },
-      }),
-    ),
+    globals.map(async (global) => {
+      try {
+        await payload.updateGlobal({
+          slug: global,
+          data: {
+            navItems: [],
+          },
+          depth: 0,
+          context: {
+            disableRevalidate: true,
+          },
+        })
+      } catch (error) {
+        // Globals may not exist yet on first migration, that's ok
+        payload.logger.info(`Skipping clear of ${global} (may not exist yet)`)
+      }
+    }),
   )
 
   await Promise.all(
