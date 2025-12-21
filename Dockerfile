@@ -25,6 +25,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Enable corepack as root before switching users
 RUN corepack enable pnpm
 
+# Install su-exec for dropping privileges
+RUN apk add --no-cache su-exec
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -34,49 +37,13 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 # Copy all source files (needed for runtime build)
 COPY --chown=nextjs:nodejs . .
 
-# Create entrypoint script that builds, migrates, and starts the app
-# Note: We run as root initially to fix .next permissions, then drop to nextjs user
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'set -e' >> /docker-entrypoint.sh && \
-    echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Waiting for database to be ready..."' >> /docker-entrypoint.sh && \
-    echo 'sleep 5' >> /docker-entrypoint.sh && \
-    echo '' >> /docker-entrypoint.sh && \
-    echo '# Ensure .next directory exists and is writable by nextjs user' >> /docker-entrypoint.sh && \
-    echo 'mkdir -p /app/.next' >> /docker-entrypoint.sh && \
-    echo 'chown -R nextjs:nodejs /app/.next' >> /docker-entrypoint.sh && \
-    echo '' >> /docker-entrypoint.sh && \
-    echo '# Switch to nextjs user and run remaining commands' >> /docker-entrypoint.sh && \
-    echo 'su-exec nextjs sh -e <<'\''EOSU'\''' >> /docker-entrypoint.sh && \
-    echo '# Check if we need to build' >> /docker-entrypoint.sh && \
-    echo 'if [ ! -d "/app/.next/standalone" ]; then' >> /docker-entrypoint.sh && \
-    echo '  echo "Running database migrations..."' >> /docker-entrypoint.sh && \
-    echo '  cd /app' >> /docker-entrypoint.sh && \
-    echo '  pnpm payload migrate' >> /docker-entrypoint.sh && \
-    echo '  echo "Migrations completed successfully"' >> /docker-entrypoint.sh && \
-    echo '  echo "Running Next.js build with database access..."' >> /docker-entrypoint.sh && \
-    echo '  pnpm run build' >> /docker-entrypoint.sh && \
-    echo '  echo "Build completed successfully"' >> /docker-entrypoint.sh && \
-    echo '  echo "Copying public and static files for standalone mode..."' >> /docker-entrypoint.sh && \
-    echo '  cp -r /app/public /app/.next/standalone/public' >> /docker-entrypoint.sh && \
-    echo '  mkdir -p /app/.next/standalone/.next' >> /docker-entrypoint.sh && \
-    echo '  cp -r /app/.next/static /app/.next/standalone/.next/static' >> /docker-entrypoint.sh && \
-    echo 'else' >> /docker-entrypoint.sh && \
-    echo '  echo "Build already exists, skipping..."' >> /docker-entrypoint.sh && \
-    echo 'fi' >> /docker-entrypoint.sh && \
-    echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting application..."' >> /docker-entrypoint.sh && \
-    echo 'cd /app/.next/standalone' >> /docker-entrypoint.sh && \
-    echo 'exec node server.js' >> /docker-entrypoint.sh && \
-    echo 'EOSU' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
-
-# Install su-exec for dropping privileges
-RUN apk add --no-cache su-exec
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
