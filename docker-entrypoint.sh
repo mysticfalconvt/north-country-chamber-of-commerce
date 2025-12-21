@@ -41,25 +41,28 @@ if [ "$NEED_BUILD" = "1" ]; then
 
     # Check if database needs seeding by checking if header/footer globals exist
     echo "Checking if database needs seeding..."
-    NEEDS_SEED=$(node -e "
-      const { getPayload } = require('payload');
-      (async () => {
-        const config = await import('./src/payload.config.ts').then(m => m.default);
-        const payload = await getPayload({ config: await config });
-        try {
-          const header = await payload.findGlobal({ slug: 'header' });
-          // If header has navItems, assume database is seeded
-          if (header && header.navItems && header.navItems.length > 0) {
-            console.log('false');
-          } else {
-            console.log('true');
-          }
-        } catch (e) {
-          console.log('true');
-        }
-        process.exit(0);
-      })();
-    " 2>/dev/null || echo "true")
+    cat > /tmp/check-seed.js <<'EOF'
+import { getPayload } from 'payload'
+
+(async () => {
+  try {
+    const configModule = await import('./src/payload.config.ts')
+    const config = configModule.default
+    const payload = await getPayload({ config: await config })
+    const header = await payload.findGlobal({ slug: 'header' })
+    // If header has navItems, assume database is seeded
+    if (header && header.navItems && header.navItems.length > 0) {
+      console.log('false')
+    } else {
+      console.log('true')
+    }
+  } catch (e) {
+    console.log('true')
+  }
+  process.exit(0)
+})()
+EOF
+    NEEDS_SEED=$(node /tmp/check-seed.js 2>/dev/null || echo "true")
 
     if [ "$NEEDS_SEED" = "true" ]; then
       echo "================================"

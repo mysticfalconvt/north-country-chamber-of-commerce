@@ -1,9 +1,10 @@
-const { getPayload } = require('payload')
-const { seed } = require('../src/endpoints/seed')
+import { getPayload } from 'payload'
+import { seed } from '../src/endpoints/seed/index.ts'
 
 async function runSeed() {
   console.log('Loading Payload config...')
-  const config = await import('../src/payload.config.ts').then(m => m.default)
+  const configModule = await import('../src/payload.config.ts')
+  const config = configModule.default
 
   console.log('Initializing Payload...')
   const payload = await getPayload({ config: await config })
