@@ -39,7 +39,7 @@ export async function generateStaticParams() {
       })
 
     return params
-  } catch (error) {
+  } catch (_error) {
     // If database isn't ready yet, return empty array
     // Pages will be generated on-demand
     return []

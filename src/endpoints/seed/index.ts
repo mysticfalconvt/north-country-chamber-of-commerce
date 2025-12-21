@@ -72,7 +72,7 @@ export const seed = async ({
             disableRevalidate: true,
           },
         })
-      } catch (error) {
+      } catch (_error) {
         // Globals may not exist yet on first migration, that's ok
         payload.logger.info(`Skipping clear of ${global} (may not exist yet)`)
       }

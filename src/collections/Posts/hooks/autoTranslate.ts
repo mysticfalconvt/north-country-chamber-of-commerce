@@ -31,10 +31,11 @@ export const autoTranslate: CollectionBeforeChangeHook = async ({ data, operatio
 
 /**
  * Recursively translate blocks
+ * @deprecated Not currently used, kept for potential future use
  */
-async function translateBlocks(blocks: any[]): Promise<any[]> {
+async function _translateBlocks(_blocks: any[]): Promise<any[]> {
   return Promise.all(
-    blocks.map(async (block) => {
+    _blocks.map(async (block) => {
       const translatedBlock = { ...block }
 
       // Translate based on block type

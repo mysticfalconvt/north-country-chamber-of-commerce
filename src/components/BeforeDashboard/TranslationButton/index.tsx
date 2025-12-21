@@ -12,7 +12,6 @@ export const TranslationButton: React.FC = () => {
   const [progress, setProgress] = useState<string[]>([])
   const [showProgress, setShowProgress] = useState(false)
   const [forceMode, setForceMode] = useState(false)
-  const [isMigrating, setIsMigrating] = useState(false)
 
   const handleBackfill = async () => {
     setIsRunning(true)
@@ -83,7 +82,7 @@ export const TranslationButton: React.FC = () => {
       
         <button
           className={`${baseClass}__button`}
-          disabled={isRunning || isMigrating}
+          disabled={isRunning}
           onClick={handleBackfill}
           type="button"
         >
@@ -94,7 +93,7 @@ export const TranslationButton: React.FC = () => {
             type="checkbox"
             checked={forceMode}
             onChange={(e) => setForceMode(e.target.checked)}
-            disabled={isRunning || isMigrating}
+            disabled={isRunning}
           />
           <span>Force re-translate (overwrite existing)</span>
         </label>

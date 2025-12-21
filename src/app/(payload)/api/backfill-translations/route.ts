@@ -36,7 +36,7 @@ async function checkFrenchField(
     // If it's an array, check if it has content
     if (Array.isArray(fieldValue)) return fieldValue.length > 0
     return !!fieldValue
-  } catch (e) {
+  } catch (_e) {
     return false // French version doesn't exist
   }
 }
@@ -49,7 +49,7 @@ function removeIds(obj: any): any {
     return obj.map(item => removeIds(item))
   }
   if (obj && typeof obj === 'object') {
-    const { id, ...rest } = obj
+    const { id: _id, ...rest } = obj
     const cleaned: any = {}
     for (const [key, value] of Object.entries(rest)) {
       cleaned[key] = removeIds(value)
@@ -65,7 +65,7 @@ function removeIds(obj: any): any {
  * When updating with locale 'fr', we pass direct values for French
  * Note: We remove 'id' fields as Payload doesn't allow updating them
  */
-async function translatePageLayout(englishLayout: any[], force: boolean): Promise<any[]> {
+async function translatePageLayout(englishLayout: any[]): Promise<any[]> {
   const translated = await Promise.all(
     englishLayout.map(async (block) => {
       const translatedBlock = { ...block }
@@ -192,7 +192,6 @@ export async function POST(req: Request) {
 
           for (const page of pages.docs) {
             // Check if French version exists (only if not forcing)
-            let hasFrenchContent = false
             if (!force) {
               try {
                 const frenchPage = await payload.findByID({
@@ -203,8 +202,8 @@ export async function POST(req: Request) {
                 })
 
                 // Check if French title exists
-                const hasFrenchTitle = frenchPage.title && 
-                  (typeof frenchPage.title === 'string' || frenchPage.title.fr)
+                // When fetching with locale 'fr', title is a string, not a localized object
+                const hasFrenchTitle = frenchPage.title && typeof frenchPage.title === 'string'
                 
                 // Check if French layout exists
                 const hasFrenchLayout = frenchPage.layout && 
@@ -215,7 +214,7 @@ export async function POST(req: Request) {
                   stats.pages.skipped++
                   continue // Skip this page
                 }
-              } catch (e) {
+              } catch (_error) {
                 // French page might not exist yet, continue with translation
               }
             }
@@ -223,8 +222,8 @@ export async function POST(req: Request) {
             let needsUpdate = false
             const updateData: any = {}
 
-            // Get page title - when fetched with locale 'en', title might be string or { en, fr }
-            const pageTitle = typeof page.title === 'string' ? page.title : page.title?.en
+            // Get page title - when fetched with locale 'en', title is a string
+            const pageTitle = typeof page.title === 'string' ? page.title : (page.title as { en?: string })?.en
             if (pageTitle) {
               // Check if we need to translate title
               if (force) {
@@ -240,13 +239,14 @@ export async function POST(req: Request) {
                     locale: 'fr',
                     depth: 0,
                   })
-                  const frenchTitle = typeof frenchPage.title === 'string' ? frenchPage.title : frenchPage.title?.fr
+                  // When fetching with locale 'fr', title is a string
+                  const frenchTitle = typeof frenchPage.title === 'string' ? frenchPage.title : (frenchPage.title as { fr?: string })?.fr
                   if (!frenchTitle) {
                     sendProgress(controller, `  Translating page "${pageTitle}" title...`)
                     updateData.title = await translateToFrench(pageTitle)
                     needsUpdate = true
                   }
-                } catch (e) {
+                } catch (_error) {
                   // No French version, translate it
                   sendProgress(controller, `  Translating page "${pageTitle}" title...`)
                   updateData.title = await translateToFrench(pageTitle)
@@ -275,13 +275,13 @@ export async function POST(req: Request) {
                     stats.pages.skipped++
                     continue // Skip this page if we don't need to update title either
                   }
-                } catch (e) {
+                } catch (_error) {
                   // French page might not exist yet, continue with translation
                 }
               }
 
               sendProgress(controller, `  Translating page "${pageTitle || page.id}" layout (${page.layout.length} blocks)...`)
-              updateData.layout = await translatePageLayout(page.layout, force)
+              updateData.layout = await translatePageLayout(page.layout)
               needsUpdate = true
             }
 
@@ -312,7 +312,8 @@ export async function POST(req: Request) {
           stats.posts.total = posts.totalDocs
 
           for (const post of posts.docs) {
-            const postTitle = typeof post.title === 'string' ? post.title : post.title?.en
+            // When fetching with locale 'en', title is a string
+            const postTitle = typeof post.title === 'string' ? post.title : (post.title as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
@@ -357,7 +358,8 @@ export async function POST(req: Request) {
           stats.events.total = events.totalDocs
 
           for (const event of events.docs) {
-            const eventTitle = typeof event.title === 'string' ? event.title : event.title?.en
+            // When fetching with locale 'en', title is a string
+            const eventTitle = typeof event.title === 'string' ? event.title : (event.title as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
@@ -400,7 +402,8 @@ export async function POST(req: Request) {
           stats.announcements.total = announcements.totalDocs
 
           for (const announcement of announcements.docs) {
-            const announcementTitle = typeof announcement.title === 'string' ? announcement.title : announcement.title?.en
+            // When fetching with locale 'en', title is a string
+            const announcementTitle = typeof announcement.title === 'string' ? announcement.title : (announcement.title as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
@@ -479,7 +482,8 @@ export async function POST(req: Request) {
           stats.signatureEvents.total = signatureEvents.totalDocs
 
           for (const sigEvent of signatureEvents.docs) {
-            const sigEventName = typeof sigEvent.name === 'string' ? sigEvent.name : sigEvent.name?.en
+            // When fetching with locale 'en', name is a string
+            const sigEventName = typeof sigEvent.name === 'string' ? sigEvent.name : (sigEvent.name as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
