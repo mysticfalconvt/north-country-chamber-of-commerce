@@ -28,16 +28,28 @@ if [ "$NEED_BUILD" = "1" ]; then
 
     # Run payload CLI directly via node instead of through pnpm
     # This avoids pnpm lifecycle errors
-    if ! node ./node_modules/payload/dist/bin/index.js migrate; then
+    node ./node_modules/payload/dist/bin/index.js migrate 2>&1 | tee /tmp/migrate.log
+    MIGRATE_STATUS=$?
+
+    if [ $MIGRATE_STATUS -ne 0 ]; then
       echo "================================"
-      echo "ERROR: Migration failed!"
+      echo "ERROR: Migration failed with status $MIGRATE_STATUS"
       echo "================================"
+      cat /tmp/migrate.log
       exit 1
     fi
 
-    echo "================================"
-    echo "Migrations completed successfully"
-    echo "================================"
+    # Check if migrations actually ran by looking for CREATE or ALTER statements
+    if grep -q "CREATE\|ALTER\|No pending migrations" /tmp/migrate.log; then
+      echo "================================"
+      echo "Migrations completed successfully"
+      echo "================================"
+    else
+      echo "================================"
+      echo "WARNING: Migration command succeeded but no SQL detected!"
+      echo "================================"
+      cat /tmp/migrate.log
+    fi
 
     # Check if database needs seeding by checking if header/footer globals exist
     echo "Checking if database needs seeding..."
