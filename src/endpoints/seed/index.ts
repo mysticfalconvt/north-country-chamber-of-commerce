@@ -83,10 +83,21 @@ export const seed = async ({
     collections.map((collection) => payload.db.deleteMany({ collection, req, where: {} })),
   )
 
+  // Delete versions - catch errors in case schema is out of sync
   await Promise.all(
     collections
       .filter((collection) => Boolean(payload.collections[collection].config.versions))
-      .map((collection) => payload.db.deleteVersions({ collection, req, where: {} })),
+      .map(async (collection) => {
+        try {
+          await payload.db.deleteVersions({ collection, req, where: {} })
+        } catch (error) {
+          // If version deletion fails (e.g., schema mismatch), log and continue
+          // This can happen if migrations haven't been run yet
+          payload.logger.warn(
+            `Failed to delete versions for ${collection}, continuing anyway: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          )
+        }
+      }),
   )
 
   payload.logger.info(`— Seeding demo author and user...`)
