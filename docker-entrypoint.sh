@@ -4,9 +4,10 @@ set -e
 echo "Waiting for database to be ready..."
 sleep 5
 
-# Ensure .next directory exists and is writable
+# Ensure .next and public/media directories exist and are writable
 mkdir -p /app/.next
-chown -R nextjs:nodejs /app/.next
+mkdir -p /app/public/media
+chown -R nextjs:nodejs /app/.next /app/public/media
 
 # Check if we need to build (as root, before switching users)
 if [ ! -d "/app/.next/standalone" ]; then
