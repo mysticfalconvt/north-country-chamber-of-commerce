@@ -26,15 +26,12 @@ if [ "$NEED_BUILD" = "1" ]; then
     echo "Running database migrations..."
     echo "================================"
 
-    # Run migrations and capture full output
-    pnpm payload migrate 2>&1 | tee /tmp/migrate.log
-    MIGRATE_EXIT=${PIPESTATUS[0]}
-
-    if [ $MIGRATE_EXIT -ne 0 ]; then
+    # Run payload CLI directly via node instead of through pnpm
+    # This avoids pnpm lifecycle errors
+    if ! node ./node_modules/payload/dist/bin/index.js migrate; then
       echo "================================"
-      echo "ERROR: Migration failed with exit code $MIGRATE_EXIT"
+      echo "ERROR: Migration failed!"
       echo "================================"
-      cat /tmp/migrate.log
       exit 1
     fi
 
