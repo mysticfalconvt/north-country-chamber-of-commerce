@@ -8,65 +8,67 @@ sleep 5
 mkdir -p /app/.next
 chown -R nextjs:nodejs /app/.next
 
-# Switch to nextjs user for remaining operations
-su-exec nextjs sh <<'EOSU'
-set -e
-
-# Check if we need to build
+# Check if we need to build (as root, before switching users)
 if [ ! -d "/app/.next/standalone" ]; then
-  echo "================================"
-  echo "Running database migrations..."
-  echo "================================"
-  cd /app
-
-  MIGRATE_OUTPUT=$(pnpm payload migrate 2>&1)
-  MIGRATE_EXIT=$?
-
-  echo "$MIGRATE_OUTPUT"
-
-  if [ $MIGRATE_EXIT -ne 0 ]; then
-    echo "================================"
-    echo "ERROR: Migration failed!"
-    echo "================================"
-    echo "Check logs above for details."
-    exit 1
-  fi
-
-  echo "================================"
-  echo "Migrations completed successfully"
-  echo "================================"
-
-  echo "Running Next.js build with database access..."
-  BUILD_OUTPUT=$(pnpm run build 2>&1)
-  BUILD_EXIT=$?
-
-  echo "$BUILD_OUTPUT"
-
-  if [ $BUILD_EXIT -ne 0 ]; then
-    echo "================================"
-    echo "ERROR: Build failed!"
-    echo "================================"
-    echo "Check logs above for details."
-    exit 1
-  fi
-
-  echo "================================"
-  echo "Build completed successfully"
-  echo "================================"
-
-  echo "Copying public and static files for standalone mode..."
-  cp -r /app/public /app/.next/standalone/public
-  mkdir -p /app/.next/standalone/.next
-  cp -r /app/.next/static /app/.next/standalone/.next/static
-
-  echo "Setup complete!"
+  NEED_BUILD=1
 else
+  NEED_BUILD=0
   echo "Build already exists, skipping migration and build..."
+fi
+
+# Switch to nextjs user for remaining operations
+if [ "$NEED_BUILD" = "1" ]; then
+  su-exec nextjs sh -c '
+    set -e
+    cd /app
+
+    echo "================================"
+    echo "Running database migrations..."
+    echo "================================"
+
+    if ! pnpm payload migrate; then
+      echo "================================"
+      echo "ERROR: Migration failed!"
+      echo "================================"
+      exit 1
+    fi
+
+    echo "================================"
+    echo "Migrations completed successfully"
+    echo "================================"
+
+    echo "Running Next.js build with database access..."
+
+    if ! pnpm run build; then
+      echo "================================"
+      echo "ERROR: Build failed!"
+      echo "================================"
+      exit 1
+    fi
+
+    echo "================================"
+    echo "Build completed successfully"
+    echo "================================"
+
+    echo "Copying public and static files for standalone mode..."
+    cp -r /app/public /app/.next/standalone/public
+    mkdir -p /app/.next/standalone/.next
+    cp -r /app/.next/static /app/.next/standalone/.next/static
+
+    echo "Setup complete!"
+  '
+
+  # Check if the build command succeeded
+  if [ $? -ne 0 ]; then
+    echo "Build or migration failed, exiting..."
+    exit 1
+  fi
 fi
 
 echo "================================"
 echo "Starting application..."
 echo "================================"
+
+# Start the application as nextjs user
 cd /app/.next/standalone
-exec node server.js
-EOSU
+exec su-exec nextjs node server.js
