@@ -70,7 +70,8 @@ EOF
       echo "================================"
 
       # Run seed script to populate globals and initial data
-      if ! node scripts/seed.js; then
+      # Use tsx to run TypeScript directly
+      if ! pnpm exec tsx scripts/seed.ts; then
         echo "================================"
         echo "ERROR: Seeding failed!"
         echo "================================"
