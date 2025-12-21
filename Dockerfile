@@ -52,15 +52,16 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
     echo 'if [ ! -d "/app/.next/standalone" ]; then' >> /docker-entrypoint.sh && \
     echo '  echo "Running Next.js build with database access..."' >> /docker-entrypoint.sh && \
     echo '  cd /app && pnpm run build' >> /docker-entrypoint.sh && \
+    echo '  echo "Copying public and static files for standalone mode..."' >> /docker-entrypoint.sh && \
+    echo '  cp -r /app/public /app/.next/standalone/public' >> /docker-entrypoint.sh && \
+    echo '  mkdir -p /app/.next/standalone/.next' >> /docker-entrypoint.sh && \
+    echo '  cp -r /app/.next/static /app/.next/standalone/.next/static' >> /docker-entrypoint.sh && \
     echo 'else' >> /docker-entrypoint.sh && \
     echo '  echo "Build already exists, skipping..."' >> /docker-entrypoint.sh && \
     echo 'fi' >> /docker-entrypoint.sh && \
     echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Running Payload migrations..."' >> /docker-entrypoint.sh && \
-    echo 'cd /app && node node_modules/@payloadcms/db-postgres/dist/bin.js || echo "Migrations complete"' >> /docker-entrypoint.sh && \
-    echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting application..."' >> /docker-entrypoint.sh && \
-    echo 'cd /app && exec node .next/standalone/server.js' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting application (Payload will auto-migrate)..."' >> /docker-entrypoint.sh && \
+    echo 'cd /app/.next/standalone && exec node server.js' >> /docker-entrypoint.sh && \
     echo 'EOSU' >> /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
