@@ -598,11 +598,17 @@ export const seed = async ({
     payload.create({
       collection: 'pages',
       depth: 0,
+      context: {
+        disableRevalidate: true,
+      },
       data: home({ heroImage: imageHomeDoc, metaImage: image2Doc }),
     }),
     payload.create({
       collection: 'pages',
       depth: 0,
+      context: {
+        disableRevalidate: true,
+      },
       data: contactPageData({ contactForm: contactForm }),
     }),
   ])
@@ -612,6 +618,9 @@ export const seed = async ({
   await Promise.all([
     payload.updateGlobal({
       slug: 'header',
+      context: {
+        disableRevalidate: true,
+      },
       data: {
         navItems: [
           {
@@ -657,6 +666,9 @@ export const seed = async ({
     }),
     payload.updateGlobal({
       slug: 'footer',
+      context: {
+        disableRevalidate: true,
+      },
       data: {
         navItems: [
           {
