@@ -256,42 +256,98 @@ export async function POST(req: Request) {
             }
 
             // Check and translate hero
+            // Hero has localized fields: richText and links[].link.label
+            // When updating with locale 'fr', we need to provide the full structure
             if (page.hero) {
-              const heroNeedsTranslation = force || !(await checkFrenchField(payload, 'pages', page.id, 'hero', force))
-              
-              if (heroNeedsTranslation) {
-                const translatedHero: any = { ...page.hero }
+              let heroNeedsUpdate = false
+              const heroUpdate: any = {
+                type: page.hero.type, // Keep non-localized fields
+                media: page.hero.media, // Keep media reference
+              }
 
-                // Translate hero richText (localized)
-                if (page.hero.richText) {
+              // Check if hero richText needs translation
+              if (page.hero.richText) {
+                const needsRichText = force || !(await checkFrenchField(payload, 'pages', page.id, 'hero.richText', force))
+                if (needsRichText) {
                   sendProgress(controller, `  Translating page "${pageTitle || page.id}" hero richText...`)
-                  translatedHero.richText = await translateLexicalJSON(page.hero.richText)
+                  heroUpdate.richText = await translateLexicalJSON(page.hero.richText)
+                  heroNeedsUpdate = true
+                } else {
+                  // Keep existing richText if not translating
+                  heroUpdate.richText = page.hero.richText
+                }
+              }
+
+              // Check if hero links need translation
+              if (page.hero.links && Array.isArray(page.hero.links) && page.hero.links.length > 0) {
+                // Check if French links exist
+                let needsLinks = force
+                if (!force) {
+                  try {
+                    const frenchPage = await payload.findByID({
+                      collection: 'pages',
+                      id: page.id,
+                      locale: 'fr',
+                      depth: 0,
+                    })
+                    const hasFrenchLinks = frenchPage.hero?.links && 
+                      Array.isArray(frenchPage.hero.links) && 
+                      frenchPage.hero.links.length > 0 &&
+                      frenchPage.hero.links.every((link: any) => {
+                        const label = typeof link.link?.label === 'string' ? link.link.label : (link.link?.label as { fr?: string })?.fr
+                        return !!label
+                      })
+                    needsLinks = !hasFrenchLinks
+                  } catch (_error) {
+                    needsLinks = true
+                  }
                 }
 
-                // Translate hero links (link.label is localized)
-                if (page.hero.links && Array.isArray(page.hero.links)) {
+                if (needsLinks) {
                   sendProgress(controller, `  Translating page "${pageTitle || page.id}" hero links (${page.hero.links.length} links)...`)
-                  translatedHero.links = await Promise.all(
+                  heroUpdate.links = await Promise.all(
                     page.hero.links.map(async (linkItem: any) => {
-                      const translatedLink = { ...linkItem }
-                      if (linkItem.link?.label) {
-                        // When fetching with locale 'en', label is a string
-                        const label = typeof linkItem.link.label === 'string' 
-                          ? linkItem.link.label 
-                          : (linkItem.link.label as { en?: string })?.en
-                        if (label) {
-                          translatedLink.link = {
-                            ...linkItem.link,
-                            label: await translateToFrench(label),
-                          }
-                        }
+                      // Build the link structure - keep all non-localized fields, translate label
+                      const translatedLink: any = {
+                        link: {
+                          type: linkItem.link?.type || 'reference',
+                          newTab: linkItem.link?.newTab ?? false,
+                          appearance: linkItem.link?.appearance || 'default',
+                        },
                       }
+                      
+                      // Handle reference vs custom URL
+                      if (linkItem.link?.type === 'custom' && linkItem.link?.url) {
+                        translatedLink.link.url = linkItem.link.url
+                      } else if (linkItem.link?.type === 'reference' && linkItem.link?.reference) {
+                        translatedLink.link.reference = linkItem.link.reference
+                      }
+                      
+                      // Translate the label (localized field, required)
+                      // When fetching with locale 'en', label is a string
+                      const label = typeof linkItem.link?.label === 'string' 
+                        ? linkItem.link.label 
+                        : (linkItem.link?.label as { en?: string })?.en
+                      
+                      if (label) {
+                        translatedLink.link.label = await translateToFrench(label)
+                      } else {
+                        // If no label found, use empty string (shouldn't happen but be safe)
+                        translatedLink.link.label = ''
+                      }
+                      
                       return translatedLink
                     })
                   )
+                  heroNeedsUpdate = true
+                } else {
+                  // Keep existing links if not translating
+                  heroUpdate.links = page.hero.links
                 }
+              }
 
-                updateData.hero = removeIds(translatedHero)
+              if (heroNeedsUpdate || (page.hero.richText && !heroUpdate.richText) || (page.hero.links && !heroUpdate.links)) {
+                updateData.hero = heroUpdate
                 needsUpdate = true
               }
             }
