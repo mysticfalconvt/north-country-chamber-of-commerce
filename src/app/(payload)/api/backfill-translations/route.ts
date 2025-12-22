@@ -306,7 +306,9 @@ export async function POST(req: Request) {
                 if (needsLinks) {
                   sendProgress(controller, `  Translating page "${pageTitle || page.id}" hero links (${page.hero.links.length} links)...`)
                   heroUpdate.links = await Promise.all(
-                    page.hero.links.map(async (linkItem: any) => {
+                    page.hero.links.map(async (linkItem: any, index: number) => {
+                      console.log(`[backfill-translations] Original link ${index + 1}:`, JSON.stringify(linkItem, null, 2))
+                      
                       // Build the link structure - keep all non-localized fields, translate label
                       const translatedLink: any = {
                         link: {
@@ -329,16 +331,24 @@ export async function POST(req: Request) {
                         ? linkItem.link.label 
                         : (linkItem.link?.label as { en?: string })?.en
                       
+                      console.log(`[backfill-translations] Link ${index + 1} original label:`, label)
+                      
                       if (label) {
-                        translatedLink.link.label = await translateToFrench(label)
+                        const translatedLabel = await translateToFrench(label)
+                        translatedLink.link.label = translatedLabel
+                        console.log(`[backfill-translations] Link ${index + 1} translated label:`, translatedLabel)
                       } else {
                         // If no label found, use empty string (shouldn't happen but be safe)
+                        console.warn(`[backfill-translations] Link ${index + 1} has no label!`)
                         translatedLink.link.label = ''
                       }
+                      
+                      console.log(`[backfill-translations] Link ${index + 1} final structure:`, JSON.stringify(translatedLink, null, 2))
                       
                       return translatedLink
                     })
                   )
+                  console.log(`[backfill-translations] All translated links:`, JSON.stringify(heroUpdate.links, null, 2))
                   heroNeedsUpdate = true
                 } else {
                   // Keep existing links if not translating
@@ -383,15 +393,25 @@ export async function POST(req: Request) {
             }
 
             if (needsUpdate) {
-              await payload.update({
-                collection: 'pages',
-                id: page.id,
-                data: updateData,
-                locale: 'fr',
-                context: { skipTranslation: true },
-              })
-              stats.pages.translated++
-              sendProgress(controller, `  ✓ Translated page "${pageTitle || page.id}"`)
+              console.log(`[backfill-translations] Updating page ${page.id} with data:`, JSON.stringify(updateData, null, 2))
+              try {
+                await payload.update({
+                  collection: 'pages',
+                  id: page.id,
+                  data: updateData,
+                  locale: 'fr',
+                  context: { skipTranslation: true },
+                })
+                stats.pages.translated++
+                sendProgress(controller, `  ✓ Translated page "${pageTitle || page.id}"`)
+              } catch (error: any) {
+                console.error(`[backfill-translations] Error updating page ${page.id}:`, error)
+                console.error(`[backfill-translations] Error details:`, JSON.stringify(error, null, 2))
+                if (error.data) {
+                  console.error(`[backfill-translations] Validation errors:`, JSON.stringify(error.data, null, 2))
+                }
+                throw error
+              }
             } else {
               stats.pages.skipped++
             }
