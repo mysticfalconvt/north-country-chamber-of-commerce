@@ -9,36 +9,48 @@ mkdir -p /app/.next
 mkdir -p /app/public/media
 chown -R nextjs:nodejs /app/.next /app/public/media
 
-# Check if we need to build (as root, before switching users)
+# Always run migrations first (as nextjs user)
+su-exec nextjs sh -c '
+  set -e
+  cd /app
+
+  echo "================================"
+  echo "Running database migrations..."
+  echo "================================"
+
+  # Run migrations with pnpm - let it fail loudly if there are real issues
+  if pnpm payload migrate; then
+    echo "================================"
+    echo "Migrations completed successfully"
+    echo "================================"
+  else
+    MIGRATE_EXIT_CODE=$?
+    echo "================================"
+    echo "ERROR: Migration failed with exit code $MIGRATE_EXIT_CODE"
+    echo "================================"
+    exit 1
+  fi
+'
+
+# Check if migrations succeeded
+if [ $? -ne 0 ]; then
+  echo "Migrations failed, exiting..."
+  exit 1
+fi
+
+# Check if we need to build
 if [ ! -d "/app/.next/standalone" ]; then
   NEED_BUILD=1
 else
   NEED_BUILD=0
-  echo "Build already exists, skipping migration and build..."
+  echo "Build already exists, skipping build..."
 fi
 
-# Switch to nextjs user for remaining operations
+# Run build and seeding if needed (as nextjs user)
 if [ "$NEED_BUILD" = "1" ]; then
   su-exec nextjs sh -c '
     set -e
     cd /app
-
-    echo "================================"
-    echo "Running database migrations..."
-    echo "================================"
-
-    # Run migrations with pnpm - let it fail loudly if there are real issues
-    if pnpm payload migrate; then
-      echo "================================"
-      echo "Migrations completed successfully"
-      echo "================================"
-    else
-      MIGRATE_EXIT_CODE=$?
-      echo "================================"
-      echo "ERROR: Migration failed with exit code $MIGRATE_EXIT_CODE"
-      echo "================================"
-      exit 1
-    fi
 
     # Check if database needs seeding by checking for any existing data
     # Can be disabled entirely with DISABLE_AUTO_SEED=true environment variable
