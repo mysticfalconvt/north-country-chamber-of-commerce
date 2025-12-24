@@ -126,9 +126,14 @@ export async function Footer() {
           {/* Copyright */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <p>{copyright || '© 2025 North Country Chamber of Commerce. All rights reserved.'}</p>
-            <p className="text-xs">
-              Built with <span className="text-red-500">♥</span> for Vermont
-            </p>
+            <div className="flex items-center gap-4">
+              <Link href="/admin" className="text-xs hover:text-foreground transition-colors">
+                Admin
+              </Link>
+              <p className="text-xs">
+                Built with <span className="text-red-500">♥</span> for Vermont
+              </p>
+            </div>
           </div>
         </div>
       </Container>

@@ -7,11 +7,40 @@
 
 A bilingual (English/French) web application for a local chamber of commerce, featuring a public-facing website and a content management system for chamber staff and member businesses.
 
-**Project Type:** Pro Bono  
-**Primary Developer:** [Your Name]  
-**Client:** Vermont's North Country Chamber of Commerce  
-**Location:** Newport, VT (Northeast Kingdom)  
+**Project Type:** Pro Bono
+**Primary Developer:** [Your Name]
+**Client:** Vermont's North Country Chamber of Commerce
+**Location:** Newport, VT (Northeast Kingdom)
 **Current Website:** https://www.vtnorthcountry.org (WordPress)
+
+### Key Features (PM Requirements)
+
+**Content Management:**
+- ✅ Announcements and event updates system
+- ✅ Full access for chamber staff to update content
+- ✅ Bilingual content with AI-powered translation
+
+**Membership Management:**
+- ✅ Accept membership applications with business information
+- ✅ Upload and display member business logos
+- ✅ Online payment processing for membership dues (Stripe)
+- ✅ Multiple membership tiers with different benefits
+
+**Business Directory:**
+- ✅ Full member management capabilities
+- ✅ Sort and filter by business location (city, address)
+- ✅ Sort and filter by business type (category)
+- ✅ Sort by business name (A-Z)
+- ✅ Enhanced member advertising with links to business websites
+- ✅ Support for member business hours, photos, and descriptions
+- ✅ Map view of business locations
+
+**Events Calendar:**
+- ✅ Chamber events and announcements
+- ✅ Accept event submissions from external organizations
+- ✅ Signature event pages (ChiliFest, AquaFest) with seasonal info
+- ✅ Application system for entering signature events
+- ✅ Event filtering by type (chamber, community, external)
 
 ---
 
@@ -25,9 +54,11 @@ A bilingual (English/French) web application for a local chamber of commerce, fe
 | Styling | Tailwind CSS | Mobile-first approach |
 | Components | shadcn/ui | Accessible, customizable |
 | Icons | Lucide React | Consistent icon set |
+| Maps | OpenStreetMap + react-openlayers | Interactive business location maps |
 | Hosting | VPS via Coolify | Self-managed |
 | File Storage | Local disk | Persistent volume in Coolify |
 | Email | Resend / Nodemailer | Transactional emails |
+| Payments | Stripe | Membership dues and event payments |
 
 ---
 
@@ -266,42 +297,56 @@ Authentication and access control for admin panel.
 | business | relationship | Link to business (for members) |
 
 ### Businesses
-Member directory listings.
+Member directory listings with enhanced advertising capabilities.
 
 | Field | Type | Localized | Notes |
 |-------|------|-----------|-------|
 | name | text | No | Business name |
 | slug | text | No | URL-safe identifier |
-| description | richText | Yes | |
-| logo | upload | No | |
-| coverImage | upload | No | |
-| category | relationship | No | Link to categories |
-| address | text | No | |
-| phone | text | No | |
-| email | email | No | |
-| website | text | No | |
+| description | richText | Yes | Full business description |
+| logo | upload | No | Business logo for directory |
+| coverImage | upload | No | Hero image for business page |
+| category | relationship | No | Link to categories (multiple) |
+| address | text | No | Street address |
+| city | text | No | City/Town |
+| state | text | No | State (default: VT) |
+| zipCode | text | No | ZIP code |
+| coordinates | group | No | lat/lng for map display |
+| phone | text | No | Primary phone |
+| email | email | No | Public contact email |
+| website | text | No | Business website URL |
 | socialLinks | array | No | Facebook, Instagram, etc. |
-| memberSince | date | No | |
+| membershipTier | select | No | basic, premium, featured |
+| memberSince | date | No | Membership start date |
+| membershipExpires | date | No | Renewal tracking |
 | featured | checkbox | No | Show on homepage |
-| status | select | No | active, inactive |
+| advertisingSlots | array | No | Gallery images, videos, offers |
+| hoursOfOperation | richText | Yes | Business hours |
+| status | select | No | active, inactive, pending |
 
 ### Events
-Community and business events.
+Community and business events (chamber + external organizations).
 
 | Field | Type | Localized | Notes |
 |-------|------|-----------|-------|
-| title | text | Yes | |
-| slug | text | No | |
-| description | richText | Yes | |
-| image | upload | No | |
-| date | date | No | |
-| startTime | text | No | |
-| endTime | text | No | |
-| location | text | No | |
+| title | text | Yes | Event title |
+| slug | text | No | URL-safe identifier |
+| description | richText | Yes | Full event description |
+| image | upload | No | Event image/poster |
+| date | date | No | Event date |
+| endDate | date | No | For multi-day events |
+| startTime | text | No | Start time |
+| endTime | text | No | End time |
+| location | text | No | Venue/location name |
+| address | text | No | Full address |
 | business | relationship | No | Hosting business (optional) |
-| category | select | No | community, networking, workshop, etc. |
-| featured | checkbox | No | |
+| organizer | text | No | For external organizations |
+| category | select | No | chamber, community, networking, workshop, festival |
+| featured | checkbox | No | Highlight on homepage |
+| recurring | checkbox | No | Is this a recurring event? |
+| externalUrl | text | No | Link to external registration/info |
 | status | select | No | draft, published, cancelled |
+| submittedBy | relationship | No | User who submitted (tracking) |
 
 ### Pages
 Static content pages.
@@ -328,33 +373,86 @@ News and updates from the chamber.
 | status | select | No | draft, published |
 
 ### Signature Events
-Dedicated pages for recurring annual events.
+Dedicated pages for recurring annual events with applications.
 
 | Field | Type | Localized | Notes |
 |-------|------|-----------|-------|
 | name | text | Yes | e.g., "Hot Rod ChiliFest" |
-| slug | text | No | |
-| description | richText | Yes | |
+| slug | text | No | URL identifier |
+| description | richText | Yes | Event overview |
 | logo | upload | No | Event-specific branding |
 | gallery | array | No | Photo gallery |
 | schedule | richText | Yes | Day-of schedule |
 | vendors | richText | Yes | Vendor list |
 | rules | richText | Yes | Rules & regulations |
+| applicationForm | richText | Yes | Instructions & requirements |
+| applicationOpen | checkbox | No | Accept applications? |
+| applicationDeadline | date | No | Deadline for entries |
 | year | number | No | Current year's info |
+| contactEmail | email | No | Event coordinator email |
 | status | select | No | upcoming, active, archived |
 
 **Known Signature Events:**
 - Hot Rod ChiliFest / Chili Challenge Cookoff
 - AquaFest
 
+### Event Applications
+Applications for signature events (ChiliFest, etc.)
+
+| Field | Type | Notes |
+|-------|------|-------|
+| event | relationship | Link to Signature Event |
+| applicantName | text | Individual/Business name |
+| applicantEmail | email | Contact email |
+| applicantPhone | text | Contact phone |
+| business | relationship | Link to member business (optional) |
+| category | text | Entry category (e.g., "Hot Rod", "Chili") |
+| details | richText | Application details/questions |
+| attachments | upload | Supporting files |
+| status | select | pending, approved, rejected |
+| submittedDate | date | Auto-populated |
+| notes | richText | Internal chamber notes |
+
+### Memberships
+Membership tiers and payment tracking.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| business | relationship | Link to business |
+| tier | select | basic, premium, featured |
+| amount | number | Annual dues amount |
+| startDate | date | Membership period start |
+| endDate | date | Membership expiration |
+| autoRenew | checkbox | Recurring payment enabled |
+| stripeCustomerId | text | Stripe customer reference |
+| stripeSubscriptionId | text | Stripe subscription reference |
+| paymentStatus | select | pending, paid, overdue, cancelled |
+| paymentMethod | select | stripe, check, cash, comp |
+| invoiceUrl | text | Link to Stripe invoice |
+| notes | richText | Internal notes |
+
+### Membership Tiers (Global Config)
+Define available membership levels.
+
+| Field | Type | Localized | Notes |
+|-------|------|-----------|-------|
+| name | text | Yes | Tier name (e.g., "Premium") |
+| slug | text | No | tier-identifier |
+| description | richText | Yes | Benefits description |
+| annualPrice | number | No | Price in dollars |
+| features | array | Yes | List of features included |
+| advertisingSlots | number | No | Number of ad slots |
+| featured | checkbox | No | Featured directory placement |
+| active | checkbox | No | Currently accepting |
+
 ### Categories
 Business categories for directory.
 
 | Field | Type | Localized | Notes |
 |-------|------|-----------|-------|
-| name | text | Yes | |
-| slug | text | No | |
-| description | textarea | Yes | |
+| name | text | Yes | Category name |
+| slug | text | No | URL identifier |
+| description | textarea | Yes | Category description |
 | icon | text | No | Lucide icon name |
 
 **Existing Categories to Migrate:**
@@ -403,14 +501,20 @@ Shared media library.
 | Users | CRUD | Read own | Read own | — |
 | Businesses | CRUD | CRUD | Update own | Read |
 | Events | CRUD | CRUD | CRUD own | Read published |
+| Event Applications | CRUD | Read all | Read own | Create |
+| Memberships | CRUD | Read all | Read own | — |
+| Membership Tiers | CRUD | Read | Read | Read |
+| Signature Events | CRUD | CRUD | Read | Read published |
 | Pages | CRUD | CRUD | — | Read published |
 | Announcements | CRUD | CRUD | — | Read published |
 | Categories | CRUD | Read | Read | Read |
 | Media | CRUD | CRUD | Create, Read | Read |
 
-**Approval Workflow (TBD with chamber):**
-- Do business-submitted events require approval before publishing?
-- Can businesses edit their profiles directly or submit change requests?
+**Approval Workflow:**
+- Business-submitted events: Auto-publish for members, staff can moderate
+- Business profile updates: Direct edit (member businesses can update own)
+- Event applications: Public can submit, staff reviews/approves
+- Membership applications: Require staff approval before activation
 
 ---
 
@@ -419,19 +523,28 @@ Shared media library.
 ### Public Pages
 
 ```
-/                       Homepage
-/about                  About the chamber
-/join                   Membership information
-/contact                Contact form
-/businesses             Member directory
-/businesses/[slug]      Individual business page
-/events                 Events calendar/list
-/events/[slug]          Individual event page
-/news                   Announcements list
-/news/[slug]            Individual announcement
-/[slug]                 Dynamic pages (from Pages collection)
+/                           Homepage
+/about                      About the chamber
+/join                       Membership information & tiers
+/join/apply                 Membership application form
+/join/payment               Membership payment (Stripe)
+/contact                    Contact form
+/businesses                 Member directory (sortable by name, location, category)
+/businesses?category=eat    Filter by category
+/businesses?location=newport Filter by city/location
+/businesses/[slug]          Individual business page with advertising
+/events                     Events calendar/list (all events)
+/events?type=chamber        Filter by event type
+/events/submit              Submit external event
+/events/[slug]              Individual event page
+/signature-events           List of annual signature events
+/signature-events/[slug]    Signature event detail page
+/signature-events/[slug]/apply Application form (ChiliFest, etc.)
+/news                       Announcements list
+/news/[slug]                Individual announcement
+/[slug]                     Dynamic pages (from Pages collection)
 
-/fr/...                 French versions of all above
+/fr/...                     French versions of all above
 ```
 
 ### Admin Routes
@@ -441,6 +554,47 @@ Shared media library.
 /admin/collections/...  Collection management
 /admin/globals/...      Global settings
 ```
+
+---
+
+## Business Directory Features
+
+### Sorting Options
+- **By Name:** Alphabetical A-Z or Z-A
+- **By Location:** Group by city/town, then alphabetically
+- **By Category:** Group by business type
+- **By Membership Date:** Newest members first
+- **Featured First:** Premium/featured members at top
+
+### Filtering Options
+- **Category Filter:** Single or multiple categories
+- **Location Filter:** By city, town, or ZIP code
+- **Membership Tier:** Filter by basic, premium, featured
+- **Search:** Free text search across name, description, keywords
+
+### Display Modes
+- **Grid View:** Cards with logo, name, category, location
+- **List View:** Compact rows with key info
+- **Map View:** Interactive OpenStreetMap with pins for each business
+  - Built with react-openlayers
+  - Click pin to see business card popup
+  - Filter and sort apply to map view
+  - Clustering for nearby businesses
+  - Custom marker styling for membership tiers
+  - Zoom to Newport, VT region by default
+
+### Business Detail Page
+- Logo and cover image
+- Full business description (rich text, localized)
+- Contact info (address, phone, email, website)
+- Hours of operation
+- Social media links
+- Advertising slots (gallery images, promotional content)
+- Map with location pin
+- "Get Directions" link
+- Related businesses (same category)
+- Member since badge
+- Membership tier badge (if premium/featured)
 
 ---
 
@@ -518,6 +672,8 @@ Mobile-first approach: design for mobile, enhance for larger screens.
 
 | Service | Purpose | Cost |
 |---------|---------|------|
+| Stripe | Payment processing | 2.9% + $0.30 per transaction |
+| OpenStreetMap | Map tiles and geocoding | Free (open source) |
 | Resend | Transactional email | Free tier (100/day) |
 | Plausible/Umami | Analytics | Self-hosted (free) or ~$9/mo |
 | Backblaze B2 | Backup storage | ~$0.005/GB/mo |
@@ -552,6 +708,11 @@ NEXT_PUBLIC_SITE_URL=https://...
 
 # Email
 RESEND_API_KEY=...
+
+# Payments
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
 # Translation (self-hosted LLM)
 TRANSLATION_API_URL=http://192.168.x.x:11434/v1
@@ -619,7 +780,11 @@ NEXT_PUBLIC_GA_ID=...
 ### Phase 2: Core Collections (Week 3-4)
 - [ ] Businesses collection + access control
 - [ ] Events collection
+- [ ] Event Applications collection
+- [ ] Signature Events collection
 - [ ] Categories collection
+- [ ] Memberships collection
+- [ ] Membership Tiers global
 - [ ] Pages collection with block builder
 - [ ] Announcements collection
 - [ ] Header/Footer globals
@@ -627,22 +792,35 @@ NEXT_PUBLIC_GA_ID=...
 ### Phase 3: Public Frontend (Week 5-6)
 - [ ] Layout components (header, footer, navigation)
 - [ ] Homepage with dynamic content
-- [ ] Business directory + detail pages
-- [ ] Events listing + detail pages
+- [ ] Business directory with sort/filter (name, location, category)
+- [ ] Business detail pages with enhanced advertising
+- [ ] Business location map integration
+- [ ] Events listing + detail pages (with filters)
+- [ ] Event submission form (for external organizations)
+- [ ] Signature events pages (ChiliFest, AquaFest)
+- [ ] Event application forms (ChiliFest entries, etc.)
 - [ ] News/announcements pages
 - [ ] Static pages (about, join, contact)
 - [ ] Contact form
 
-### Phase 4: Localization & Polish (Week 7)
+### Phase 4: Payment Integration (Week 7)
+- [ ] Stripe account setup and configuration
+- [ ] Membership application form with Stripe integration
+- [ ] Payment processing for membership dues
+- [ ] Webhook handlers for payment events
+- [ ] Member dashboard for payment history
+- [ ] Renewal reminders and notifications
+
+### Phase 5: Localization & Polish (Week 8)
 - [ ] French translations for all content
 - [ ] Locale switcher component
 - [ ] SEO optimization
 - [ ] Performance optimization
 - [ ] Mobile testing and refinements
 
-### Phase 5: Launch Prep (Week 8)
+### Phase 6: Launch Prep (Week 9)
 - [ ] Content migration (if applicable)
-- [ ] Chamber staff training
+- [ ] Chamber staff training (2 sessions: content + payments)
 - [ ] Documentation
 - [ ] Production deployment
 - [ ] DNS cutover
@@ -794,22 +972,52 @@ Questions to cover before development begins.
 ## Ongoing Operations
 
 - [ ] Who will manage content after launch?
-- [ ] Do you need training? (Recommend 1-2 hours)
+- [ ] Do you need training? (Recommend 2-3 hours: content management + payment processing)
 - [ ] What happens if something breaks? (Support expectations)
 - [ ] Who handles member support questions about their logins?
 - [ ] Any plans for future features? (Mobile app, e-commerce, etc.)
 
+## Payments & Membership
+
+- [ ] Do you currently accept credit card payments? Do you have a Stripe account?
+- [ ] What are your current membership tiers and pricing?
+- [ ] How often are dues collected? (Annual, monthly, quarterly?)
+- [ ] Do you offer any complimentary memberships?
+- [ ] Should renewals be automatic (recurring) or manual?
+- [ ] Who handles membership payment questions and issues?
+- [ ] What information do you need on the membership application?
+- [ ] Do members need approval before being charged?
+- [ ] What happens when a membership expires? Grace period?
+- [ ] Do you offer proration for mid-year joins?
+
+## Event Applications
+
+- [ ] Which events require applications? (ChiliFest confirmed, others?)
+- [ ] What information do you collect on event applications?
+- [ ] Is there an application fee? Should it be collected online?
+- [ ] Who reviews and approves applications?
+- [ ] What's the typical timeline for application review?
+- [ ] Do applicants need to be chamber members?
+- [ ] Should applicants receive automated confirmation emails?
+
 ## Nice-to-Haves (Future Phases)
 
-- [ ] Online membership payment/dues via Stripe?
-- [ ] Job board for member businesses?
-- [ ] Deals/coupons/specials from member businesses?
-- [ ] Newsletter integration (Mailchimp, Constant Contact)?
-- [ ] Event RSVPs or ticketing for ChiliFest/AquaFest?
-- [ ] Member-only content areas (beyond profile editing)?
-- [ ] Interactive map of member businesses?
-- [ ] Integration with Vermont tourism sites?
-- [ ] Photo gallery/contest functionality?
+**Now In Scope (Phase 1):**
+- ✅ Online membership payment/dues via Stripe
+- ✅ Interactive map of member businesses
+- ✅ Event application system (ChiliFest, AquaFest)
+
+**Future Considerations:**
+- [ ] Job board for member businesses
+- [ ] Deals/coupons/specials from member businesses
+- [ ] Newsletter integration (Mailchimp, Constant Contact)
+- [ ] Event RSVPs or ticketing for ChiliFest/AquaFest
+- [ ] Member-only content areas (exclusive resources, discounts)
+- [ ] Integration with Vermont tourism sites
+- [ ] Photo gallery/contest functionality
+- [ ] Mobile app for members
+- [ ] QR code check-in for events
+- [ ] Business analytics dashboard (profile views, clicks)
 
 ---
 
@@ -825,5 +1033,9 @@ Once discussed, both parties should confirm:
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: [Date]*
+*Document Version: 1.1*
+*Last Updated: 2025-12-23*
+
+**Changelog:**
+- v1.1 (2025-12-23): Added PM requirements - payment processing, enhanced business directory with sorting/filtering/maps (OpenStreetMap + react-openlayers), event application system, membership tiers
+- v1.0: Initial planning document

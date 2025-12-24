@@ -82,6 +82,44 @@ export const SignatureEvents: CollectionConfig = {
       },
     },
     {
+      name: 'applicationForm',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description: 'Application instructions & requirements',
+      },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'applicationOpen',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description: 'Accept applications?',
+          },
+        },
+        {
+          name: 'applicationDeadline',
+          type: 'date',
+          admin: {
+            description: 'Deadline for entries',
+            date: {
+              pickerAppearance: 'dayOnly',
+            },
+          },
+        },
+      ],
+    },
+    {
+      name: 'contactEmail',
+      type: 'email',
+      admin: {
+        description: 'Event coordinator email',
+      },
+    },
+    {
       type: 'row',
       fields: [
         {

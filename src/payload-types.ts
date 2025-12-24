@@ -71,6 +71,7 @@ export interface Config {
     posts: Post;
     businesses: Business;
     events: Event;
+    'event-applications': EventApplication;
     announcements: Announcement;
     'signature-events': SignatureEvent;
     media: Media;
@@ -97,6 +98,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'event-applications': EventApplicationsSelect<false> | EventApplicationsSelect<true>;
     announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
     'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -480,7 +482,35 @@ export interface Business {
   logo?: (number | null) | Media;
   coverImage?: (number | null) | Media;
   category: (number | Category)[];
+  /**
+   * Street address
+   */
   address?: string | null;
+  /**
+   * City or town
+   */
+  city?: string | null;
+  /**
+   * State (e.g., VT)
+   */
+  state?: string | null;
+  /**
+   * ZIP code
+   */
+  zipCode?: string | null;
+  /**
+   * Coordinates for map display. Leave empty to geocode from address.
+   */
+  coordinates?: {
+    /**
+     * Latitude (e.g., 44.9369)
+     */
+    latitude?: number | null;
+    /**
+     * Longitude (e.g., -72.2052)
+     */
+    longitude?: number | null;
+  };
   phone?: string | null;
   email?: string | null;
   /**
@@ -494,19 +524,78 @@ export interface Business {
         id?: string | null;
       }[]
     | null;
+  /**
+   * When membership started
+   */
   memberSince?: string | null;
+  /**
+   * Membership expiration date
+   */
+  membershipExpires?: string | null;
+  /**
+   * Membership level determines benefits
+   */
+  membershipTier?: ('basic' | 'premium' | 'featured') | null;
   /**
    * Show on homepage
    */
   featured?: boolean | null;
   /**
+   * Gallery images, videos, or promotional content for business page
+   */
+  advertisingSlots?:
+    | {
+        type: 'image' | 'video' | 'offer';
+        media?: (number | null) | Media;
+        /**
+         * YouTube or Vimeo URL
+         */
+        videoUrl?: string | null;
+        offerTitle?: string | null;
+        offerDescription?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        /**
+         * Optional caption for this slot
+         */
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Business hours (e.g., Mon-Fri: 9am-5pm)
+   */
+  hoursOfOperation?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
    * Membership status
    */
   membershipStatus: 'active' | 'inactive';
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
   slug: string;
   updatedAt: string;
   createdAt: string;
@@ -879,6 +968,10 @@ export interface Event {
   image?: (number | null) | Media;
   date: string;
   /**
+   * For multi-day events
+   */
+  endDate?: string | null;
+  /**
    * e.g., "10:00 AM"
    */
   startTime?: string | null;
@@ -886,14 +979,65 @@ export interface Event {
    * e.g., "2:00 PM"
    */
   endTime?: string | null;
+  /**
+   * Venue/location name
+   */
   location?: string | null;
+  /**
+   * Street address
+   */
+  address?: string | null;
+  /**
+   * City or town
+   */
+  city?: string | null;
+  /**
+   * State (e.g., VT)
+   */
+  state?: string | null;
+  /**
+   * ZIP code
+   */
+  zipCode?: string | null;
+  /**
+   * Auto-populated from address. Leave empty to geocode automatically, or enter manually to override.
+   */
+  coordinates?: {
+    /**
+     * Latitude (e.g., 44.9369)
+     */
+    latitude?: number | null;
+    /**
+     * Longitude (e.g., -72.2052)
+     */
+    longitude?: number | null;
+  };
   /**
    * Hosting business (optional)
    */
   business?: (number | null) | Business;
-  category?: ('community' | 'networking' | 'workshop' | 'fundraiser' | 'social' | 'other') | null;
+  /**
+   * For external organizations
+   */
+  organizer?: string | null;
+  category?: ('chamber' | 'community' | 'networking' | 'workshop' | 'festival' | 'fundraiser' | 'social') | null;
+  /**
+   * Is this a recurring event?
+   */
+  recurring?: boolean | null;
+  /**
+   * Link to external registration/info page
+   */
+  externalUrl?: string | null;
+  /**
+   * Highlight on homepage
+   */
   featured?: boolean | null;
-  eventStatus: 'published' | 'cancelled';
+  eventStatus: 'draft' | 'published' | 'cancelled';
+  /**
+   * User who submitted this event (for tracking)
+   */
+  submittedBy?: (number | null) | User;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -905,12 +1049,32 @@ export interface Event {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "announcements".
+ * via the `definition` "event-applications".
  */
-export interface Announcement {
+export interface EventApplication {
   id: number;
-  title: string;
-  content: {
+  /**
+   * Which signature event is this application for?
+   */
+  event: number | SignatureEvent;
+  /**
+   * Individual or business name
+   */
+  applicantName: string;
+  applicantEmail: string;
+  applicantPhone: string;
+  /**
+   * Link to member business (if applicable)
+   */
+  business?: (number | null) | Business;
+  /**
+   * Entry category (e.g., "Hot Rod", "Chili", "Vendor")
+   */
+  category?: string | null;
+  /**
+   * Application details/questions
+   */
+  details: {
     root: {
       type: string;
       children: {
@@ -925,17 +1089,42 @@ export interface Announcement {
     };
     [k: string]: unknown;
   };
-  image?: (number | null) | Media;
-  publishDate: string;
-  featured?: boolean | null;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * Supporting files (images, documents, etc.)
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  attachments?: (number | Media)[] | null;
+  /**
+   * Application status
+   */
+  status: 'pending' | 'approved' | 'rejected' | 'waitlist';
+  /**
+   * Auto-populated on submission
+   */
+  submittedDate?: string | null;
+  /**
+   * Internal chamber notes (not visible to applicant)
+   */
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * User who submitted this application
+   */
+  submittedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1027,10 +1216,74 @@ export interface SignatureEvent {
     [k: string]: unknown;
   } | null;
   /**
+   * Application instructions & requirements
+   */
+  applicationForm?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Accept applications?
+   */
+  applicationOpen?: boolean | null;
+  /**
+   * Deadline for entries
+   */
+  applicationDeadline?: string | null;
+  /**
+   * Event coordinator email
+   */
+  contactEmail?: string | null;
+  /**
    * Current year's info
    */
   year: number;
   eventStatus: 'upcoming' | 'active' | 'archived';
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcements".
+ */
+export interface Announcement {
+  id: number;
+  title: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  image?: (number | null) | Media;
+  publishDate: string;
+  featured?: boolean | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -1245,6 +1498,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'event-applications';
+        value: number | EventApplication;
       } | null)
     | ({
         relationTo: 'announcements';
@@ -1505,6 +1762,15 @@ export interface BusinessesSelect<T extends boolean = true> {
   coverImage?: T;
   category?: T;
   address?: T;
+  city?: T;
+  state?: T;
+  zipCode?: T;
+  coordinates?:
+    | T
+    | {
+        latitude?: T;
+        longitude?: T;
+      };
   phone?: T;
   email?: T;
   website?: T;
@@ -1516,9 +1782,22 @@ export interface BusinessesSelect<T extends boolean = true> {
         id?: T;
       };
   memberSince?: T;
+  membershipExpires?: T;
+  membershipTier?: T;
   featured?: T;
+  advertisingSlots?:
+    | T
+    | {
+        type?: T;
+        media?: T;
+        videoUrl?: T;
+        offerTitle?: T;
+        offerDescription?: T;
+        caption?: T;
+        id?: T;
+      };
+  hoursOfOperation?: T;
   membershipStatus?: T;
-  generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1533,18 +1812,53 @@ export interface EventsSelect<T extends boolean = true> {
   description?: T;
   image?: T;
   date?: T;
+  endDate?: T;
   startTime?: T;
   endTime?: T;
   location?: T;
+  address?: T;
+  city?: T;
+  state?: T;
+  zipCode?: T;
+  coordinates?:
+    | T
+    | {
+        latitude?: T;
+        longitude?: T;
+      };
   business?: T;
+  organizer?: T;
   category?: T;
+  recurring?: T;
+  externalUrl?: T;
   featured?: T;
   eventStatus?: T;
+  submittedBy?: T;
   generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-applications_select".
+ */
+export interface EventApplicationsSelect<T extends boolean = true> {
+  event?: T;
+  applicantName?: T;
+  applicantEmail?: T;
+  applicantPhone?: T;
+  business?: T;
+  category?: T;
+  details?: T;
+  attachments?: T;
+  status?: T;
+  submittedDate?: T;
+  notes?: T;
+  submittedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1579,6 +1893,10 @@ export interface SignatureEventsSelect<T extends boolean = true> {
   schedule?: T;
   vendors?: T;
   rules?: T;
+  applicationForm?: T;
+  applicationOpen?: T;
+  applicationDeadline?: T;
+  contactEmail?: T;
   year?: T;
   eventStatus?: T;
   generateSlug?: T;

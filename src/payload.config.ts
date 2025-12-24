@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 import { Announcements } from './collections/Announcements'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
+import { EventApplications } from './collections/EventApplications'
 import { Events } from './collections/Events'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
@@ -85,6 +86,7 @@ export default buildConfig({
     Posts,
     Businesses,
     Events,
+    EventApplications,
     Announcements,
     SignatureEvents,
     Media,
