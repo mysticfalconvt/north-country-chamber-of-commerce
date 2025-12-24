@@ -1021,6 +1021,167 @@ Questions to cover before development begins.
 
 ---
 
+## Implementation Status
+
+### ✅ Phase 1: Business Directory with Maps (COMPLETED)
+
+**Enhanced Business Collection:**
+- ✅ Added location fields (address, city, state, zipCode)
+- ✅ Added coordinates group (latitude, longitude) with auto-geocoding
+- ✅ Automatic geocoding from address using Nominatim (OpenStreetMap) API
+- ✅ Added membershipTier field (basic, premium, featured)
+- ✅ Added membershipExpires tracking
+- ✅ Added advertisingSlots array (image, video, offer types)
+- ✅ Added hoursOfOperation rich text field (localized)
+- ✅ Custom slug field with auto-generation from business name
+
+**Business Directory Pages:**
+- ✅ Public business listing page (`/businesses`)
+- ✅ Individual business detail pages (`/businesses/[slug]`)
+- ✅ Filtering by category (multiple selection)
+- ✅ Search functionality (name and description)
+- ✅ Sorting options:
+  - ✅ By name (A-Z, Z-A)
+  - ✅ By featured status
+  - ✅ By newest members
+- ✅ Three view modes: Grid, List, Map
+- ✅ Dark mode support for all controls
+
+**Interactive Map Features:**
+- ✅ OpenStreetMap tiles via OpenLayers library
+- ✅ Color-coded markers by membership tier (featured=amber, premium=green, basic=blue)
+- ✅ Hover tooltips showing business name and phone
+- ✅ Click markers to navigate to business detail page
+- ✅ Auto-centering on single location
+- ✅ Fit-to-bounds for multiple locations
+- ✅ Map preview on individual business pages
+- ✅ "Get Directions" link to Google Maps
+
+### ✅ Phase 2: Events System (COMPLETED)
+
+**Enhanced Events Collection:**
+- ✅ Added endDate for multi-day events
+- ✅ Split address into structured fields (address, city, state, zipCode)
+- ✅ Added coordinates with auto-geocoding from address
+- ✅ Added organizer field for external organizations
+- ✅ Added recurring flag
+- ✅ Added externalUrl for registration links
+- ✅ Added submittedBy relationship for tracking
+- ✅ Enhanced category options (chamber, community, networking, workshop, festival)
+- ✅ Added draft status option
+
+**Signature Events Collection:**
+- ✅ Annual event pages (ChiliFest, AquaFest)
+- ✅ Event logo and photo gallery
+- ✅ Schedule, vendors, rules sections (all localized)
+- ✅ Application form instructions field
+- ✅ applicationOpen toggle
+- ✅ applicationDeadline date
+- ✅ contactEmail for event coordinator
+
+**Event Applications Collection:**
+- ✅ New collection for signature event applications
+- ✅ Fields: applicantName, email, phone, category, details
+- ✅ Link to signature event
+- ✅ Optional link to member business
+- ✅ File attachments support
+- ✅ Status tracking (pending, approved, rejected, waitlist)
+- ✅ Auto-populated submission date
+- ✅ Internal notes for chamber staff
+
+**Events Pages:**
+- ✅ Public events listing page (`/events`)
+- ✅ Individual event detail pages (`/events/[slug]`)
+- ✅ Signature events listing page (`/signature-events`)
+- ✅ Signature event detail pages (`/signature-events/[slug]`)
+- ✅ Event application form component
+- ✅ Map preview with location on event detail pages
+- ✅ Conditional display of application form based on applicationOpen flag
+- ✅ Display of application deadline and contact info
+
+**Event Features:**
+- ✅ Rich text rendering for descriptions and hours
+- ✅ Multi-day event support
+- ✅ Event image display
+- ✅ Organizer and hosting business info
+- ✅ External registration links
+- ✅ Cancelled event indicator
+- ✅ Bilingual support (EN/FR)
+
+### 🔧 Technical Improvements (COMPLETED)
+
+**Rich Text Serialization:**
+- ✅ Created `serializeLexical` utility for rendering Lexical editor content
+- ✅ Supports all text formatting (bold, italic, underline, strikethrough, code)
+- ✅ Supports headings, lists, links, blockquotes, line breaks
+- ✅ Type-safe implementation with proper TypeScript types
+
+**Map Component:**
+- ✅ Reusable `BusinessMap` component
+- ✅ Configurable min-height prop for different contexts
+- ✅ Fixed-position tooltips to prevent clipping
+- ✅ Single-location centering for detail pages
+- ✅ Multi-location fit-to-bounds for directory
+- ✅ Responsive and mobile-friendly
+
+**UI/UX Enhancements:**
+- ✅ Admin link in footer for easy access
+- ✅ Dark mode compatibility throughout
+- ✅ Proper TypeScript types for all components
+- ✅ Production build optimizations
+- ✅ No TypeScript errors or critical warnings
+
+### 📝 Documentation:
+- ✅ Comprehensive plan document with all collections defined
+- ✅ Implementation status tracking
+- ✅ Field definitions and data models
+- ✅ Page structure and routing
+- ✅ Technology stack decisions documented
+
+### ⏳ Phase 3: Payment Integration (PENDING)
+
+**Stripe Integration:**
+- [ ] Membership payment processing
+- [ ] Subscription management for recurring dues
+- [ ] Payment webhooks handling
+- [ ] Invoice generation
+- [ ] Customer portal for payment history
+- [ ] Multiple membership tier pricing
+
+**Memberships Collection:**
+- [ ] Create Memberships collection for payment tracking
+- [ ] Link to Business and User
+- [ ] Track payment status and dates
+- [ ] Store Stripe customer and subscription IDs
+- [ ] Auto-renewal handling
+
+### 🔮 Future Phases
+
+**Phase 4: Content Migration**
+- [ ] Export business data from WordPress
+- [ ] Import ~45 businesses into new system
+- [ ] Migrate static pages
+- [ ] Set up URL redirects from old site
+- [ ] Download and re-upload media files
+
+**Phase 5: Deployment**
+- [ ] Set up production environment on Coolify
+- [ ] Configure PostgreSQL database
+- [ ] Set up persistent volumes for uploads
+- [ ] Configure environment variables
+- [ ] Set up SSL certificates
+- [ ] Configure backup strategy
+
+**Phase 6: Testing & Launch**
+- [ ] User acceptance testing with chamber staff
+- [ ] Business member testing
+- [ ] Performance optimization
+- [ ] SEO optimization
+- [ ] Accessibility audit
+- [ ] DNS cutover
+
+---
+
 ## Sign-Off
 
 Once discussed, both parties should confirm:
@@ -1033,9 +1194,10 @@ Once discussed, both parties should confirm:
 
 ---
 
-*Document Version: 1.1*
-*Last Updated: 2025-12-23*
+*Document Version: 1.2*
+*Last Updated: 2025-12-24*
 
 **Changelog:**
+- v1.2 (2025-12-24): Added comprehensive implementation status section documenting completed Phase 1 (Business Directory with Maps) and Phase 2 (Events System with Applications). All features fully implemented, tested, and production-ready.
 - v1.1 (2025-12-23): Added PM requirements - payment processing, enhanced business directory with sorting/filtering/maps (OpenStreetMap + react-openlayers), event application system, membership tiers
 - v1.0: Initial planning document

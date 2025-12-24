@@ -40,9 +40,14 @@ if [ "$NEED_BUILD" = "1" ]; then
       exit 1
     fi
 
-    # Check if database needs seeding by checking if header/footer globals exist
-    echo "Checking if database needs seeding..."
-    cat > /tmp/check-seed.js <<'EOF'
+    # Check if database needs seeding by checking for any existing data
+    # Can be disabled entirely with DISABLE_AUTO_SEED=true environment variable
+    if [ "$DISABLE_AUTO_SEED" = "true" ]; then
+      echo "Auto-seeding disabled via DISABLE_AUTO_SEED environment variable"
+      NEEDS_SEED="false"
+    else
+      echo "Checking if database needs seeding..."
+      cat > /tmp/check-seed.js <<'EOF'
 import { getPayload } from 'payload'
 
 (async () => {
@@ -50,20 +55,33 @@ import { getPayload } from 'payload'
     const configModule = await import('./src/payload.config.js')
     const config = configModule.default
     const payload = await getPayload({ config: await config })
-    const header = await payload.findGlobal({ slug: 'header' })
-    // If header has navItems, assume database is seeded
-    if (header && header.navItems && header.navItems.length > 0) {
+
+    // Check multiple indicators that database is already populated
+    const [header, users, categories] = await Promise.all([
+      payload.findGlobal({ slug: 'header' }).catch(() => null),
+      payload.find({ collection: 'users', limit: 1 }).catch(() => null),
+      payload.find({ collection: 'categories', limit: 1 }).catch(() => null),
+    ])
+
+    // If any collection has data or globals are configured, skip seeding
+    const hasHeader = header && header.navItems && header.navItems.length > 0
+    const hasUsers = users && users.docs && users.docs.length > 0
+    const hasCategories = categories && categories.docs && categories.docs.length > 0
+
+    if (hasHeader || hasUsers || hasCategories) {
       console.log('false')
     } else {
       console.log('true')
     }
   } catch (e) {
+    // On any error, default to seeding (for initial setup)
     console.log('true')
   }
   process.exit(0)
 })()
 EOF
-    NEEDS_SEED=$(node /tmp/check-seed.js 2>/dev/null || echo "true")
+      NEEDS_SEED=$(node /tmp/check-seed.js 2>/dev/null || echo "true")
+    fi
 
     if [ "$NEEDS_SEED" = "true" ]; then
       echo "================================"

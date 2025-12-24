@@ -35,6 +35,9 @@ services:
       PAYLOAD_SECRET: change_this_to_a_secure_32_character_minimum_secret_key
       PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3997
 
+      # Seeding - disable auto-seed in production after initial setup
+      DISABLE_AUTO_SEED: true
+
       # Next.js
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
