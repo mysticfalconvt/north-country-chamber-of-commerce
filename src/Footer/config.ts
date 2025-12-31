@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
 import { revalidateFooter } from './hooks/revalidateFooter'
+import { ensureCoreLinks } from './hooks/ensureCoreLinks'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
@@ -23,9 +24,10 @@ export const Footer: GlobalConfig = {
                   appearances: false,
                 }),
               ],
-              maxRows: 8,
               admin: {
                 initCollapsed: true,
+                description:
+                  'Core quick links (Businesses, Events, Contact, etc.) are automatically added and cannot be removed. You can add additional custom links here.',
                 components: {
                   RowLabel: '@/Footer/RowLabel#RowLabel',
                 },
@@ -102,6 +104,7 @@ export const Footer: GlobalConfig = {
     },
   ],
   hooks: {
+    beforeChange: [ensureCoreLinks],
     afterChange: [revalidateFooter],
   },
 }

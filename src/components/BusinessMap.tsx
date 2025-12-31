@@ -29,7 +29,12 @@ interface BusinessMapProps {
   minHeight?: string
 }
 
-export function BusinessMap({ businesses, onBusinessClick, className = '', minHeight = '500px' }: BusinessMapProps) {
+export function BusinessMap({
+  businesses,
+  onBusinessClick,
+  className = '',
+  minHeight = '500px',
+}: BusinessMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<Map | null>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)

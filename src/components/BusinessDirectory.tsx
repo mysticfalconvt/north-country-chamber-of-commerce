@@ -80,7 +80,7 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
         name: b.name,
         latitude: b.coordinates!.latitude!,
         longitude: b.coordinates!.longitude!,
-        membershipTier: b.membershipTier || 'basic',
+        membershipTier: (b.membershipTier as 'basic' | 'featured' | 'premium') || 'basic',
         slug: b.slug!,
         phone: b.phone || undefined,
       }))
@@ -185,9 +185,7 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
       ) : (
         <div
           className={
-            viewMode === 'grid'
-              ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col gap-4'
+            viewMode === 'grid' ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'
           }
         >
           {filteredBusinesses.map((business) => (
@@ -215,7 +213,9 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
                         <div className="flex flex-wrap gap-2">
                           {business.category.map((cat) => (
                             <span
-                              key={typeof cat === 'string' || typeof cat === 'number' ? cat : cat.id}
+                              key={
+                                typeof cat === 'string' || typeof cat === 'number' ? cat : cat.id
+                              }
                               className="text-xs bg-muted px-2 py-1 rounded"
                             >
                               {typeof cat === 'string' || typeof cat === 'number' ? cat : cat.name}

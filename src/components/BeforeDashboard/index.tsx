@@ -14,18 +14,15 @@ const BeforeDashboard: React.FC = () => {
       </Banner>
       Here&apos;s what to do next:
       <ul className={`${baseClass}__instructions`}>
-      
         <li>
           <TranslationButton />
-          {' to automatically translate all existing English content to French. Only content without French translations will be translated.'}
+          {
+            ' to automatically translate all existing English content to French. Only content without French translations will be translated.'
+          }
         </li>
-        
-        
       </ul>
     </div>
   )
 }
 
 export default BeforeDashboard
-    
-

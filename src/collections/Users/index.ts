@@ -3,19 +3,21 @@ import type { CollectionConfig } from 'payload'
 import { authenticated } from '../../access/authenticated'
 import { isAdmin } from '../../access/isAdmin'
 import { isAdminOrSelf } from '../../access/isAdminOrSelf'
+import { adminPanelAccess } from '../../access/adminPanelAccess'
 
 export const Users: CollectionConfig = {
   slug: 'users',
   access: {
-    admin: authenticated,
+    admin: adminPanelAccess,
     create: isAdmin,
     delete: isAdmin,
     read: isAdminOrSelf,
     update: isAdminOrSelf,
   },
   admin: {
-    defaultColumns: ['name', 'email', 'role'],
+    defaultColumns: ['name', 'email', 'role', 'business'],
     useAsTitle: 'name',
+    description: 'User accounts for admin panel access and business member logins',
   },
   auth: true,
   fields: [

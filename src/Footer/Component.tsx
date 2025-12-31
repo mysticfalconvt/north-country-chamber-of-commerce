@@ -38,8 +38,8 @@ export async function Footer() {
                 <Logo className="h-10 w-auto" />
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Supporting local businesses and fostering economic growth in Vermont&apos;s Northeast
-                Kingdom.
+                Supporting local businesses and fostering economic growth in Vermont&apos;s
+                Northeast Kingdom.
               </p>
             </div>
 
@@ -51,7 +51,7 @@ export async function Footer() {
                   <CMSLink
                     key={i}
                     {...link}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors z-100"
                   />
                 ))}
               </nav>

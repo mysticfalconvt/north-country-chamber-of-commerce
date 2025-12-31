@@ -3,46 +3,75 @@ import type { CollectionConfig } from 'payload'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { isAdminOrOwner } from '../../access/isAdminOrOwner'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
+import { adminPanelAccess } from '../../access/adminPanelAccess'
 
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
   access: {
-    create: chamberStaffOrAdmin,
+    admin: adminPanelAccess,
+    // Allow business_member to create during self-registration, staff can always create
+    create: ({ req: { user } }) => {
+      if (!user) return false
+      return (
+        user.role === 'admin' || user.role === 'chamber_staff' || user.role === 'business_member'
+      )
+    },
     delete: chamberStaffOrAdmin,
     read: authenticatedOrPublished,
     update: isAdminOrOwner,
   },
   hooks: {
     beforeChange: [
-      async ({ data, req, operation }) => {
+      async ({ data, req, operation, context }) => {
+        req.payload.logger.info(
+          `[BUSINESS beforeChange] operation=${operation}, data=${JSON.stringify({
+            id: data.id,
+            name: data.name,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            zipCode: data.zipCode,
+            hasCoordinates: !!data.coordinates?.latitude,
+          })}, context=${JSON.stringify(context)}`,
+        )
+
+        // Auto-link business to the user creating it (for self-registration)
+        if (operation === 'create' && req.user?.role === 'business_member' && !data.owner) {
+          data.owner = req.user.id
+          req.payload.logger.info(`Auto-linked business ${data.name} to user ${req.user.id}`)
+        }
+
         // Auto-geocode address to get coordinates
-        if (operation === 'create' || operation === 'update') {
+        // Skip geocoding if called from membership hook to prevent hangs
+        if ((operation === 'create' || operation === 'update') && !context?.skipMembershipUpdate) {
+          req.payload.logger.info('[BUSINESS beforeChange] Checking if geocoding needed...')
           const hasAddressData = data.address || data.city || data.state || data.zipCode
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 
           // Only geocode if we have address data but no coordinates
           if (hasAddressData && !hasCoordinates) {
-            const addressParts = [
-              data.address,
-              data.city,
-              data.state,
-              data.zipCode,
-            ].filter(Boolean)
+            req.payload.logger.info('[BUSINESS beforeChange] Starting geocoding...')
+            const addressParts = [data.address, data.city, data.state, data.zipCode].filter(Boolean)
 
             if (addressParts.length > 0) {
               const addressString = addressParts.join(', ')
 
               try {
-                // Use Nominatim (OpenStreetMap) geocoding API
+                // Use Nominatim (OpenStreetMap) geocoding API with timeout
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
                 const response = await fetch(
                   `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressString)}&limit=1`,
                   {
                     headers: {
                       'User-Agent': 'North Country Chamber of Commerce',
                     },
+                    signal: controller.signal,
                   },
                 )
 
+                clearTimeout(timeoutId)
                 const results = await response.json()
 
                 if (results && results.length > 0) {
@@ -55,26 +84,64 @@ export const Businesses: CollectionConfig = {
                   data.coordinates.latitude = parseFloat(lat)
                   data.coordinates.longitude = parseFloat(lon)
 
-                  req.payload.logger.info(
-                    `Geocoded address for ${data.name}: ${lat}, ${lon}`,
-                  )
+                  req.payload.logger.info(`Geocoded address for ${data.name}: ${lat}, ${lon}`)
                 }
               } catch (error) {
-                req.payload.logger.error(
-                  `Failed to geocode address for ${data.name}: ${error}`,
-                )
+                req.payload.logger.error(`Failed to geocode address for ${data.name}: ${error}`)
               }
             }
           }
+        } else {
+          req.payload.logger.info(
+            '[BUSINESS beforeChange] Skipping geocoding (skipMembershipUpdate=true or wrong operation)',
+          )
         }
 
+        req.payload.logger.info('[BUSINESS beforeChange] Done, returning data')
         return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, req, operation, context }) => {
+        req.payload.logger.info(
+          `[BUSINESS afterChange] operation=${operation}, context=${JSON.stringify(context)}`,
+        )
+
+        // Prevent infinite loops from cascading hooks
+        if (context?.skipUserUpdate) {
+          req.payload.logger.info('[BUSINESS afterChange] Skipping (skipUserUpdate=true)')
+          return
+        }
+
+        // When a business is created by a business_member, link it back to their user account
+        if (operation === 'create' && doc.owner && req.user?.role === 'business_member') {
+          req.payload.logger.info('[BUSINESS afterChange] Linking business to user...')
+          try {
+            await req.payload.update({
+              collection: 'users',
+              id: doc.owner,
+              data: {
+                business: doc.id,
+              },
+              context: {
+                skipBusinessUpdate: true,
+              },
+            })
+
+            req.payload.logger.info(`Updated user ${doc.owner} with business ${doc.id}`)
+          } catch (error) {
+            req.payload.logger.error(`Failed to update user with business reference: ${error}`)
+          }
+        }
+
+        req.payload.logger.info('[BUSINESS afterChange] Done')
       },
     ],
   },
   admin: {
     defaultColumns: ['name', 'category', 'membershipStatus', 'memberSince'],
     useAsTitle: 'name',
+    description: 'Member business directory listings',
   },
   fields: [
     {
@@ -83,6 +150,30 @@ export const Businesses: CollectionConfig = {
       required: true,
       admin: {
         description: 'Business name (not localized)',
+      },
+    },
+    {
+      name: 'owner',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        description: 'User account that manages this business (optional)',
+        condition: (data, siblingData, { user }) => {
+          // Only show to admin and chamber staff
+          return user?.role === 'admin' || user?.role === 'chamber_staff'
+        },
+      },
+      access: {
+        read: ({ req: { user } }) => {
+          // Only admin and chamber staff can see who owns a business
+          return user?.role === 'admin' || user?.role === 'chamber_staff'
+        },
+        create: ({ req: { user } }) => {
+          return user?.role === 'admin' || user?.role === 'chamber_staff'
+        },
+        update: ({ req: { user } }) => {
+          return user?.role === 'admin' || user?.role === 'chamber_staff'
+        },
       },
     },
     {
@@ -107,6 +198,9 @@ export const Businesses: CollectionConfig = {
       relationTo: 'categories',
       hasMany: true,
       required: true,
+      admin: {
+        description: 'Business categories',
+      },
     },
     {
       name: 'address',
@@ -244,15 +338,9 @@ export const Businesses: CollectionConfig = {
       fields: [
         {
           name: 'membershipTier',
-          type: 'select',
-          options: [
-            { label: 'Basic', value: 'basic' },
-            { label: 'Premium', value: 'premium' },
-            { label: 'Featured', value: 'featured' },
-          ],
-          defaultValue: 'basic',
+          type: 'text',
           admin: {
-            description: 'Membership level determines benefits',
+            description: 'Membership tier slug (set automatically after payment)',
           },
         },
         {

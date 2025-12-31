@@ -58,22 +58,22 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold tracking-tight">{business.name}</h1>
-                {business.featured && (
-                  <span className="text-amber-500 text-xl">★</span>
-                )}
+                {business.featured && <span className="text-amber-500 text-xl">★</span>}
               </div>
-              {business.category && Array.isArray(business.category) && business.category.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {business.category.map((cat) => (
-                    <span
-                      key={typeof cat === 'string' || typeof cat === 'number' ? cat : cat.id}
-                      className="text-sm bg-muted px-3 py-1 rounded-full"
-                    >
-                      {typeof cat === 'string' || typeof cat === 'number' ? cat : cat.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {business.category &&
+                Array.isArray(business.category) &&
+                business.category.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {business.category.map((cat) => (
+                      <span
+                        key={typeof cat === 'string' || typeof cat === 'number' ? cat : cat.id}
+                        className="text-sm bg-muted px-3 py-1 rounded-full"
+                      >
+                        {typeof cat === 'string' || typeof cat === 'number' ? cat : cat.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -114,35 +114,39 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             )}
 
             {/* Advertising Slots */}
-            {business.advertisingSlots && Array.isArray(business.advertisingSlots) && business.advertisingSlots.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">Gallery & Offers</h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {business.advertisingSlots.map((slot, index) => (
-                    <Card key={index} className="p-4">
-                      {slot.type === 'image' && slot.media && typeof slot.media === 'object' && (
-                        <img
-                          src={slot.media.url || ''}
-                          alt={slot.caption || ''}
-                          className="w-full h-48 object-cover rounded-lg mb-2"
-                        />
-                      )}
-                      {slot.type === 'offer' && (
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-lg">{slot.offerTitle}</h3>
-                          {slot.offerDescription && (
-                            <div className="prose prose-sm dark:prose-invert">
-                              {serializeLexical(slot.offerDescription)}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {slot.caption && <p className="text-sm text-muted-foreground mt-2">{slot.caption}</p>}
-                    </Card>
-                  ))}
+            {business.advertisingSlots &&
+              Array.isArray(business.advertisingSlots) &&
+              business.advertisingSlots.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold">Gallery & Offers</h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {business.advertisingSlots.map((slot, index) => (
+                      <Card key={index} className="p-4">
+                        {slot.type === 'image' && slot.media && typeof slot.media === 'object' && (
+                          <img
+                            src={slot.media.url || ''}
+                            alt={slot.caption || ''}
+                            className="w-full h-48 object-cover rounded-lg mb-2"
+                          />
+                        )}
+                        {slot.type === 'offer' && (
+                          <div className="space-y-2">
+                            <h3 className="font-semibold text-lg">{slot.offerTitle}</h3>
+                            {slot.offerDescription && (
+                              <div className="prose prose-sm dark:prose-invert">
+                                {serializeLexical(slot.offerDescription)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {slot.caption && (
+                          <p className="text-sm text-muted-foreground mt-2">{slot.caption}</p>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Sidebar - Contact Info */}
@@ -198,24 +202,26 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 </div>
               )}
 
-              {business.socialLinks && Array.isArray(business.socialLinks) && business.socialLinks.length > 0 && (
-                <div className="pt-4 border-t">
-                  <h3 className="text-sm font-semibold mb-3">Follow Us</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {business.socialLinks.map((link, index) => (
-                      <a
-                        key={index}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1 bg-muted rounded-md text-sm hover:bg-muted/80 capitalize"
-                      >
-                        {link.platform}
-                      </a>
-                    ))}
+              {business.socialLinks &&
+                Array.isArray(business.socialLinks) &&
+                business.socialLinks.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-semibold mb-3">Follow Us</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {business.socialLinks.map((link, index) => (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1 bg-muted rounded-md text-sm hover:bg-muted/80 capitalize"
+                        >
+                          {link.platform}
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {business.membershipTier && business.membershipTier !== 'basic' && (
                 <div className="pt-4 border-t">
@@ -238,7 +244,8 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                         name: business.name,
                         latitude: business.coordinates.latitude,
                         longitude: business.coordinates.longitude,
-                        membershipTier: business.membershipTier || 'basic',
+                        membershipTier:
+                          (business.membershipTier as 'basic' | 'featured' | 'premium') || 'basic',
                         slug: business.slug!,
                         phone: business.phone || undefined,
                       },

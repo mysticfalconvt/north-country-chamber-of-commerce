@@ -7,6 +7,7 @@ import { useSelectedLayoutSegments } from 'next/navigation'
 import { PayloadAdminBar } from '@payloadcms/admin-bar'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 import './index.scss'
 
@@ -42,9 +43,33 @@ export const AdminBar: React.FC<{
   ) as keyof typeof collectionLabels
   const router = useRouter()
 
+  const [user, setUser] = useState<PayloadMeUser | null>(null)
+
   const onAuthChange = React.useCallback((user: PayloadMeUser) => {
     setShow(Boolean(user?.id))
+    setUser(user)
   }, [])
+
+  // For business members, show a custom portal bar instead of the admin bar
+  if (show && user?.role === 'business_member') {
+    return (
+      <div className={cn(baseClass, 'py-2 bg-blue-600 text-white')}>
+        <div className="container">
+          <div className="flex items-center justify-between">
+            <Link href="/portal" className="hover:underline font-medium">
+              Member Portal
+            </Link>
+            <div className="flex items-center gap-4">
+              <span className="text-sm">{user.email}</span>
+              <a href="/api/logout" className="hover:underline text-sm">
+                Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

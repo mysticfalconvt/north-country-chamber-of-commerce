@@ -80,8 +80,8 @@ export function BackfillTranslationsButton() {
           <div className="flex-1">
             <h3 className="text-lg font-semibold">Backfill French Translations</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Automatically translate all existing English content to French. This will only translate
-              content that doesn&apos;t already have French translations.
+              Automatically translate all existing English content to French. This will only
+              translate content that doesn&apos;t already have French translations.
             </p>
           </div>
         </div>

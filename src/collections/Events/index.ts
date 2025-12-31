@@ -3,11 +3,14 @@ import type { CollectionConfig } from 'payload'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
+import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
+import { sendEventApprovalNotification } from '../../utilities/email'
 
 export const Events: CollectionConfig = {
   slug: 'events',
   access: {
+    admin: adminPanelAccess,
     create: authenticated,
     delete: chamberStaffOrAdmin,
     read: authenticatedOrPublished,
@@ -18,18 +21,14 @@ export const Events: CollectionConfig = {
       async ({ data, req, operation }) => {
         // Auto-geocode address to get coordinates
         if (operation === 'create' || operation === 'update') {
-          const hasAddressData = data.address || data.city || data.state || data.zipCode || data.location
+          const hasAddressData =
+            data.address || data.city || data.state || data.zipCode || data.location
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 
           // Only geocode if we have address data but no coordinates
           if (hasAddressData && !hasCoordinates) {
             // Build address string from separate fields (preferred) or fall back to location
-            const addressParts = [
-              data.address,
-              data.city,
-              data.state,
-              data.zipCode,
-            ].filter(Boolean)
+            const addressParts = [data.address, data.city, data.state, data.zipCode].filter(Boolean)
 
             // If no structured address, use location field
             if (addressParts.length === 0 && data.location) {
@@ -76,6 +75,74 @@ export const Events: CollectionConfig = {
         }
 
         return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        // Send notification email when a new event is created with pending status
+        if (operation === 'create' && doc.eventStatus === 'pending') {
+          try {
+            // Get all admin and chamber_staff users
+            const adminUsers = await req.payload.find({
+              collection: 'users',
+              where: {
+                or: [{ role: { equals: 'admin' } }, { role: { equals: 'chamber_staff' } }],
+              },
+              limit: 100,
+            })
+
+            const adminEmails = adminUsers.docs
+              .map((user) => user.email)
+              .filter((email): email is string => !!email)
+
+            if (adminEmails.length === 0) {
+              req.payload.logger.warn(
+                'No admin or chamber staff emails found for event approval notification',
+              )
+              return
+            }
+
+            // Get business name if available
+            let businessName = 'Unknown Business'
+            if (doc.business) {
+              const businessId = typeof doc.business === 'number' ? doc.business : doc.business.id
+              const business = await req.payload.findByID({
+                collection: 'businesses',
+                id: businessId,
+              })
+              businessName = business.name || businessName
+            }
+
+            // Get submitter email
+            let submitterEmail = 'Unknown'
+            if (doc.submittedBy) {
+              const userId =
+                typeof doc.submittedBy === 'number' ? doc.submittedBy : doc.submittedBy.id
+              const user = await req.payload.findByID({
+                collection: 'users',
+                id: userId,
+              })
+              submitterEmail = user.email || submitterEmail
+            }
+
+            // Send notification email
+            await sendEventApprovalNotification({
+              eventId: doc.id,
+              eventTitle:
+                typeof doc.title === 'string' ? doc.title : doc.title?.en || 'Untitled Event',
+              eventDate: doc.date,
+              businessName,
+              submitterEmail,
+              adminEmails,
+            })
+
+            req.payload.logger.info(
+              `Sent event approval notification for "${doc.title}" to ${adminEmails.length} recipient(s)`,
+            )
+          } catch (error) {
+            req.payload.logger.error(`Failed to send event approval notification: ${error}`)
+          }
+        }
       },
     ],
   },
@@ -284,10 +351,11 @@ export const Events: CollectionConfig = {
           name: 'eventStatus',
           type: 'select',
           required: true,
-          defaultValue: 'published',
+          defaultValue: 'pending',
           options: [
-            { label: 'Draft', value: 'draft' },
+            { label: 'Pending Approval', value: 'pending' },
             { label: 'Published', value: 'published' },
+            { label: 'Draft', value: 'draft' },
             { label: 'Cancelled', value: 'cancelled' },
           ],
         },

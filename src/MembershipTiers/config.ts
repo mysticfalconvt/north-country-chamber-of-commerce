@@ -1,0 +1,131 @@
+import type { GlobalConfig } from 'payload'
+
+export const MembershipTiers: GlobalConfig = {
+  slug: 'membershipTiers',
+  label: 'Membership Tiers',
+  access: {
+    read: () => true, // Public can see tiers
+    update: ({ req: { user } }) => {
+      // Only admin and chamber_staff can edit tiers
+      return user?.role === 'admin' || user?.role === 'chamber_staff'
+    },
+  },
+  fields: [
+    {
+      name: 'tiers',
+      type: 'array',
+      label: 'Membership Tiers',
+      required: true,
+      minRows: 1,
+      admin: {
+        description: 'Define available membership levels and their benefits',
+        initCollapsed: true,
+      },
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          required: true,
+          localized: true,
+          admin: {
+            description: 'Display name (e.g., "Basic", "Premium", "Featured")',
+          },
+        },
+        {
+          name: 'slug',
+          type: 'text',
+          required: true,
+          unique: true,
+          admin: {
+            description:
+              'Internal identifier (e.g., "basic", "premium", "featured"). Must match Business membershipTier values.',
+          },
+        },
+        {
+          name: 'description',
+          type: 'richText',
+          required: true,
+          localized: true,
+          admin: {
+            description: 'Full description of benefits and features',
+          },
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'annualPrice',
+              type: 'number',
+              required: true,
+              admin: {
+                description: 'Annual membership price in dollars (e.g., 100 for $100)',
+              },
+            },
+            {
+              name: 'advertisingSlots',
+              type: 'number',
+              defaultValue: 0,
+              admin: {
+                description: 'Number of advertising slots on business page',
+              },
+            },
+          ],
+        },
+        {
+          name: 'features',
+          type: 'array',
+          label: 'Features',
+          required: true,
+          localized: true,
+          admin: {
+            description: 'List of benefits included in this tier',
+            initCollapsed: true,
+          },
+          fields: [
+            {
+              name: 'feature',
+              type: 'text',
+              required: true,
+              admin: {
+                description: 'Feature description (e.g., "Business directory listing")',
+              },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'featuredInDirectory',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                description: 'Show at top of directory listings',
+              },
+            },
+            {
+              name: 'active',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: {
+                description: 'Available for new sign-ups',
+              },
+            },
+          ],
+        },
+        {
+          name: 'stripePriceId',
+          type: 'text',
+          admin: {
+            description:
+              'Stripe Price ID for payment integration (leave empty until Stripe is configured)',
+            position: 'sidebar',
+          },
+        },
+      ],
+    },
+  ],
+  admin: {
+    description: 'Configure membership levels, pricing, and benefits',
+  },
+}

@@ -74,6 +74,7 @@ export interface Config {
     'event-applications': EventApplication;
     announcements: Announcement;
     'signature-events': SignatureEvent;
+    memberships: Membership;
     media: Media;
     categories: Category;
     users: User;
@@ -101,6 +102,7 @@ export interface Config {
     'event-applications': EventApplicationsSelect<false> | EventApplicationsSelect<true>;
     announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
     'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
+    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -122,10 +124,12 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    membershipTiers: MembershipTier;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    membershipTiers: MembershipTiersSelect<false> | MembershipTiersSelect<true>;
   };
   locale: 'en' | 'fr';
   user: User & {
@@ -428,6 +432,8 @@ export interface Category {
   createdAt: string;
 }
 /**
+ * User accounts for admin panel access and business member logins
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -455,6 +461,8 @@ export interface User {
   password?: string | null;
 }
 /**
+ * Member business directory listings
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "businesses".
  */
@@ -464,6 +472,10 @@ export interface Business {
    * Business name (not localized)
    */
   name: string;
+  /**
+   * User account that manages this business (optional)
+   */
+  owner?: (number | null) | User;
   description: {
     root: {
       type: string;
@@ -481,6 +493,9 @@ export interface Business {
   };
   logo?: (number | null) | Media;
   coverImage?: (number | null) | Media;
+  /**
+   * Business categories
+   */
   category: (number | Category)[];
   /**
    * Street address
@@ -533,9 +548,9 @@ export interface Business {
    */
   membershipExpires?: string | null;
   /**
-   * Membership level determines benefits
+   * Membership tier slug (set automatically after payment)
    */
-  membershipTier?: ('basic' | 'premium' | 'featured') | null;
+  membershipTier?: string | null;
   /**
    * Show on homepage
    */
@@ -1033,7 +1048,7 @@ export interface Event {
    * Highlight on homepage
    */
   featured?: boolean | null;
-  eventStatus: 'draft' | 'published' | 'cancelled';
+  eventStatus: 'pending' | 'published' | 'draft' | 'cancelled';
   /**
    * User who submitted this event (for tracking)
    */
@@ -1294,6 +1309,83 @@ export interface Announcement {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Track membership payments and renewal status
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships".
+ */
+export interface Membership {
+  id: number;
+  /**
+   * The business this membership belongs to
+   */
+  business: number | Business;
+  /**
+   * Membership tier slug (from MembershipTiers global)
+   */
+  tier: string;
+  /**
+   * Annual membership dues amount (in dollars)
+   */
+  amount: number;
+  /**
+   * Current payment status
+   */
+  paymentStatus: 'pending' | 'paid' | 'overdue' | 'cancelled' | 'refunded';
+  /**
+   * Membership period start date
+   */
+  startDate: string;
+  /**
+   * Membership expiration date
+   */
+  endDate: string;
+  /**
+   * Automatic renewal via Stripe subscription
+   */
+  autoRenew?: boolean | null;
+  /**
+   * How this membership was paid
+   */
+  paymentMethod: 'stripe' | 'check' | 'cash' | 'comp';
+  /**
+   * Stripe Customer ID (cus_xxxxx)
+   */
+  stripeCustomerId?: string | null;
+  /**
+   * Stripe Subscription ID (sub_xxxxx) for recurring payments
+   */
+  stripeSubscriptionId?: string | null;
+  /**
+   * Stripe Invoice ID (in_xxxxx)
+   */
+  stripeInvoiceId?: string | null;
+  /**
+   * Link to Stripe invoice/receipt
+   */
+  invoiceUrl?: string | null;
+  /**
+   * Internal notes (not visible to member)
+   */
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1510,6 +1602,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'signature-events';
         value: number | SignatureEvent;
+      } | null)
+    | ({
+        relationTo: 'memberships';
+        value: number | Membership;
       } | null)
     | ({
         relationTo: 'media';
@@ -1757,6 +1853,7 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface BusinessesSelect<T extends boolean = true> {
   name?: T;
+  owner?: T;
   description?: T;
   logo?: T;
   coverImage?: T;
@@ -1904,6 +2001,27 @@ export interface SignatureEventsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships_select".
+ */
+export interface MembershipsSelect<T extends boolean = true> {
+  business?: T;
+  tier?: T;
+  amount?: T;
+  paymentStatus?: T;
+  startDate?: T;
+  endDate?: T;
+  autoRenew?: T;
+  paymentMethod?: T;
+  stripeCustomerId?: T;
+  stripeSubscriptionId?: T;
+  stripeInvoiceId?: T;
+  invoiceUrl?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2327,6 +2445,9 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Header {
   id: number;
+  /**
+   * Core navigation links (Home, Businesses, Events, etc.) are automatically added and cannot be removed. You can add additional custom links here.
+   */
   navItems?:
     | {
         link: {
@@ -2356,6 +2477,9 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  /**
+   * Core quick links (Businesses, Events, Contact, etc.) are automatically added and cannot be removed. You can add additional custom links here.
+   */
   navItems?:
     | {
         link: {
@@ -2392,6 +2516,79 @@ export interface Footer {
       }[]
     | null;
   copyright?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Configure membership levels, pricing, and benefits
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "membershipTiers".
+ */
+export interface MembershipTier {
+  id: number;
+  /**
+   * Define available membership levels and their benefits
+   */
+  tiers: {
+    /**
+     * Display name (e.g., "Basic", "Premium", "Featured")
+     */
+    name: string;
+    /**
+     * Internal identifier (e.g., "basic", "premium", "featured"). Must match Business membershipTier values.
+     */
+    slug: string;
+    /**
+     * Full description of benefits and features
+     */
+    description: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
+    /**
+     * Annual membership price in dollars (e.g., 100 for $100)
+     */
+    annualPrice: number;
+    /**
+     * Number of advertising slots on business page
+     */
+    advertisingSlots?: number | null;
+    /**
+     * List of benefits included in this tier
+     */
+    features: {
+      /**
+       * Feature description (e.g., "Business directory listing")
+       */
+      feature: string;
+      id?: string | null;
+    }[];
+    /**
+     * Show at top of directory listings
+     */
+    featuredInDirectory?: boolean | null;
+    /**
+     * Available for new sign-ups
+     */
+    active?: boolean | null;
+    /**
+     * Stripe Price ID for payment integration (leave empty until Stripe is configured)
+     */
+    stripePriceId?: string | null;
+    id?: string | null;
+  }[];
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2452,6 +2649,34 @@ export interface FooterSelect<T extends boolean = true> {
         id?: T;
       };
   copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "membershipTiers_select".
+ */
+export interface MembershipTiersSelect<T extends boolean = true> {
+  tiers?:
+    | T
+    | {
+        name?: T;
+        slug?: T;
+        description?: T;
+        annualPrice?: T;
+        advertisingSlots?: T;
+        features?:
+          | T
+          | {
+              feature?: T;
+              id?: T;
+            };
+        featuredInDirectory?: T;
+        active?: T;
+        stripePriceId?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

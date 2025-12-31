@@ -2,11 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
+import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
 
 export const Announcements: CollectionConfig = {
   slug: 'announcements',
   access: {
+    admin: adminPanelAccess,
     create: chamberStaffOrAdmin,
     delete: chamberStaffOrAdmin,
     read: authenticatedOrPublished,

@@ -127,7 +127,7 @@ export const SignatureEvents: CollectionConfig = {
           type: 'number',
           required: true,
           admin: {
-            description: 'Current year\'s info',
+            description: "Current year's info",
           },
         },
         {

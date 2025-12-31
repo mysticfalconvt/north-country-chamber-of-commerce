@@ -167,12 +167,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     {event.location && <p className="font-medium">{event.location}</p>}
                     {(event.address || event.city) && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        {[
-                          event.address,
-                          event.city,
-                          event.state,
-                          event.zipCode,
-                        ]
+                        {[event.address, event.city, event.state, event.zipCode]
                           .filter(Boolean)
                           .join(', ')}
                       </p>
@@ -222,11 +217,13 @@ export default async function EventPage({ params }: EventPageProps) {
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
                     {event.organizer && <p>{event.organizer}</p>}
-                    {event.business && typeof event.business !== 'string' && typeof event.business !== 'number' && (
-                      <p className="text-sm text-muted-foreground">
-                        {t.hostedBy} {event.business.name}
-                      </p>
-                    )}
+                    {event.business &&
+                      typeof event.business !== 'string' &&
+                      typeof event.business !== 'number' && (
+                        <p className="text-sm text-muted-foreground">
+                          {t.hostedBy} {event.business.name}
+                        </p>
+                      )}
                   </div>
                 </div>
               </Card>

@@ -1,8 +1,10 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import sharp from 'sharp'
 import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
+import nodemailer from 'nodemailer'
 
 import { Announcements } from './collections/Announcements'
 import { Businesses } from './collections/Businesses'
@@ -10,12 +12,14 @@ import { Categories } from './collections/Categories'
 import { EventApplications } from './collections/EventApplications'
 import { Events } from './collections/Events'
 import { Media } from './collections/Media'
+import { Memberships } from './collections/Memberships'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { SignatureEvents } from './collections/SignatureEvents'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { MembershipTiers } from './MembershipTiers/config'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -32,7 +36,17 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ['@/components/BeforeDashboard'],
+      // Redirect users based on their role after login
+      afterLogin: ['@/components/AfterLogin'],
     },
+    autoLogin:
+      process.env.NEXT_PUBLIC_ENABLE_AUTOLOGIN === 'true'
+        ? {
+            email: 'dev@payloadcms.com',
+            password: 'test',
+            prefillOnly: true,
+          }
+        : false,
     importMap: {
       baseDir: path.resolve(dirname),
     },
@@ -60,6 +74,21 @@ export default buildConfig({
       ],
     },
   },
+  email: nodemailerAdapter({
+    defaultFromAddress: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    defaultFromName: 'North Country Chamber of Commerce',
+    transport: nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'localhost',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: process.env.SMTP_USER
+        ? {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          }
+        : undefined,
+    }),
+  }),
   localization: {
     locales: [
       {
@@ -89,12 +118,13 @@ export default buildConfig({
     EventApplications,
     Announcements,
     SignatureEvents,
+    Memberships,
     Media,
     Categories,
     Users,
   ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer],
+  globals: [Header, Footer, MembershipTiers],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

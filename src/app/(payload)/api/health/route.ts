@@ -9,11 +9,14 @@ export async function GET() {
   try {
     // Try to get Payload instance to verify database connection
     const payload = await getPayload({ config })
-    
+
     // Simple health check - just verify Payload initialized
     // We don't need to query the database, just check if Payload is ready
     if (!payload) {
-      return Response.json({ status: 'unhealthy', error: 'Payload not initialized' }, { status: 503 })
+      return Response.json(
+        { status: 'unhealthy', error: 'Payload not initialized' },
+        { status: 503 },
+      )
     }
 
     return Response.json({
@@ -32,6 +35,3 @@ export async function GET() {
     )
   }
 }
-
-
-

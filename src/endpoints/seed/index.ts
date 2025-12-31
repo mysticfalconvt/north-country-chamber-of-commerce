@@ -59,24 +59,27 @@ export const seed = async ({
   payload.logger.info(`— Clearing collections and globals...`)
 
   // clear the database (skip globals if they don't exist yet)
+  // Only clear header and footer which have navItems
   await Promise.all(
-    globals.map(async (global) => {
-      try {
-        await payload.updateGlobal({
-          slug: global,
-          data: {
-            navItems: [],
-          },
-          depth: 0,
-          context: {
-            disableRevalidate: true,
-          },
-        })
-      } catch (_error) {
-        // Globals may not exist yet on first migration, that's ok
-        payload.logger.info(`Skipping clear of ${global} (may not exist yet)`)
-      }
-    }),
+    globals
+      .filter((global) => global === 'header' || global === 'footer')
+      .map(async (global) => {
+        try {
+          await payload.updateGlobal({
+            slug: global,
+            data: {
+              navItems: [],
+            },
+            depth: 0,
+            context: {
+              disableRevalidate: true,
+            },
+          })
+        } catch (_error) {
+          // Globals may not exist yet on first migration, that's ok
+          payload.logger.info(`Skipping clear of ${global} (may not exist yet)`)
+        }
+      }),
   )
 
   // Delete collections sequentially to avoid deadlocks from foreign key constraints
@@ -303,6 +306,8 @@ export const seed = async ({
         email: 'info@mountainviewinn.com',
         website: 'https://mountainviewinn.com',
         memberSince: '2020-01-15',
+        membershipTier: '3-10-employees',
+        membershipExpires: new Date('2026-01-15').toISOString(),
         featured: true,
         membershipStatus: 'active',
       },
@@ -339,6 +344,8 @@ export const seed = async ({
         email: 'hello@nccroasters.com',
         website: 'https://nccroasters.com',
         memberSince: '2018-06-01',
+        membershipTier: '11-25-employees',
+        membershipExpires: new Date('2025-06-01').toISOString(),
         featured: true,
         membershipStatus: 'active',
         socialLinks: [
@@ -378,6 +385,8 @@ export const seed = async ({
         phone: '(802) 555-9012',
         email: 'sales@greenmountainhardware.com',
         memberSince: '2015-03-20',
+        membershipTier: '1-2-employees',
+        membershipExpires: new Date('2025-03-20').toISOString(),
         featured: false,
         membershipStatus: 'active',
       },
@@ -564,23 +573,17 @@ export const seed = async ({
             children: [
               {
                 type: 'paragraph',
-                children: [
-                  { type: 'text', text: '10:00 AM - Gates Open' },
-                ],
+                children: [{ type: 'text', text: '10:00 AM - Gates Open' }],
                 version: 1,
               },
               {
                 type: 'paragraph',
-                children: [
-                  { type: 'text', text: '11:00 AM - Chili Tasting Begins' },
-                ],
+                children: [{ type: 'text', text: '11:00 AM - Chili Tasting Begins' }],
                 version: 1,
               },
               {
                 type: 'paragraph',
-                children: [
-                  { type: 'text', text: '2:00 PM - Awards Ceremony' },
-                ],
+                children: [{ type: 'text', text: '2:00 PM - Awards Ceremony' }],
                 version: 1,
               },
             ],
@@ -654,6 +657,157 @@ export const seed = async ({
   ])
 
   payload.logger.info(`— Seeding globals...`)
+
+  // Seed membership tiers first
+  await payload.updateGlobal({
+    slug: 'membershipTiers',
+    data: {
+      tiers: [
+        {
+          name: '100+ employees',
+          slug: '100-plus-employees',
+          annualPrice: 750,
+          description: {
+            root: {
+              type: 'root',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'For businesses with 100 or more employees',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          features: [
+            { feature: 'All benefits included' },
+            { feature: 'Priority event registration' },
+            { feature: 'Featured business listing' },
+            { feature: 'Unlimited event promotions' },
+            { feature: 'Premium advertising opportunities' },
+          ],
+          active: true,
+        },
+        {
+          name: '26-99 employees',
+          slug: '26-99-employees',
+          annualPrice: 500,
+          description: {
+            root: {
+              type: 'root',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'For businesses with 26-99 employees',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          features: [
+            { feature: 'All standard benefits' },
+            { feature: 'Priority event registration' },
+            { feature: 'Featured business listing' },
+            { feature: 'Monthly event promotions' },
+            { feature: 'Standard advertising opportunities' },
+          ],
+          active: true,
+        },
+        {
+          name: '11-25 employees',
+          slug: '11-25-employees',
+          annualPrice: 275,
+          description: {
+            root: {
+              type: 'root',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'For businesses with 11-25 employees',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          features: [
+            { feature: 'Business directory listing' },
+            { feature: 'Event registration' },
+            { feature: 'Networking opportunities' },
+            { feature: 'Quarterly event promotions' },
+            { feature: 'Newsletter feature' },
+          ],
+          active: true,
+        },
+        {
+          name: '3-10 employees',
+          slug: '3-10-employees',
+          annualPrice: 170,
+          description: {
+            root: {
+              type: 'root',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'For businesses with 3-10 employees',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          features: [
+            { feature: 'Business directory listing' },
+            { feature: 'Event registration' },
+            { feature: 'Networking opportunities' },
+            { feature: 'Annual event promotion' },
+          ],
+          active: true,
+        },
+        {
+          name: '1-2 employees or individuals',
+          slug: '1-2-employees',
+          annualPrice: 75,
+          description: {
+            root: {
+              type: 'root',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'For sole proprietors, individuals, and businesses with 1-2 employees',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          features: [
+            { feature: 'Business directory listing' },
+            { feature: 'Event registration' },
+            { feature: 'Networking opportunities' },
+          ],
+          active: true,
+        },
+      ],
+    },
+  })
 
   await Promise.all([
     payload.updateGlobal({
@@ -762,10 +916,7 @@ export const seed = async ({
           phone: '(802) 334-7782',
           email: 'info@northcountrychamber.com',
         },
-        socialLinks: [
-          { platform: 'facebook', url: 'https://facebook.com/vnccoc' }
-
-        ],
+        socialLinks: [{ platform: 'facebook', url: 'https://facebook.com/vnccoc' }],
         copyright: '© 2025 North Country Chamber of Commerce. All rights reserved.',
       },
     }),

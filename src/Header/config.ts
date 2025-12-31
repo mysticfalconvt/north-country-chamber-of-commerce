@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
 import { revalidateHeader } from './hooks/revalidateHeader'
+import { ensureCoreLinks } from './hooks/ensureCoreLinks'
 
 export const Header: GlobalConfig = {
   slug: 'header',
@@ -17,9 +18,10 @@ export const Header: GlobalConfig = {
           appearances: false,
         }),
       ],
-      maxRows: 6,
       admin: {
         initCollapsed: true,
+        description:
+          'Core navigation links (Home, Businesses, Events, etc.) are automatically added and cannot be removed. You can add additional custom links here.',
         components: {
           RowLabel: '@/Header/RowLabel#RowLabel',
         },
@@ -27,6 +29,7 @@ export const Header: GlobalConfig = {
     },
   ],
   hooks: {
+    beforeChange: [ensureCoreLinks],
     afterChange: [revalidateHeader],
   },
 }

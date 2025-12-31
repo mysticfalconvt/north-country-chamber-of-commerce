@@ -22,12 +22,7 @@ export function MobileNav({ data }: MobileNavProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          aria-label="Open mobile menu"
-        >
+        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open mobile menu">
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
@@ -55,7 +50,10 @@ export function MobileNav({ data }: MobileNavProps) {
             <Separator className="my-4" />
 
             {/* Language Switcher & Theme Toggle */}
-            <div className="px-2 flex items-center justify-between gap-4" onClick={() => setOpen(false)}>
+            <div
+              className="px-2 flex items-center justify-between gap-4"
+              onClick={() => setOpen(false)}
+            >
               <LanguageSwitcher variant="mobile" />
               <ThemeToggle />
             </div>

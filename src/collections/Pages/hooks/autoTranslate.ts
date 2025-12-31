@@ -29,7 +29,12 @@ export const autoTranslate: CollectionBeforeChangeHook = async ({ data, operatio
  * Auto-translate layout blocks after save
  * This avoids interfering with Payload's localization handling during save
  */
-export const autoTranslateLayout: CollectionAfterChangeHook = async ({ doc, req, operation, context }) => {
+export const autoTranslateLayout: CollectionAfterChangeHook = async ({
+  doc,
+  req,
+  operation,
+  context,
+}) => {
   // Skip if this is already a translation update to prevent loops
   if (context.skipTranslation) {
     return doc
@@ -47,7 +52,7 @@ export const autoTranslateLayout: CollectionAfterChangeHook = async ({ doc, req,
   try {
     // Try to get layout from the doc first (it should have the just-saved layout)
     let englishLayout = doc.layout
-    
+
     console.log('[autoTranslateLayout] Checking doc.layout:', {
       hasLayout: !!englishLayout,
       isArray: Array.isArray(englishLayout),
@@ -57,11 +62,11 @@ export const autoTranslateLayout: CollectionAfterChangeHook = async ({ doc, req,
       isDraft: doc._status === 'draft',
       layoutValue: englishLayout ? JSON.stringify(englishLayout).substring(0, 200) : 'null',
     })
-    
+
     // If layout is not in doc, fetch it explicitly
     if (!englishLayout || !Array.isArray(englishLayout) || englishLayout.length === 0) {
       console.log('[autoTranslateLayout] Layout not in doc, fetching from database...')
-      
+
       try {
         const englishDoc = await req.payload.findByID({
           collection: 'pages',
@@ -71,17 +76,19 @@ export const autoTranslateLayout: CollectionAfterChangeHook = async ({ doc, req,
           draft: doc._status === 'draft' ? true : undefined,
           req,
         })
-        
+
         englishLayout = englishDoc.layout
-        
+
         console.log('[autoTranslateLayout] Fetched layout:', {
           hasLayout: !!englishLayout,
           isArray: Array.isArray(englishLayout),
           length: Array.isArray(englishLayout) ? englishLayout.length : 0,
         })
-        
+
         if (!englishLayout || !Array.isArray(englishLayout) || englishLayout.length === 0) {
-          console.log('[autoTranslateLayout] No English layout found in database, skipping translation')
+          console.log(
+            '[autoTranslateLayout] No English layout found in database, skipping translation',
+          )
           return doc
         }
       } catch (fetchError) {
@@ -100,7 +107,7 @@ export const autoTranslateLayout: CollectionAfterChangeHook = async ({ doc, req,
         draft: doc._status === 'draft' ? true : undefined,
         req,
       })
-      
+
       if (frenchDoc.layout && Array.isArray(frenchDoc.layout) && frenchDoc.layout.length > 0) {
         console.log('[autoTranslateLayout] French layout already exists, skipping translation')
         return doc
@@ -128,8 +135,10 @@ async function translateAndSaveLayout(
   isDraft: boolean,
   req: any,
 ): Promise<void> {
-  console.log(`[autoTranslateLayout] Translating ${englishLayout.length} layout blocks to French...`)
-  
+  console.log(
+    `[autoTranslateLayout] Translating ${englishLayout.length} layout blocks to French...`,
+  )
+
   // Translate the blocks
   const translatedBlocks = await translateBlocks(englishLayout)
 
@@ -177,13 +186,13 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
                   hasFr: !!column.richText?.fr,
                   hasRoot: !!column.richText?.root,
                 })
-                
+
                 // richText is localized, but when layout is also localized,
                 // richText within each locale's blocks is direct Lexical JSON for that locale
                 // So in French blocks, richText should be the translated Lexical JSON directly
                 if (column.richText) {
                   let englishRichText: any = null
-                  
+
                   // Extract English content
                   if (column.richText.root || column.richText.type) {
                     // Direct Lexical JSON - this is the English content
@@ -192,17 +201,19 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
                     // Already in localized format (shouldn't happen when layout is localized, but handle it)
                     englishRichText = column.richText.en
                   }
-                  
+
                   if (englishRichText) {
                     console.log(`[autoTranslate] Translating column ${idx} richText...`)
                     // Translate to French - result is direct Lexical JSON for French locale
                     translatedColumn.richText = await translateLexicalJSON(englishRichText)
                   } else {
-                    console.log(`[autoTranslate] Column ${idx} skipped - no English content to translate`)
+                    console.log(
+                      `[autoTranslate] Column ${idx} skipped - no English content to translate`,
+                    )
                   }
                 }
                 return translatedColumn
-              })
+              }),
             )
           } else {
             console.log('[autoTranslate] No columns found in content block')
@@ -218,13 +229,13 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
             } else if (block.richText.en) {
               englishRichText = block.richText.en
             }
-            
+
             if (englishRichText) {
               // Translate to French - direct Lexical JSON for French locale
               translatedBlock.richText = await translateLexicalJSON(englishRichText)
             }
           }
-          
+
           // Translate link labels (links is an array of link objects)
           // link.label is localized, but within French blocks it should be direct string
           if (block.links && Array.isArray(block.links)) {
@@ -238,7 +249,7 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
                   } else if (link.link.label.en) {
                     englishLabel = link.link.label.en
                   }
-                  
+
                   if (englishLabel) {
                     // Translate to French - direct string for French locale
                     translatedLink.link = {
@@ -248,7 +259,7 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
                   }
                 }
                 return translatedLink
-              })
+              }),
             )
           }
           break
@@ -266,7 +277,7 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
             } else if (block.introContent.en) {
               englishIntroContent = block.introContent.en
             }
-            
+
             if (englishIntroContent) {
               // Translate to French - direct Lexical JSON for French locale
               translatedBlock.introContent = await translateLexicalJSON(englishIntroContent)
@@ -283,7 +294,7 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
             } else if (block.introContent.en) {
               englishIntroContent = block.introContent.en
             }
-            
+
             if (englishIntroContent) {
               // Translate to French - direct Lexical JSON for French locale
               translatedBlock.introContent = await translateLexicalJSON(englishIntroContent)

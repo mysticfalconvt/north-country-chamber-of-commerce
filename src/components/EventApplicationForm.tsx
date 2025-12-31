@@ -33,7 +33,8 @@ export function EventApplicationForm({ eventId, locale }: EventApplicationFormPr
       detailsPlaceholder: 'Tell us about your entry...',
       submit: 'Submit Application',
       submitting: 'Submitting...',
-      success: 'Application submitted successfully! We will review your submission and contact you soon.',
+      success:
+        'Application submitted successfully! We will review your submission and contact you soon.',
       error: 'There was an error submitting your application. Please try again.',
       requiredFields: 'All fields are required',
     },
@@ -48,8 +49,10 @@ export function EventApplicationForm({ eventId, locale }: EventApplicationFormPr
       detailsPlaceholder: 'Parlez-nous de votre candidature...',
       submit: 'Soumettre la candidature',
       submitting: 'Soumission...',
-      success: 'Candidature soumise avec succès ! Nous examinerons votre soumission et vous contacterons bientôt.',
-      error: "Une erreur s'est produite lors de la soumission de votre candidature. Veuillez réessayer.",
+      success:
+        'Candidature soumise avec succès ! Nous examinerons votre soumission et vous contacterons bientôt.',
+      error:
+        "Une erreur s'est produite lors de la soumission de votre candidature. Veuillez réessayer.",
       requiredFields: 'Tous les champs sont obligatoires',
     },
   }
@@ -62,7 +65,12 @@ export function EventApplicationForm({ eventId, locale }: EventApplicationFormPr
     setSubmitStatus('idle')
 
     // Validate required fields
-    if (!formData.applicantName || !formData.applicantEmail || !formData.applicantPhone || !formData.details) {
+    if (
+      !formData.applicantName ||
+      !formData.applicantEmail ||
+      !formData.applicantPhone ||
+      !formData.details
+    ) {
       alert(t.requiredFields)
       setIsSubmitting(false)
       return

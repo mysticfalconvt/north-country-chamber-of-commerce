@@ -98,7 +98,10 @@ export async function translateLexicalJSON(
   }
 
   console.log('[translateLexicalJSON] Starting translation of Lexical JSON')
-  console.log('[translateLexicalJSON] Input structure:', JSON.stringify(lexicalJSON).substring(0, 200))
+  console.log(
+    '[translateLexicalJSON] Input structure:',
+    JSON.stringify(lexicalJSON).substring(0, 200),
+  )
 
   // Deep clone to avoid mutating original
   const translated = JSON.parse(JSON.stringify(lexicalJSON))
@@ -111,7 +114,9 @@ export async function translateLexicalJSON(
       return
     }
 
-    console.log(`[translateLexicalJSON] ${path}: type=${node.type}, hasText=${!!node.text}, hasChildren=${!!node.children}`)
+    console.log(
+      `[translateLexicalJSON] ${path}: type=${node.type}, hasText=${!!node.text}, hasChildren=${!!node.children}`,
+    )
 
     // If this is a text node with text content
     if (node.type === 'text' && typeof node.text === 'string') {
@@ -165,7 +170,7 @@ export async function translateDataStructure(data: any): Promise<any> {
 
   // Handle arrays - translate each element
   if (Array.isArray(data)) {
-    return Promise.all(data.map(item => translateDataStructure(item)))
+    return Promise.all(data.map((item) => translateDataStructure(item)))
   }
 
   // Handle objects
@@ -174,7 +179,7 @@ export async function translateDataStructure(data: any): Promise<any> {
     if (data.type === 'text' && typeof data.text === 'string') {
       return {
         ...data,
-        text: await translateToFrench(data.text)
+        text: await translateToFrench(data.text),
       }
     }
 
@@ -182,9 +187,18 @@ export async function translateDataStructure(data: any): Promise<any> {
     const translated: any = {}
     for (const [key, value] of Object.entries(data)) {
       // Skip certain fields that should never be translated
-      if (key === 'id' || key === 'blockType' || key === 'type' || key === 'format' ||
-          key === 'indent' || key === 'version' || key === 'mode' || key === 'style' ||
-          key === 'relationTo' || key === 'value') {
+      if (
+        key === 'id' ||
+        key === 'blockType' ||
+        key === 'type' ||
+        key === 'format' ||
+        key === 'indent' ||
+        key === 'version' ||
+        key === 'mode' ||
+        key === 'style' ||
+        key === 'relationTo' ||
+        key === 'value'
+      ) {
         translated[key] = value
       } else {
         translated[key] = await translateDataStructure(value)

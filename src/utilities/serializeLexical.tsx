@@ -59,9 +59,7 @@ function serializeNode(node: Node, key: number): React.ReactNode {
     return <Fragment key={key}>{text}</Fragment>
   }
 
-  const children = node.children ? (
-    node.children.map((child, i) => serializeNode(child, i))
-  ) : null
+  const children = node.children ? node.children.map((child, i) => serializeNode(child, i)) : null
 
   switch (node.type) {
     case 'paragraph':

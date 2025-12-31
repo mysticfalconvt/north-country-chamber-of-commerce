@@ -74,12 +74,9 @@ export const TranslationButton: React.FC = () => {
     }
   }
 
-  
-
   return (
     <div className={baseClass}>
       <div className={`${baseClass}__controls`}>
-      
         <button
           className={`${baseClass}__button`}
           disabled={isRunning}

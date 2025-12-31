@@ -139,7 +139,10 @@ export default async function SignatureEventPage({ params }: SignatureEventPageP
             <h2 className="text-3xl font-bold mb-6">{t.gallery}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {event.gallery.map((item, index) => {
-                const image = typeof item.image !== 'string' && typeof item.image !== 'number' ? item.image : null
+                const image =
+                  typeof item.image !== 'string' && typeof item.image !== 'number'
+                    ? item.image
+                    : null
                 if (!image) return null
 
                 return (

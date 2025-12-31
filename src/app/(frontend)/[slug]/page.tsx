@@ -73,8 +73,6 @@ export default async function Page({ params: paramsPromise }: Args) {
     locale,
   })
 
- 
-
   // Remove this code once your website is seeded
   if (!page && slug === 'home') {
     page = homeStatic
