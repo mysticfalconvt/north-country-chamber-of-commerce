@@ -1,6 +1,6 @@
 import React from 'react'
 import { Container } from '@/design-system/Container'
-import { getPayload } from 'payload'
+import { getPayload, type PaginatedDocs } from 'payload'
 import config from '@payload-config'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
@@ -8,6 +8,7 @@ import { Calendar, Clock, MapPin } from 'lucide-react'
 import { headers } from 'next/headers'
 import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 import EventsFilters from './EventsFilters'
+import type { Event } from '@/payload-types'
 
 export default async function EventsPage({
   searchParams,
@@ -75,13 +76,13 @@ export default async function EventsPage({
   })
 
   // Query for past events if requested
-  let pastEvents = {
+  let pastEvents: PaginatedDocs<Event> = {
     docs: [],
     totalDocs: 0,
     limit: 0,
     totalPages: 0,
-    page: 0,
-    pagingCounter: 0,
+    page: 1,
+    pagingCounter: 1,
     hasPrevPage: false,
     hasNextPage: false,
     prevPage: null,
@@ -142,7 +143,7 @@ export default async function EventsPage({
 
   const t = translations[locale]
 
-  const EventCard = ({ event }: { event: any }) => (
+  const EventCard = ({ event }: { event: Event }) => (
     <Link
       key={event.id}
       href={addLocaleToPathname(`/events/${event.slug}`, locale)}

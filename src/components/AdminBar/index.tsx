@@ -1,6 +1,7 @@
 'use client'
 
 import type { PayloadAdminBarProps, PayloadMeUser } from '@payloadcms/admin-bar'
+import type { User } from '@/payload-types'
 
 import { cn } from '@/utilities/ui'
 import { useSelectedLayoutSegments } from 'next/navigation'
@@ -43,11 +44,11 @@ export const AdminBar: React.FC<{
   ) as keyof typeof collectionLabels
   const router = useRouter()
 
-  const [user, setUser] = useState<PayloadMeUser | null>(null)
+  const [user, setUser] = useState<(PayloadMeUser & Partial<User>) | null>(null)
 
   const onAuthChange = React.useCallback((user: PayloadMeUser) => {
     setShow(Boolean(user?.id))
-    setUser(user)
+    setUser(user as PayloadMeUser & Partial<User>)
   }, [])
 
   // For business members, show a custom portal bar instead of the admin bar
@@ -61,6 +62,7 @@ export const AdminBar: React.FC<{
             </Link>
             <div className="flex items-center gap-4">
               <span className="text-sm">{user.email}</span>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/logout" className="hover:underline text-sm">
                 Logout
               </a>
