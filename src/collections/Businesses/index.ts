@@ -10,7 +10,7 @@ export const Businesses: CollectionConfig = {
   access: {
     admin: adminPanelAccess,
     // Allow unauthenticated users to create during self-registration
-    create: true,
+    create: () => true,
     delete: chamberStaffOrAdmin,
     read: authenticatedOrPublished,
     update: isAdminOrOwner,
