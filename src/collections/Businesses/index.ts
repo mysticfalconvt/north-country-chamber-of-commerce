@@ -9,13 +9,8 @@ export const Businesses: CollectionConfig = {
   slug: 'businesses',
   access: {
     admin: adminPanelAccess,
-    // Allow business_member to create during self-registration, staff can always create
-    create: ({ req: { user } }) => {
-      if (!user) return false
-      return (
-        user.role === 'admin' || user.role === 'chamber_staff' || user.role === 'business_member'
-      )
-    },
+    // Allow unauthenticated users to create during self-registration
+    create: true,
     delete: chamberStaffOrAdmin,
     read: authenticatedOrPublished,
     update: isAdminOrOwner,
