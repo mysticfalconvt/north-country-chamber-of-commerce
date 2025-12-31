@@ -19,7 +19,7 @@ su-exec nextjs sh -c '
   echo "================================"
 
   # Run migrations with pnpm - let it fail loudly if there are real issues
-  if pnpm payload migrate; then
+  if pnpm payload migrate --yes; then
     echo "================================"
     echo "Migrations completed successfully"
     echo "================================"
