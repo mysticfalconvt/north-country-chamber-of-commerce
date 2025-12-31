@@ -35,6 +35,19 @@ services:
       PAYLOAD_SECRET: change_this_to_a_secure_32_character_minimum_secret_key
       PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3997
 
+      # Stripe - CHANGE THESE VALUES
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+
+      # Email (Nodemailer SMTP) - CHANGE THESE VALUES
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM:-noreply@vtnorthcountry.org}
+
       # Seeding - disable auto-seed in production after initial setup
       DISABLE_AUTO_SEED: true
 

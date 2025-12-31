@@ -29,15 +29,21 @@ export const ensureCoreLinks: GlobalBeforeChangeHook = async ({ data, req }) => 
   const locale = req.locale || 'en'
 
   // Get URLs of existing links to avoid duplicates
+  // Check both custom and reference links
   const existingUrls = new Set(
     navItems
-      .filter((item: any) => item?.link?.type === 'custom' && item?.link?.url)
-      .map((item: any) => item.link.url),
+      .filter((item: any) => item?.link?.url)
+      .map((item: any) => {
+        // Normalize URLs by removing trailing slashes
+        const url = item.link.url
+        return typeof url === 'string' ? url.replace(/\/$/, '') : url
+      })
+      .filter(Boolean),
   )
 
-  // Find core links that are missing
+  // Find core links that are missing (normalize core URLs too)
   const missingCoreLinkDefs = CORE_LINK_DEFS.filter(
-    (coreLinkDef) => !existingUrls.has(coreLinkDef.url),
+    (coreLinkDef) => !existingUrls.has(coreLinkDef.url.replace(/\/$/, '')),
   )
 
   // If there are missing core links, prepend them to the data
