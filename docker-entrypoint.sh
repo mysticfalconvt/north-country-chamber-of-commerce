@@ -19,8 +19,8 @@ su-exec nextjs sh -c '
   echo "================================"
 
   # Run migrations with pnpm - let it fail loudly if there are real issues
-  # Use --force-accept-warning to auto-accept any prompts (useful for CI/CD)
-  if pnpm payload migrate --force-accept-warning; then
+  # Use yes command to pipe "y" responses to handle any interactive prompts
+  if yes y | pnpm payload migrate 2>&1 | tee /tmp/migrate.log; then
     echo "================================"
     echo "Migrations completed successfully"
     echo "================================"
