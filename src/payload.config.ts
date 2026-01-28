@@ -9,14 +9,17 @@ import nodemailer from 'nodemailer'
 import { Announcements } from './collections/Announcements'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
+import { EmailCampaigns } from './collections/EmailCampaigns'
 import { EventApplications } from './collections/EventApplications'
 import { Events } from './collections/Events'
+import { MailingList } from './collections/MailingList'
 import { Media } from './collections/Media'
 import { Memberships } from './collections/Memberships'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { SignatureEvents } from './collections/SignatureEvents'
 import { Users } from './collections/Users'
+import { Banners } from './globals/Banners/config'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { MembershipTiers } from './MembershipTiers/config'
@@ -119,12 +122,14 @@ export default buildConfig({
     Announcements,
     SignatureEvents,
     Memberships,
+    MailingList,
+    EmailCampaigns,
     Media,
     Categories,
     Users,
   ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer, MembershipTiers],
+  globals: [Header, Footer, MembershipTiers, Banners],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

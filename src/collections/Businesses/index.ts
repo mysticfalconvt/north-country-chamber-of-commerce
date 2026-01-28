@@ -134,7 +134,7 @@ export const Businesses: CollectionConfig = {
     ],
   },
   admin: {
-    defaultColumns: ['name', 'category', 'membershipStatus', 'memberSince'],
+    defaultColumns: ['name', 'category', 'approvalStatus', 'membershipStatus', 'memberSince'],
     useAsTitle: 'name',
     description: 'Member business directory listings',
   },
@@ -420,14 +420,64 @@ export const Businesses: CollectionConfig = {
       name: 'membershipStatus',
       type: 'select',
       required: true,
-      defaultValue: 'active',
+      defaultValue: 'pending',
       options: [
         { label: 'Active', value: 'active' },
         { label: 'Inactive', value: 'inactive' },
+        { label: 'Pending', value: 'pending' },
       ],
       admin: {
         position: 'sidebar',
         description: 'Membership status',
+      },
+    },
+    {
+      name: 'approvalStatus',
+      type: 'select',
+      required: true,
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Approval status for new business applications',
+      },
+    },
+    {
+      name: 'approvedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        position: 'sidebar',
+        description: 'Admin who approved this business',
+      },
+    },
+    {
+      name: 'approvedAt',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        description: 'When this business was approved',
+      },
+    },
+    {
+      name: 'applicationDate',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        description: 'When application was submitted',
+      },
+    },
+    {
+      name: 'rejectionReason',
+      type: 'textarea',
+      admin: {
+        position: 'sidebar',
+        description: 'Reason for rejection (if applicable)',
+        condition: (data) => data.approvalStatus === 'rejected',
       },
     },
     {

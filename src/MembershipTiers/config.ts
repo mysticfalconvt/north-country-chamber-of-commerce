@@ -114,13 +114,26 @@ export const MembershipTiers: GlobalConfig = {
           ],
         },
         {
-          name: 'stripePriceId',
-          type: 'text',
-          admin: {
-            description:
-              'Stripe Price ID for payment integration (leave empty until Stripe is configured)',
-            position: 'sidebar',
-          },
+          type: 'row',
+          fields: [
+            {
+              name: 'displayBadge',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                description: 'Show tier badge in business directory (for silver, gold, platinum)',
+              },
+            },
+            {
+              name: 'sortOrder',
+              type: 'number',
+              required: true,
+              defaultValue: 99,
+              admin: {
+                description: 'Sort order for directory (1=highest/platinum, 2=gold, 3=silver, 4=bronze)',
+              },
+            },
+          ],
         },
       ],
     },

@@ -164,6 +164,34 @@ export const Memberships: CollectionConfig = {
       ],
     },
     {
+      type: 'collapsible',
+      label: 'Check Payment Details',
+      admin: {
+        description: 'Check payment tracking information',
+        initCollapsed: true,
+        condition: (data) => data.paymentMethod === 'check',
+      },
+      fields: [
+        {
+          name: 'checkNumber',
+          type: 'text',
+          admin: {
+            description: 'Check number for reference',
+          },
+        },
+        {
+          name: 'checkDate',
+          type: 'date',
+          admin: {
+            description: 'Date check was received',
+            date: {
+              pickerAppearance: 'dayOnly',
+            },
+          },
+        },
+      ],
+    },
+    {
       name: 'notes',
       type: 'richText',
       admin: {

@@ -58,6 +58,16 @@ export const Announcements: CollectionConfig = {
         },
       ],
     },
+    {
+      name: 'emailSent',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Has this announcement been sent as a newsletter?',
+        readOnly: true,
+      },
+    },
     slugField(),
   ],
   versions: {
