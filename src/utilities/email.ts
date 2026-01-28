@@ -275,3 +275,154 @@ North Country Chamber of Commerce
     `.trim(),
   })
 }
+
+// Send business application approval notification to admins
+export async function sendBusinessApprovalNotification({
+  businessId,
+  businessName,
+  tier,
+  contactEmail,
+  contactName,
+  adminEmails,
+}: {
+  businessId: number
+  businessName: string
+  tier: string
+  contactEmail: string
+  contactName: string
+  adminEmails: string[]
+}) {
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+  const reviewUrl = `${baseUrl}/admin/collections/businesses/${businessId}`
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    to: adminEmails.join(', '),
+    subject: `New Business Membership Application: ${businessName}`,
+    text: `
+A new business has applied for chamber membership.
+
+Business: ${businessName}
+Contact: ${contactName}
+Email: ${contactEmail}
+Tier: ${tier}
+
+Review and approve: ${reviewUrl}
+
+North Country Chamber of Commerce
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
+    .content { background-color: #f9fafb; padding: 30px; }
+    .business-details { background-color: white; border: 2px solid #2563eb; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 10px 10px 0; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>New Business Application</h1>
+    </div>
+    <div class="content">
+      <p>A new business has applied for chamber membership and requires approval.</p>
+
+      <div class="business-details">
+        <h3>${businessName}</h3>
+        <p><strong>Contact:</strong> ${contactName}</p>
+        <p><strong>Email:</strong> ${contactEmail}</p>
+        <p><strong>Membership Tier:</strong> ${tier}</p>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${reviewUrl}" class="button">Review Application</a>
+      </p>
+
+      <p style="font-size: 12px; color: #6b7280;">Log into the admin panel to review the complete application and approve or reject.</p>
+
+      <p><strong>North Country Chamber of Commerce</strong></p>
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} North Country Chamber of Commerce. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  })
+}
+
+// Send rejection email to business applicant
+export async function sendBusinessRejectedEmail({
+  to,
+  businessName,
+  reason,
+}: {
+  to: string
+  businessName: string
+  reason?: string
+}) {
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    to,
+    subject: 'Chamber Membership Application Update',
+    text: `
+Dear ${businessName},
+
+Thank you for your interest in joining the North Country Chamber of Commerce.
+
+After reviewing your application, we are unable to approve your membership at this time.
+
+${reason ? `Reason: ${reason}` : ''}
+
+If you have any questions or would like to discuss this further, please contact us.
+
+Thank you,
+North Country Chamber of Commerce
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #dc2626; color: white; padding: 20px; text-align: center; }
+    .content { background-color: #f9fafb; padding: 30px; }
+    .reason-box { background-color: #fef2f2; border: 2px solid #dc2626; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Application Update</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${businessName},</p>
+
+      <p>Thank you for your interest in joining the North Country Chamber of Commerce.</p>
+
+      <p>After reviewing your application, we are unable to approve your membership at this time.</p>
+
+      ${reason ? `<div class="reason-box"><p><strong>Reason:</strong> ${reason}</p></div>` : ''}
+
+      <p>If you have any questions or would like to discuss this further, please contact us.</p>
+
+      <p>Thank you,<br><strong>North Country Chamber of Commerce</strong></p>
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} North Country Chamber of Commerce. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim(),
+  })
+}
