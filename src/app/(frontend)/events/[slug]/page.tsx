@@ -10,8 +10,9 @@ import { headers } from 'next/headers'
 import { getLocaleFromPathname } from '@/utilities/getLocale'
 import { serializeLexical } from '@/utilities/serializeLexical'
 import Image from 'next/image'
-import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { getOptimizedImageUrl } from '@/utilities/getMediaUrl'
 import { BusinessMap } from '@/components/BusinessMap'
+import type { Media } from '@/payload-types'
 
 interface EventPageProps {
   params: Promise<{
@@ -97,16 +98,21 @@ export default async function EventPage({ params }: EventPageProps) {
         </div>
 
         {/* Event Image */}
-        {event.image && typeof event.image !== 'string' && typeof event.image !== 'number' && (
-          <div className="relative w-full h-96 rounded-lg overflow-hidden">
-            <Image
-              src={getMediaUrl(event.image.url)}
-              alt={event.image.alt || event.title}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+        {(() => {
+          const image = event.image as Media | null
+          const imageUrl = getOptimizedImageUrl(image, 'large')
+          if (!imageUrl) return null
+          return (
+            <div className="relative w-full h-96 rounded-lg overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt={image?.alt || event.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )
+        })()}
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}

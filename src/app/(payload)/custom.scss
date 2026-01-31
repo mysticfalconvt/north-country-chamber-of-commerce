@@ -1,0 +1,59 @@
+/* Custom admin styles */
+
+/* Fix error tooltip covering slug lock button and other interactive elements */
+
+/* Ensure field errors don't have excessive z-index */
+.field-type {
+  .field__error-wrap {
+    z-index: 10;
+  }
+}
+
+/* Make sure slug field lock button is always clickable */
+.field-type.slug {
+  position: relative;
+
+  /* The lock/unlock button should be above error messages */
+  button[aria-label*="lock"],
+  button[aria-label*="Lock"],
+  .field-type__wrap > button {
+    z-index: 20 !important;
+    position: relative;
+  }
+
+  /* Error message positioning */
+  .field__error-wrap {
+    z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to elements below */
+
+    /* But make the error text itself clickable for copying */
+    .field__error {
+      pointer-events: auto;
+    }
+  }
+}
+
+/* Tooltip adjustments - move error tooltips so they don't cover controls */
+.tooltip--error,
+[data-error="true"] .tooltip-content {
+  margin-top: 4px;
+}
+
+/* Ensure buttons in field rows are always accessible */
+.field-type__wrap {
+  > button,
+  > div > button {
+    z-index: 15;
+    position: relative;
+  }
+}
+
+/* Fix sidebar field error overlap */
+.render-fields.render-fields--sidebar {
+  .field-type {
+    .field__error-wrap {
+      position: relative;
+      z-index: 5;
+    }
+  }
+}

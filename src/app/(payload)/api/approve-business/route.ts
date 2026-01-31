@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { cookies } from 'next/headers'
 import { sendWelcomeEmail, sendBusinessRejectedEmail } from '@/utilities/email'
 
 // Generate a random temporary password
@@ -17,16 +18,26 @@ export async function POST(req: NextRequest) {
   const payload = await getPayload({ config })
 
   try {
-    // Authenticate user
-    const user = req.headers.get('X-Payload-User')
-    if (!user) {
+    // Authenticate user using Payload's cookie-based auth
+    const cookieStore = await cookies()
+    const token = cookieStore.get('payload-token')?.value
+
+    if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    const userData = JSON.parse(user)
+    // Verify the token and get user
+    const { user: userData } = await payload.auth({ headers: req.headers })
+
+    if (!userData) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     // Check if user is admin or chamber_staff
     if (userData.role !== 'admin' && userData.role !== 'chamber_staff') {
@@ -54,10 +65,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the business
-    const business = await payload.findByID({
+    const business = (await payload.findByID({
       collection: 'businesses',
       id: businessId,
-    })
+    })) as any
 
     if (!business) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 })
@@ -76,39 +87,19 @@ export async function POST(req: NextRequest) {
       const endDate = new Date()
       endDate.setFullYear(endDate.getFullYear() + 1)
 
-      // Update business approval status
+      // Update business approval status and payment status
       await payload.update({
         collection: 'businesses',
         id: businessId,
         data: {
           approvalStatus: 'approved',
           membershipStatus: 'active',
+          paymentStatus: 'paid',
           approvedBy: userData.id,
           approvedAt: new Date().toISOString(),
           memberSince: startDate.toISOString(),
           membershipExpires: endDate.toISOString(),
-        },
-      })
-
-      // Get tier details
-      const membershipTiersGlobal = await payload.findGlobal({
-        slug: 'membershipTiers',
-      })
-      const tierData = membershipTiersGlobal?.tiers?.find((t: any) => t.slug === business.membershipTier)
-
-      // Create membership record
-      await payload.create({
-        collection: 'memberships',
-        data: {
-          business: businessId,
-          tier: business.membershipTier,
-          amount: tierData?.annualPrice || 0,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          paymentStatus: 'pending',
-          autoRenew: false,
-          paymentMethod: 'check',
-        },
+        } as any,
       })
 
       // Get the user associated with this business
@@ -160,7 +151,7 @@ export async function POST(req: NextRequest) {
         data: {
           approvalStatus: 'rejected',
           rejectionReason: rejectionReason || undefined,
-        },
+        } as any,
       })
 
       // Send rejection email

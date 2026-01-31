@@ -5,19 +5,26 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { BusinessMap } from './BusinessMap'
 import type { Business, Category } from '@/payload-types'
-import { MapIcon, Grid3x3Icon, ListIcon } from 'lucide-react'
+import { MapIcon, Grid3x3Icon, ListIcon, Award, Medal, Crown } from 'lucide-react'
 
 type ViewMode = 'grid' | 'list' | 'map'
-type SortOption = 'name-asc' | 'name-desc' | 'featured' | 'newest'
+
+interface MembershipTier {
+  name: string
+  slug: string
+  displayBadge?: boolean | null
+  sortOrder?: number | null
+  annualPrice?: number | null
+}
 
 interface BusinessDirectoryProps {
   businesses: Business[]
   categories: Category[]
+  membershipTiers: MembershipTier[]
 }
 
-export function BusinessDirectory({ businesses, categories }: BusinessDirectoryProps) {
+export function BusinessDirectory({ businesses, categories, membershipTiers }: BusinessDirectoryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
-  const [sortBy, setSortBy] = useState<SortOption>('featured')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -48,28 +55,21 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
       )
     }
 
-    // Sort
+    // Sort by tier (higher tiers first) then alphabetically by name
     filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':
-          return a.name.localeCompare(b.name)
-        case 'name-desc':
-          return b.name.localeCompare(a.name)
-        case 'featured':
-          if (a.featured && !b.featured) return -1
-          if (!a.featured && b.featured) return 1
-          return a.name.localeCompare(b.name)
-        case 'newest':
-          const aDate = a.memberSince ? new Date(a.memberSince).getTime() : 0
-          const bDate = b.memberSince ? new Date(b.memberSince).getTime() : 0
-          return bDate - aDate
-        default:
-          return 0
+      const tierA = membershipTiers.find((t) => t.slug === a.membershipTier)
+      const tierB = membershipTiers.find((t) => t.slug === b.membershipTier)
+      const sortOrderA = tierA?.sortOrder || 999
+      const sortOrderB = tierB?.sortOrder || 999
+
+      if (sortOrderA !== sortOrderB) {
+        return sortOrderA - sortOrderB
       }
+      return a.name.localeCompare(b.name)
     })
 
     return filtered
-  }, [businesses, selectedCategories, searchQuery, sortBy])
+  }, [businesses, selectedCategories, searchQuery, membershipTiers])
 
   // Map locations
   const mapLocations = useMemo(() => {
@@ -92,6 +92,25 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
     )
   }
 
+  // Get tier badge display info
+  const getTierBadge = (tierSlug: string | undefined) => {
+    if (!tierSlug) return null
+
+    const tier = membershipTiers.find((t) => t.slug === tierSlug)
+    if (!tier || !tier.displayBadge) return null
+
+    switch (tierSlug) {
+      case 'platinum':
+        return { icon: Crown, label: 'Platinum Member', color: 'text-slate-400' }
+      case 'gold':
+        return { icon: Award, label: 'Gold Member', color: 'text-yellow-500' }
+      case 'silver':
+        return { icon: Medal, label: 'Silver Member', color: 'text-slate-300' }
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Filters and Controls */}
@@ -105,43 +124,29 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
           className="w-full px-4 py-2 border rounded-lg bg-background text-foreground"
         />
 
-        <div className="flex flex-wrap gap-4 items-center justify-between">
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-              aria-label="Grid view"
-            >
-              <Grid3x3Icon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-              aria-label="List view"
-            >
-              <ListIcon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`p-2 rounded ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-              aria-label="Map view"
-            >
-              <MapIcon className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="px-4 py-2 border rounded-lg bg-background text-foreground"
+        {/* View Mode Toggle */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            aria-label="Grid view"
           >
-            <option value="featured">Featured First</option>
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-            <option value="newest">Newest Members</option>
-          </select>
+            <Grid3x3Icon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            aria-label="List view"
+          >
+            <ListIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setViewMode('map')}
+            className={`p-2 rounded ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            aria-label="Map view"
+          >
+            <MapIcon className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Category Filters */}
@@ -199,13 +204,34 @@ export function BusinessDirectory({ businesses, categories }: BusinessDirectoryP
               >
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {business.logo && typeof business.logo === 'object' && business.logo.url && (
+                        <img
+                          src={business.logo.url}
+                          alt=""
+                          className="w-10 h-10 object-contain rounded flex-shrink-0"
+                        />
+                      )}
                       <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
                         {business.name}
                       </h3>
                       {business.featured && (
                         <span className="text-amber-500 text-sm">★ Featured</span>
                       )}
+                      {(() => {
+                        const badge = getTierBadge(business.membershipTier ?? undefined)
+                        if (!badge) return null
+                        const Icon = badge.icon
+                        return (
+                          <span
+                            className={`flex items-center gap-1 text-xs ${badge.color}`}
+                            title={badge.label}
+                          >
+                            <Icon className="h-4 w-4" />
+                            {badge.label.split(' ')[0]}
+                          </span>
+                        )
+                      })()}
                     </div>
                     {business.category &&
                       Array.isArray(business.category) &&

@@ -2,7 +2,7 @@ import { requireBusinessMember } from '@/utilities/auth'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
-import { AlertCircle, Building2, Calendar, CheckCircle, Clock } from 'lucide-react'
+import { AlertCircle, Building2, Calendar, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default async function PortalDashboard() {
@@ -16,26 +16,11 @@ export default async function PortalDashboard() {
       : user.business
     : null
 
-  // Get the latest membership for this business
-  let membership: any = null
+  // Get tier details if we have a membership tier
   let membershipTier: any = null
-  if (business) {
-    const memberships = await payload.find({
-      collection: 'memberships',
-      where: {
-        business: { equals: business.id },
-      },
-      sort: '-createdAt',
-      limit: 1,
-    })
-
-    membership = memberships.docs[0] || null
-
-    // Get tier details if we have a membership
-    if (membership && membership.tier) {
-      const tierGlobal = await payload.findGlobal({ slug: 'membershipTiers' })
-      membershipTier = tierGlobal?.tiers?.find((t: any) => t.slug === membership.tier)
-    }
+  if (business && business.membershipTier) {
+    const tierGlobal = await payload.findGlobal({ slug: 'membershipTiers' })
+    membershipTier = tierGlobal?.tiers?.find((t: any) => t.slug === business.membershipTier)
   }
 
   // Calculate days until expiration
@@ -111,6 +96,19 @@ export default async function PortalDashboard() {
                     <AlertCircle className="h-5 w-5 text-red-500" />
                     <span className="text-red-700 dark:text-red-400 font-medium">Inactive</span>
                   </>
+                )}
+                {business.paymentStatus && (
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                      business.paymentStatus === 'paid'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : business.paymentStatus === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                    }`}
+                  >
+                    Payment: {business.paymentStatus}
+                  </span>
                 )}
               </div>
 
@@ -196,26 +194,6 @@ export default async function PortalDashboard() {
               </div>
             </Link>
           </div>
-
-          {/* Recent Activity */}
-          {membership && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Payment
-              </h2>
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-gray-900 dark:text-white">
-                    Payment of ${membership.amount} received
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(membership.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

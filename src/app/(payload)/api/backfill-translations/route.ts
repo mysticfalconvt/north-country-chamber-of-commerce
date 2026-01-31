@@ -181,9 +181,8 @@ export async function POST(req: Request) {
 
           const stats = {
             pages: { total: 0, translated: 0, skipped: 0 },
-            posts: { total: 0, translated: 0, skipped: 0 },
             events: { total: 0, translated: 0, skipped: 0 },
-            announcements: { total: 0, translated: 0, skipped: 0 },
+            news: { total: 0, translated: 0, skipped: 0 },
             businesses: { total: 0, translated: 0, skipped: 0 },
             signatureEvents: { total: 0, translated: 0, skipped: 0 },
           }
@@ -476,56 +475,6 @@ export async function POST(req: Request) {
             }
           }
 
-          // Translate Posts
-          sendProgress(controller, '📝 Processing Posts...')
-          const posts = await payload.find({
-            collection: 'posts',
-            limit: 1000,
-            locale: 'en',
-            depth: 0,
-          })
-
-          stats.posts.total = posts.totalDocs
-
-          for (const post of posts.docs) {
-            // When fetching with locale 'en', title is a string
-            const postTitle =
-              typeof post.title === 'string' ? post.title : (post.title as { en?: string })?.en
-            let needsUpdate = false
-            const updateData: any = {}
-
-            // Check if we need to translate title
-            if (postTitle && !(await checkFrenchField(payload, 'posts', post.id, 'title', force))) {
-              sendProgress(controller, `  Translating post "${postTitle}" title...`)
-              updateData.title = await translateToFrench(postTitle)
-              needsUpdate = true
-            }
-
-            // Check if we need to translate content
-            if (
-              post.content &&
-              !(await checkFrenchField(payload, 'posts', post.id, 'content', force))
-            ) {
-              sendProgress(controller, `  Translating post "${postTitle || post.id}" content...`)
-              updateData.content = await translateLexicalJSON(post.content)
-              needsUpdate = true
-            }
-
-            if (needsUpdate) {
-              await payload.update({
-                collection: 'posts',
-                id: post.id,
-                data: updateData,
-                locale: 'fr',
-                context: { skipTranslation: true },
-              })
-              stats.posts.translated++
-              sendProgress(controller, `  ✓ Translated post "${postTitle || post.id}"`)
-            } else {
-              stats.posts.skipped++
-            }
-          }
-
           // Translate Events
           sendProgress(controller, '📅 Processing Events...')
           const events = await payload.find({
@@ -580,62 +529,62 @@ export async function POST(req: Request) {
             }
           }
 
-          // Translate Announcements
-          sendProgress(controller, '📢 Processing Announcements...')
-          const announcements = await payload.find({
-            collection: 'announcements',
+          // Translate News
+          sendProgress(controller, '📢 Processing News...')
+          const newsItems = await payload.find({
+            collection: 'news',
             limit: 1000,
             locale: 'en',
             depth: 0,
           })
 
-          stats.announcements.total = announcements.totalDocs
+          stats.news.total = newsItems.totalDocs
 
-          for (const announcement of announcements.docs) {
+          for (const newsItem of newsItems.docs) {
             // When fetching with locale 'en', title is a string
-            const announcementTitle =
-              typeof announcement.title === 'string'
-                ? announcement.title
-                : (announcement.title as { en?: string })?.en
+            const newsTitle =
+              typeof newsItem.title === 'string'
+                ? newsItem.title
+                : (newsItem.title as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
             if (
-              announcementTitle &&
-              !(await checkFrenchField(payload, 'announcements', announcement.id, 'title', force))
+              newsTitle &&
+              !(await checkFrenchField(payload, 'news', newsItem.id, 'title', force))
             ) {
-              sendProgress(controller, `  Translating announcement "${announcementTitle}" title...`)
-              updateData.title = await translateToFrench(announcementTitle)
+              sendProgress(controller, `  Translating news item "${newsTitle}" title...`)
+              updateData.title = await translateToFrench(newsTitle)
               needsUpdate = true
             }
 
             if (
-              announcement.content &&
-              !(await checkFrenchField(payload, 'announcements', announcement.id, 'content', force))
+              newsItem.content &&
+              !(await checkFrenchField(payload, 'news', newsItem.id, 'content', force))
             ) {
               sendProgress(
                 controller,
-                `  Translating announcement "${announcementTitle || announcement.id}" content...`,
+                `  Translating news item "${newsTitle || newsItem.id}" content...`,
               )
-              updateData.content = await translateLexicalJSON(announcement.content)
+              updateData.content = await translateLexicalJSON(newsItem.content)
               needsUpdate = true
             }
 
             if (needsUpdate) {
               await payload.update({
-                collection: 'announcements',
-                id: announcement.id,
+                collection: 'news',
+                id: newsItem.id,
                 data: updateData,
                 locale: 'fr',
                 context: { skipTranslation: true },
               })
-              stats.announcements.translated++
+              stats.news.translated++
               sendProgress(
                 controller,
-                `  ✓ Translated announcement "${announcementTitle || announcement.id}"`,
+                `  ✓ Translated news item "${newsTitle || newsItem.id}"`,
               )
             } else {
-              stats.announcements.skipped++
+              stats.news.skipped++
             }
           }
 
@@ -788,9 +737,8 @@ export async function POST(req: Request) {
 
 Summary:
 - Pages: ${stats.pages.translated} translated, ${stats.pages.skipped} skipped (${stats.pages.total} total)
-- Posts: ${stats.posts.translated} translated, ${stats.posts.skipped} skipped (${stats.posts.total} total)
 - Events: ${stats.events.translated} translated, ${stats.events.skipped} skipped (${stats.events.total} total)
-- Announcements: ${stats.announcements.translated} translated, ${stats.announcements.skipped} skipped (${stats.announcements.total} total)
+- News: ${stats.news.translated} translated, ${stats.news.skipped} skipped (${stats.news.total} total)
 - Businesses: ${stats.businesses.translated} translated, ${stats.businesses.skipped} skipped (${stats.businesses.total} total)
 - Signature Events: ${stats.signatureEvents.translated} translated, ${stats.signatureEvents.skipped} skipped (${stats.signatureEvents.total} total)
           `.trim()

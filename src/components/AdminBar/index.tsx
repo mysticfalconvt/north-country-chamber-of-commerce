@@ -4,7 +4,7 @@ import type { PayloadAdminBarProps, PayloadMeUser } from '@payloadcms/admin-bar'
 import type { User } from '@/payload-types'
 
 import { cn } from '@/utilities/ui'
-import { useSelectedLayoutSegments } from 'next/navigation'
+import { useSelectedLayoutSegments, usePathname } from 'next/navigation'
 import { PayloadAdminBar } from '@payloadcms/admin-bar'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,6 +38,7 @@ export const AdminBar: React.FC<{
 }> = (props) => {
   const { adminBarProps } = props || {}
   const segments = useSelectedLayoutSegments()
+  const pathname = usePathname()
   const [show, setShow] = useState(false)
   const collection = (
     collectionLabels[segments?.[1] as keyof typeof collectionLabels] ? segments[1] : 'pages'
@@ -51,10 +52,15 @@ export const AdminBar: React.FC<{
     setUser(user as PayloadMeUser & Partial<User>)
   }, [])
 
-  // For business members, show a custom portal bar instead of the admin bar
+  // For business members on portal pages, hide entirely (portal has its own header)
+  if (show && user?.role === 'business_member' && pathname?.startsWith('/portal')) {
+    return null
+  }
+
+  // For business members on non-portal pages, show a custom portal bar
   if (show && user?.role === 'business_member') {
     return (
-      <div className={cn(baseClass, 'py-2 bg-blue-600 text-white')}>
+      <div className={cn(baseClass, 'py-2 bg-blue-600 text-white relative z-[60]')}>
         <div className="container">
           <div className="flex items-center justify-between">
             <Link href="/portal" className="hover:underline font-medium">

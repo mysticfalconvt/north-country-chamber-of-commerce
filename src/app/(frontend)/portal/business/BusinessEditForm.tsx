@@ -14,6 +14,12 @@ export default function BusinessEditForm({ business }: { business: any }) {
     email: business.email || '',
     website: business.website || '',
     hoursOfOperation: business.hoursOfOperation?.root?.children?.[0]?.children?.[0]?.text || '',
+    address: business.address || '',
+    city: business.city || '',
+    state: business.state || '',
+    zipCode: business.zipCode || '',
+    latitude: business.coordinates?.latitude?.toString() || '',
+    longitude: business.coordinates?.longitude?.toString() || '',
   })
 
   const [loading, setLoading] = useState(false)
@@ -65,6 +71,26 @@ export default function BusinessEditForm({ business }: { business: any }) {
           }
         : business.hoursOfOperation
 
+      // Build coordinates object
+      // If both are empty, send nulls to clear them (triggers auto-geocoding from address)
+      // If values exist, send them
+      const hadCoordinatesBefore =
+        business.coordinates?.latitude || business.coordinates?.longitude
+      const hasCoordinatesNow = formData.latitude || formData.longitude
+
+      let coordinates: { latitude: number | null; longitude: number | null } | undefined
+      if (hasCoordinatesNow) {
+        // User provided coordinates
+        coordinates = {
+          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        }
+      } else if (hadCoordinatesBefore) {
+        // User cleared coordinates - send nulls to trigger re-geocoding
+        coordinates = { latitude: null, longitude: null }
+      }
+      // If there were no coordinates before and none now, don't send the field
+
       const response = await fetch('/api/portal/business', {
         method: 'PATCH',
         headers: {
@@ -76,6 +102,11 @@ export default function BusinessEditForm({ business }: { business: any }) {
           email: formData.email,
           website: formData.website,
           hoursOfOperation,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          coordinates,
         }),
       })
 
@@ -100,8 +131,8 @@ export default function BusinessEditForm({ business }: { business: any }) {
           <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-blue-900 dark:text-blue-200">
-              Some fields like business name, address, and membership tier can only be updated by
-              chamber staff. Contact us if you need to change these fields.
+              Some fields like business name and membership tier can only be updated by chamber
+              staff. Contact us if you need to change these fields.
             </p>
           </div>
         </div>
@@ -112,17 +143,6 @@ export default function BusinessEditForm({ business }: { business: any }) {
         <div>
           <Label>Business Name</Label>
           <Input value={business.name} disabled className="mt-1" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>City</Label>
-            <Input value={business.city || ''} disabled className="mt-1" />
-          </div>
-          <div>
-            <Label>State</Label>
-            <Input value={business.state || ''} disabled className="mt-1" />
-          </div>
         </div>
 
         <div>
@@ -222,6 +242,95 @@ export default function BusinessEditForm({ business }: { business: any }) {
             placeholder="https://"
           />
         </div>
+
+        <hr className="my-6 border-gray-200 dark:border-gray-700" />
+
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Address</h3>
+
+        <div>
+          <Label htmlFor="address">Street Address</Label>
+          <Input
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            className="mt-1"
+            placeholder="123 Main St"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="col-span-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="mt-1"
+              placeholder="VT"
+            />
+          </div>
+          <div>
+            <Label htmlFor="zipCode">ZIP Code</Label>
+            <Input
+              id="zipCode"
+              name="zipCode"
+              value={formData.zipCode}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+            Map Coordinates
+          </h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Leave blank to auto-detect from address, or enter manually for precise map placement.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                name="latitude"
+                type="number"
+                step="any"
+                value={formData.latitude}
+                onChange={handleChange}
+                className="mt-1"
+                placeholder="e.g., 44.9369"
+              />
+            </div>
+            <div>
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                name="longitude"
+                type="number"
+                step="any"
+                value={formData.longitude}
+                onChange={handleChange}
+                className="mt-1"
+                placeholder="e.g., -72.2052"
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
         <div>
           <Label htmlFor="hoursOfOperation">Hours of Operation</Label>

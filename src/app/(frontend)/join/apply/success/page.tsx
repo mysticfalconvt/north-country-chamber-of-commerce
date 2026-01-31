@@ -49,11 +49,11 @@ function SuccessContent() {
                 <p className="pt-2 border-t">
                   <strong>Mail Check To:</strong>
                   <br />
-                  North Country Chamber of Commerce
+                  Vermont's North Country Chamber of Commerce
                   <br />
-                  [Address Line 1]
+                  246 Causeway
                   <br />
-                  [City, State ZIP]
+                  Causeway, Newport, VT 05855
                 </p>
                 <p className="text-sm text-muted-foreground pt-2">
                   Please include your business name in the memo line of the check.

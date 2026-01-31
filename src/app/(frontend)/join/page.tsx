@@ -4,7 +4,6 @@ import config from '@/payload.config'
 import { Container } from '@/design-system/Container'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
 import type { MembershipTier } from '@/payload-types'
 import { serializeLexical } from '@/utilities/serializeLexical'
 
@@ -16,7 +15,9 @@ export default async function JoinPage() {
   })) as MembershipTier
 
   const tiers = membershipTiersData?.tiers || []
-  const activeTiers = tiers.filter((tier) => tier.active)
+  const activeTiers = tiers
+    .filter((tier) => tier.active)
+    .sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99))
 
   return (
     <div className="min-h-screen py-16">
@@ -31,7 +32,7 @@ export default async function JoinPage() {
         </div>
 
         {/* Membership Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {activeTiers.map((tier: any, index: number) => {
             const isFeatured = tier.slug === 'featured'
 
@@ -65,15 +66,7 @@ export default async function JoinPage() {
                   </div>
                 )}
 
-                {/* Features */}
-                <ul className="space-y-3 mb-8 flex-grow">
-                  {tier.features?.map((feature: any, i: number) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature.feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="flex-grow" />
 
                 <Button asChild className="w-full" variant={isFeatured ? 'default' : 'outline'}>
                   <Link href={`/join/apply?tier=${tier.slug}`}>Get Started</Link>

@@ -432,6 +432,20 @@ export const Businesses: CollectionConfig = {
       },
     },
     {
+      name: 'paymentStatus',
+      type: 'select',
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'Paid', value: 'paid' },
+        { label: 'Overdue', value: 'overdue' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Has this business paid their membership dues?',
+      },
+    },
+    {
       name: 'approvalStatus',
       type: 'select',
       required: true,

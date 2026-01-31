@@ -10,12 +10,20 @@ export default async function BusinessesPage() {
   const businesses = await payload.find({
     collection: 'businesses',
     where: {
-      membershipStatus: {
-        equals: 'active',
-      },
+      and: [
+        {
+          membershipStatus: {
+            equals: 'active',
+          },
+        },
+        {
+          approvalStatus: {
+            equals: 'approved',
+          },
+        },
+      ],
     },
     limit: 100,
-    sort: '-featured',
     depth: 1,
   })
 
@@ -23,6 +31,28 @@ export default async function BusinessesPage() {
     collection: 'categories',
     limit: 100,
     sort: 'name',
+  })
+
+  // Fetch membership tiers for badge display
+  const membershipTiers = await payload.findGlobal({
+    slug: 'membershipTiers',
+  })
+
+  // Sort businesses by tier (higher tiers first) then alphabetically
+  const sortedBusinesses = [...businesses.docs].sort((a, b) => {
+    const tierA = membershipTiers.tiers?.find((t: any) => t.slug === a.membershipTier) as any
+    const tierB = membershipTiers.tiers?.find((t: any) => t.slug === b.membershipTier) as any
+
+    const sortOrderA = (tierA?.sortOrder as number | undefined) || 999
+    const sortOrderB = (tierB?.sortOrder as number | undefined) || 999
+
+    // Sort by tier first (lower sortOrder = higher tier = comes first)
+    if (sortOrderA !== sortOrderB) {
+      return sortOrderA - sortOrderB
+    }
+
+    // Then sort alphabetically by name
+    return a.name.localeCompare(b.name)
   })
 
   return (
@@ -36,8 +66,12 @@ export default async function BusinessesPage() {
           </p>
         </div>
 
-        {businesses.docs.length > 0 ? (
-          <BusinessDirectory businesses={businesses.docs} categories={categories.docs} />
+        {sortedBusinesses.length > 0 ? (
+          <BusinessDirectory
+            businesses={sortedBusinesses}
+            categories={categories.docs}
+            membershipTiers={membershipTiers.tiers || []}
+          />
         ) : (
           <div className="rounded-lg border bg-card p-8 text-center">
             <p className="text-muted-foreground">No businesses found.</p>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { sendBusinessApprovalNotification } from '@/utilities/email'
+import { sendBusinessApprovalNotification, sendApplicationReceivedEmail } from '@/utilities/email'
 
 // Generate a random temporary password
 function generateTempPassword(length: number = 10): string {
@@ -103,8 +103,13 @@ export async function POST(req: NextRequest) {
               {
                 type: 'paragraph',
                 children: [{ type: 'text', text: description || '' }],
+                version: 1,
               },
             ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
           },
         },
         address,
@@ -120,7 +125,7 @@ export async function POST(req: NextRequest) {
         applicationDate: new Date().toISOString(),
         category: categories,
         logo: logoId || undefined,
-      },
+      } as any,
     })
 
     // Generate temporary password for user account
@@ -139,6 +144,20 @@ export async function POST(req: NextRequest) {
     })
 
     payload.logger.info(`Created user ${user.id} for business ${business.id}`)
+
+    // Update business to set owner (bidirectional link)
+    await payload.update({
+      collection: 'businesses',
+      id: business.id,
+      data: {
+        owner: user.id,
+      } as any,
+      context: {
+        skipUserUpdate: true, // Prevent hook recursion
+      },
+    })
+
+    payload.logger.info(`Set business ${business.id} owner to user ${user.id}`)
 
     // Get all admin and chamber_staff emails
     const admins = await payload.find({
@@ -170,6 +189,22 @@ export async function POST(req: NextRequest) {
         payload.logger.error(`Failed to send approval notification: ${error}`)
         // Continue - don't fail the application if email fails
       }
+    }
+
+    // Send confirmation email to applicant with their credentials
+    try {
+      await sendApplicationReceivedEmail({
+        to: email,
+        businessName,
+        contactName,
+        tempPassword,
+        tier: tierData.name,
+        tierPrice: tierData.annualPrice,
+      })
+      payload.logger.info(`Sent application received email to ${email}`)
+    } catch (error) {
+      payload.logger.error(`Failed to send application received email: ${error}`)
+      // Continue - don't fail the application if email fails
     }
 
     return NextResponse.json({

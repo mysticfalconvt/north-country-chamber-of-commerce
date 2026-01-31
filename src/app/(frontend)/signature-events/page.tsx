@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card'
 import { headers } from 'next/headers'
 import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 import Image from 'next/image'
-import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { getOptimizedImageUrl } from '@/utilities/getMediaUrl'
+import type { Media } from '@/payload-types'
 
 export default async function SignatureEventsPage() {
   const headersList = await headers()
@@ -69,18 +70,21 @@ export default async function SignatureEventsPage() {
                 className="group"
               >
                 <Card className="h-full overflow-hidden transition-all hover:shadow-lg">
-                  {event.logo &&
-                    typeof event.logo !== 'string' &&
-                    typeof event.logo !== 'number' && (
+                  {(() => {
+                    const logo = event.logo as Media | null
+                    const logoUrl = getOptimizedImageUrl(logo, 'medium')
+                    if (!logoUrl) return null
+                    return (
                       <div className="relative w-full h-48 bg-muted">
                         <Image
-                          src={getMediaUrl(event.logo.url)}
-                          alt={event.logo.alt || event.name}
+                          src={logoUrl}
+                          alt={logo?.alt || event.name}
                           fill
                           className="object-cover"
                         />
                       </div>
-                    )}
+                    )
+                  })()}
                   <div className="p-6 space-y-4">
                     <div className="space-y-2">
                       <h3 className="text-2xl font-semibold group-hover:text-primary transition-colors">

@@ -9,8 +9,9 @@ import { headers } from 'next/headers'
 import { getLocaleFromPathname } from '@/utilities/getLocale'
 import { serializeLexical } from '@/utilities/serializeLexical'
 import Image from 'next/image'
-import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { getOptimizedImageUrl } from '@/utilities/getMediaUrl'
 import { EventApplicationForm } from '@/components/EventApplicationForm'
+import type { Media } from '@/payload-types'
 import { Calendar, Mail } from 'lucide-react'
 
 interface SignatureEventPageProps {
@@ -103,16 +104,21 @@ export default async function SignatureEventPage({ params }: SignatureEventPageP
         </div>
 
         {/* Logo */}
-        {event.logo && typeof event.logo !== 'string' && typeof event.logo !== 'number' && (
-          <div className="relative w-full h-96 rounded-lg overflow-hidden">
-            <Image
-              src={getMediaUrl(event.logo.url)}
-              alt={event.logo.alt || event.name}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+        {(() => {
+          const logo = event.logo as Media | null
+          const logoUrl = getOptimizedImageUrl(logo, 'large')
+          if (!logoUrl) return null
+          return (
+            <div className="relative w-full h-96 rounded-lg overflow-hidden">
+              <Image
+                src={logoUrl}
+                alt={logo?.alt || event.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )
+        })()}
 
         {/* Description */}
         <Card className="p-6">
@@ -139,17 +145,15 @@ export default async function SignatureEventPage({ params }: SignatureEventPageP
             <h2 className="text-3xl font-bold mb-6">{t.gallery}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {event.gallery.map((item, index) => {
-                const image =
-                  typeof item.image !== 'string' && typeof item.image !== 'number'
-                    ? item.image
-                    : null
-                if (!image) return null
+                const image = item.image as Media | null
+                const imageUrl = getOptimizedImageUrl(image, 'medium')
+                if (!imageUrl) return null
 
                 return (
                   <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
                     <Image
-                      src={getMediaUrl(image.url)}
-                      alt={image.alt || `Gallery image ${index + 1}`}
+                      src={imageUrl}
+                      alt={image?.alt || `Gallery image ${index + 1}`}
                       fill
                       className="object-cover hover:scale-105 transition-transform"
                     />

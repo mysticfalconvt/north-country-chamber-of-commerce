@@ -44,74 +44,26 @@ export const MembershipTiers: GlobalConfig = {
         {
           name: 'description',
           type: 'richText',
-          required: true,
           localized: true,
           admin: {
             description: 'Full description of benefits and features',
           },
         },
         {
-          type: 'row',
-          fields: [
-            {
-              name: 'annualPrice',
-              type: 'number',
-              required: true,
-              admin: {
-                description: 'Annual membership price in dollars (e.g., 100 for $100)',
-              },
-            },
-            {
-              name: 'advertisingSlots',
-              type: 'number',
-              defaultValue: 0,
-              admin: {
-                description: 'Number of advertising slots on business page',
-              },
-            },
-          ],
-        },
-        {
-          name: 'features',
-          type: 'array',
-          label: 'Features',
+          name: 'annualPrice',
+          type: 'number',
           required: true,
-          localized: true,
           admin: {
-            description: 'List of benefits included in this tier',
-            initCollapsed: true,
+            description: 'Annual membership price in dollars (e.g., 100 for $100)',
           },
-          fields: [
-            {
-              name: 'feature',
-              type: 'text',
-              required: true,
-              admin: {
-                description: 'Feature description (e.g., "Business directory listing")',
-              },
-            },
-          ],
         },
         {
-          type: 'row',
-          fields: [
-            {
-              name: 'featuredInDirectory',
-              type: 'checkbox',
-              defaultValue: false,
-              admin: {
-                description: 'Show at top of directory listings',
-              },
-            },
-            {
-              name: 'active',
-              type: 'checkbox',
-              defaultValue: true,
-              admin: {
-                description: 'Available for new sign-ups',
-              },
-            },
-          ],
+          name: 'active',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Available for new sign-ups',
+          },
         },
         {
           type: 'row',

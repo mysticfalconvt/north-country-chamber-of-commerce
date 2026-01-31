@@ -5,7 +5,7 @@ import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
-import { sendEventApprovalNotification } from '../../utilities/email'
+import { sendEventApprovalNotification, sendEventSubmissionConfirmation } from '../../utilities/email'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -139,6 +139,26 @@ export const Events: CollectionConfig = {
             req.payload.logger.info(
               `Sent event approval notification for "${doc.title}" to ${adminEmails.length} recipient(s)`,
             )
+
+            // Send confirmation email to the submitter
+            if (submitterEmail && submitterEmail !== 'Unknown') {
+              try {
+                await sendEventSubmissionConfirmation({
+                  to: submitterEmail,
+                  eventTitle:
+                    typeof doc.title === 'string' ? doc.title : doc.title?.en || 'Untitled Event',
+                  eventDate: doc.date,
+                  businessName,
+                })
+                req.payload.logger.info(
+                  `Sent event submission confirmation to ${submitterEmail} for "${doc.title}"`,
+                )
+              } catch (confirmError) {
+                req.payload.logger.error(
+                  `Failed to send event submission confirmation: ${confirmError}`,
+                )
+              }
+            }
           } catch (error) {
             req.payload.logger.error(`Failed to send event approval notification: ${error}`)
           }

@@ -6,7 +6,6 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 
-import { Announcements } from './collections/Announcements'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
 import { EmailCampaigns } from './collections/EmailCampaigns'
@@ -14,9 +13,8 @@ import { EventApplications } from './collections/EventApplications'
 import { Events } from './collections/Events'
 import { MailingList } from './collections/MailingList'
 import { Media } from './collections/Media'
-import { Memberships } from './collections/Memberships'
+import { News } from './collections/News'
 import { Pages } from './collections/Pages'
-import { Posts } from './collections/Posts'
 import { SignatureEvents } from './collections/SignatureEvents'
 import { Users } from './collections/Users'
 import { Banners } from './globals/Banners/config'
@@ -42,6 +40,7 @@ export default buildConfig({
       // Redirect users based on their role after login
       afterLogin: ['@/components/AfterLogin'],
     },
+    // Custom admin styles are loaded from src/app/(payload)/custom.scss automatically
     autoLogin:
       process.env.NEXT_PUBLIC_ENABLE_AUTOLOGIN === 'true'
         ? {
@@ -115,13 +114,11 @@ export default buildConfig({
   }),
   collections: [
     Pages,
-    Posts,
     Businesses,
     Events,
     EventApplications,
-    Announcements,
+    News,
     SignatureEvents,
-    Memberships,
     MailingList,
     EmailCampaigns,
     Media,

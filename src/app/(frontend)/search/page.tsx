@@ -1,12 +1,11 @@
 import type { Metadata } from 'next/types'
 
-import { CollectionArchive } from '@/components/CollectionArchive'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 import { Search } from '@/search/Component'
 import PageClient from './page.client'
-import { CardPostData } from '@/components/Card'
+import Link from 'next/link'
 
 type Args = {
   searchParams: Promise<{
@@ -17,16 +16,10 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   const { q: query } = await searchParamsPromise
   const payload = await getPayload({ config: configPromise })
 
-  const posts = await payload.find({
+  const results = await payload.find({
     collection: 'search',
     depth: 1,
     limit: 12,
-    select: {
-      title: true,
-      slug: true,
-      categories: true,
-      meta: true,
-    },
     // pagination: false reduces overhead if you don't need totalDocs
     pagination: false,
     ...(query
@@ -35,16 +28,6 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
             or: [
               {
                 title: {
-                  like: query,
-                },
-              },
-              {
-                'meta.description': {
-                  like: query,
-                },
-              },
-              {
-                'meta.title': {
                   like: query,
                 },
               },
@@ -72,8 +55,20 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
         </div>
       </div>
 
-      {posts.totalDocs > 0 ? (
-        <CollectionArchive posts={posts.docs as CardPostData[]} />
+      {results.totalDocs > 0 ? (
+        <div className="container">
+          <div className="grid gap-4 max-w-2xl mx-auto">
+            {results.docs.map((result) => (
+              <Link
+                key={result.id}
+                href={`/news/${result.slug}`}
+                className="block p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+              >
+                <h2 className="font-semibold text-lg">{result.title}</h2>
+              </Link>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="container">No results found.</div>
       )}
@@ -83,6 +78,6 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Payload Website Template Search`,
+    title: `Search | North Country Chamber of Commerce`,
   }
 }

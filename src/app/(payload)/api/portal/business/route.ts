@@ -31,6 +31,11 @@ export async function PATCH(req: NextRequest) {
       'socialLinks',
       'hoursOfOperation',
       'advertisingSlots',
+      'address',
+      'city',
+      'state',
+      'zipCode',
+      'coordinates',
     ]
 
     const updateData: any = {}

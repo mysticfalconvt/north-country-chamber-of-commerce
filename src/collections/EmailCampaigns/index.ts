@@ -22,12 +22,12 @@ export const EmailCampaigns: CollectionConfig = {
   },
   fields: [
     {
-      name: 'announcement',
+      name: 'newsItem',
       type: 'relationship',
-      relationTo: 'announcements',
-      required: true,
+      relationTo: 'news',
+      required: false, // Allow null so news items can be deleted
       admin: {
-        description: 'The announcement that was sent',
+        description: 'The news item that was sent (may be null if news item was deleted)',
       },
     },
     {
