@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { BusinessMap } from './BusinessMap'
 import type { Business, Category } from '@/payload-types'
 import { MapIcon, Grid3x3Icon, ListIcon, Award, Medal, Crown } from 'lucide-react'
+import { addLocaleToPathname } from '@/utilities/getLocale'
 
 type ViewMode = 'grid' | 'list' | 'map'
 
@@ -21,12 +22,57 @@ interface BusinessDirectoryProps {
   businesses: Business[]
   categories: Category[]
   membershipTiers: MembershipTier[]
+  locale?: 'en' | 'fr'
 }
 
-export function BusinessDirectory({ businesses, categories, membershipTiers }: BusinessDirectoryProps) {
+const translations = {
+  en: {
+    search: 'Search businesses...',
+    showing: 'Showing',
+    of: 'of',
+    businesses: 'businesses',
+    noResults: 'No businesses found matching your criteria.',
+    featured: 'Featured',
+    platinum: 'Platinum',
+    gold: 'Gold',
+    silver: 'Silver',
+    platinumMember: 'Platinum Member',
+    goldMember: 'Gold Member',
+    silverMember: 'Silver Member',
+    gridView: 'Grid view',
+    listView: 'List view',
+    mapView: 'Map view',
+  },
+  fr: {
+    search: 'Rechercher des entreprises...',
+    showing: 'Affichage de',
+    of: 'sur',
+    businesses: 'entreprises',
+    noResults: 'Aucune entreprise trouvée correspondant à vos critères.',
+    featured: 'En vedette',
+    platinum: 'Platine',
+    gold: 'Or',
+    silver: 'Argent',
+    platinumMember: 'Membre Platine',
+    goldMember: 'Membre Or',
+    silverMember: 'Membre Argent',
+    gridView: 'Vue grille',
+    listView: 'Vue liste',
+    mapView: 'Vue carte',
+  },
+}
+
+export function BusinessDirectory({
+  businesses,
+  categories,
+  membershipTiers,
+  locale = 'en',
+}: BusinessDirectoryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+
+  const t = translations[locale]
 
   // Filter and sort businesses
   const filteredBusinesses = useMemo(() => {
@@ -101,11 +147,11 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
 
     switch (tierSlug) {
       case 'platinum':
-        return { icon: Crown, label: 'Platinum Member', color: 'text-slate-400' }
+        return { icon: Crown, label: t.platinumMember, shortLabel: t.platinum, color: 'text-slate-400' }
       case 'gold':
-        return { icon: Award, label: 'Gold Member', color: 'text-yellow-500' }
+        return { icon: Award, label: t.goldMember, shortLabel: t.gold, color: 'text-yellow-500' }
       case 'silver':
-        return { icon: Medal, label: 'Silver Member', color: 'text-slate-300' }
+        return { icon: Medal, label: t.silverMember, shortLabel: t.silver, color: 'text-slate-300' }
       default:
         return null
     }
@@ -118,7 +164,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
         {/* Search */}
         <input
           type="text"
-          placeholder="Search businesses..."
+          placeholder={t.search}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 border rounded-lg bg-background text-foreground"
@@ -129,21 +175,21 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-            aria-label="Grid view"
+            aria-label={t.gridView}
           >
             <Grid3x3Icon className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-            aria-label="List view"
+            aria-label={t.listView}
           >
             <ListIcon className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('map')}
             className={`p-2 rounded ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-            aria-label="Map view"
+            aria-label={t.mapView}
           >
             <MapIcon className="h-5 w-5" />
           </button>
@@ -170,7 +216,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground">
-          Showing {filteredBusinesses.length} of {businesses.length} businesses
+          {t.showing} {filteredBusinesses.length} {t.of} {businesses.length} {t.businesses}
         </p>
       </div>
 
@@ -182,7 +228,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
             onBusinessClick={(id) => {
               const business = businesses.find((b) => String(b.id) === id)
               if (business?.slug) {
-                window.location.href = `/businesses/${business.slug}`
+                window.location.href = addLocaleToPathname(`/businesses/${business.slug}`, locale)
               }
             }}
           />
@@ -196,7 +242,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
           {filteredBusinesses.map((business) => (
             <Link
               key={business.id}
-              href={`/businesses/${business.slug}`}
+              href={addLocaleToPathname(`/businesses/${business.slug}`, locale)}
               className={viewMode === 'grid' ? 'group' : 'group'}
             >
               <Card
@@ -216,7 +262,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
                         {business.name}
                       </h3>
                       {business.featured && (
-                        <span className="text-amber-500 text-sm">★ Featured</span>
+                        <span className="text-amber-500 text-sm">★ {t.featured}</span>
                       )}
                       {(() => {
                         const badge = getTierBadge(business.membershipTier ?? undefined)
@@ -228,7 +274,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
                             title={badge.label}
                           >
                             <Icon className="h-4 w-4" />
-                            {badge.label.split(' ')[0]}
+                            {badge.shortLabel}
                           </span>
                         )
                       })()}
@@ -269,7 +315,7 @@ export function BusinessDirectory({ businesses, categories, membershipTiers }: B
 
       {filteredBusinesses.length === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center">
-          <p className="text-muted-foreground">No businesses found matching your criteria.</p>
+          <p className="text-muted-foreground">{t.noResults}</p>
         </div>
       )}
     </div>

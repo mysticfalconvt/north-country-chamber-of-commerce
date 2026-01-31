@@ -17,7 +17,6 @@ const collections: CollectionSlug[] = [
   'search',
   'businesses',
   'events',
-  'signature-events',
 ]
 
 const globals: GlobalSlug[] = ['header', 'footer']
@@ -80,7 +79,7 @@ export const seed = async ({
 
   // Delete collections sequentially to avoid deadlocks from foreign key constraints
   // Delete dependent collections first, then the ones they depend on
-  // Order: email-campaigns, posts, pages, events, event-applications, businesses, announcements, signature-events, memberships (depend on media/categories)
+  // Order: email-campaigns, posts, pages, events, event-applications, businesses, announcements, memberships (depend on media/categories)
   //        then: mailing-list, media, categories, forms, form-submissions, users, search, redirects
   const deletionOrder = [
     'email-campaigns', // references announcements, events
@@ -91,7 +90,6 @@ export const seed = async ({
     'memberships', // references businesses
     'businesses', // references media, categories
     'announcements', // references media
-    'signature-events', // references media
     'form-submissions', // references forms
     'mailing-list', // no references
     'media', // referenced by others
@@ -406,7 +404,6 @@ export const seed = async ({
         endTime: '9:30 AM',
         location: 'North Country Coffee Roasters',
         business: business2.id,
-        category: 'networking',
         featured: true,
         eventStatus: 'published',
       },
@@ -441,7 +438,6 @@ export const seed = async ({
         startTime: '10:00 AM',
         endTime: '4:00 PM',
         location: 'Downtown Newport',
-        category: 'community',
         featured: true,
         eventStatus: 'published',
       },
@@ -511,97 +507,6 @@ export const seed = async ({
         },
         publishDate: new Date().toISOString(),
         featured: false,
-      },
-    }),
-  ])
-
-  payload.logger.info(`— Seeding signature events...`)
-
-  await Promise.all([
-    payload.create({
-      collection: 'signature-events',
-      data: {
-        name: 'Hot Rod ChiliFest',
-        slug: 'hot-rod-chilifest',
-        description: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [
-                  {
-                    type: 'text',
-                    text: 'Annual chili cook-off and car show featuring classic cars, delicious chili, and family fun.',
-                  },
-                ],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-        year: 2025,
-        eventStatus: 'upcoming',
-        schedule: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '10:00 AM - Gates Open' }],
-                version: 1,
-              },
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '11:00 AM - Chili Tasting Begins' }],
-                version: 1,
-              },
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '2:00 PM - Awards Ceremony' }],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-      },
-    }),
-    payload.create({
-      collection: 'signature-events',
-      data: {
-        name: 'AquaFest',
-        slug: 'aquafest',
-        description: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [
-                  {
-                    type: 'text',
-                    text: 'Celebrate summer on Lake Memphremagog with water activities, live music, food vendors, and fireworks.',
-                  },
-                ],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-        year: 2025,
-        eventStatus: 'upcoming',
       },
     }),
   ])

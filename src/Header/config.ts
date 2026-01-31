@@ -29,7 +29,6 @@ export const Header: GlobalConfig = {
     },
   ],
   hooks: {
-    beforeChange: [autoTranslate],
-    afterChange: [revalidateHeader],
+    afterChange: [autoTranslate, revalidateHeader],
   },
 }

@@ -1,21 +1,4 @@
-import { headers } from 'next/headers'
-
 export type Locale = 'en' | 'fr'
-
-/**
- * Extract locale from the current request
- * Checks URL pathname for /fr prefix
- */
-export async function getLocale(): Promise<Locale> {
-  const headersList = await headers()
-  const pathname = headersList.get('x-pathname') || ''
-
-  if (pathname.startsWith('/fr')) {
-    return 'fr'
-  }
-
-  return 'en'
-}
 
 /**
  * Get locale from pathname string

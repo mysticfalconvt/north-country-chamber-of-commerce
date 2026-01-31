@@ -179,11 +179,6 @@ export default async function ApproveEventPage({ params }: PageProps) {
                           ? 'Draft'
                           : 'Pending Approval'}
                   </span>
-                  {event.category && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                      {event.category}
-                    </span>
-                  )}
                   {event.featured && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
                       Featured

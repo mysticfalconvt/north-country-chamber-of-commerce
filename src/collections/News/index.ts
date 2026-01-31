@@ -47,8 +47,8 @@ export const News: CollectionConfig = {
 
         return data
       },
-      autoTranslate,
     ],
+    afterChange: [autoTranslate],
     beforeDelete: [
       async ({ id, req }) => {
         // Nullify references in email-campaigns before deleting

@@ -96,9 +96,9 @@ export const Businesses: CollectionConfig = {
         req.payload.logger.info('[BUSINESS beforeChange] Done, returning data')
         return data
       },
-      autoTranslate,
     ],
     afterChange: [
+      autoTranslate,
       async ({ doc, req, operation, context }) => {
         req.payload.logger.info(
           `[BUSINESS afterChange] operation=${operation}, context=${JSON.stringify(context)}`,

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,9 +22,11 @@ export function LanguageSwitcher({ className, variant = 'default' }: LanguageSwi
     ? `/fr${pathname === '/' ? '' : pathname}`
     : pathname.replace(/^\/fr/, '') || '/'
 
+  // Use regular anchor tag to force full page reload
+  // This ensures the Header/Footer server components re-render with the new locale
   if (variant === 'mobile') {
     return (
-      <Link
+      <a
         href={targetPath}
         className={cn(
           'flex items-center gap-2 px-4 py-3 text-base font-medium text-foreground hover:bg-accent/50 transition-colors rounded-md',
@@ -34,16 +35,16 @@ export function LanguageSwitcher({ className, variant = 'default' }: LanguageSwi
       >
         <Globe className="h-5 w-5" />
         <span>{targetLabel === 'FR' ? 'Français' : 'English'}</span>
-      </Link>
+      </a>
     )
   }
 
   return (
     <Button variant="ghost" size="sm" asChild className={className}>
-      <Link href={targetPath} className="flex items-center gap-1.5">
+      <a href={targetPath} className="flex items-center gap-1.5">
         <Globe className="h-4 w-4" />
         <span className="text-sm font-medium">{targetLabel}</span>
-      </Link>
+      </a>
     </Button>
   )
 }

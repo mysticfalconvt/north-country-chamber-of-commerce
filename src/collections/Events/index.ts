@@ -91,9 +91,9 @@ export const Events: CollectionConfig = {
 
         return data
       },
-      autoTranslate,
     ],
     afterChange: [
+      autoTranslate,
       async ({ doc, operation, req }) => {
         // Send notification email when a new event is created with pending status
         if (operation === 'create' && doc.eventStatus === 'pending') {

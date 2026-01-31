@@ -104,7 +104,6 @@ export const Footer: GlobalConfig = {
     },
   ],
   hooks: {
-    beforeChange: [autoTranslate],
-    afterChange: [revalidateFooter],
+    afterChange: [autoTranslate, revalidateFooter],
   },
 }
