@@ -7,6 +7,7 @@ import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
 import { sendEventApprovalNotification, sendEventSubmissionConfirmation } from '../../utilities/email'
 import { autoTranslate } from './hooks'
+import { getAdminNotificationEmails } from '../../utilities/getAdminEmails'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -98,22 +99,12 @@ export const Events: CollectionConfig = {
         // Send notification email when a new event is created with pending status
         if (operation === 'create' && doc.eventStatus === 'pending') {
           try {
-            // Get all admin and chamber_staff users
-            const adminUsers = await req.payload.find({
-              collection: 'users',
-              where: {
-                or: [{ role: { equals: 'admin' } }, { role: { equals: 'chamber_staff' } }],
-              },
-              limit: 100,
-            })
-
-            const adminEmails = adminUsers.docs
-              .map((user) => user.email)
-              .filter((email): email is string => !!email)
+            // Get admin notification emails (from env var or fallback to database)
+            const adminEmails = await getAdminNotificationEmails(req.payload)
 
             if (adminEmails.length === 0) {
               req.payload.logger.warn(
-                'No admin or chamber staff emails found for event approval notification',
+                'No admin notification emails configured. Set ADMIN_NOTIFICATION_EMAIL env var.',
               )
               return
             }
@@ -152,9 +143,8 @@ export const Events: CollectionConfig = {
               adminEmails,
             })
 
-            req.payload.logger.info(
-              `Sent event approval notification for "${doc.title}" to ${adminEmails.length} recipient(s)`,
-            )
+            req.payload.logger.info(`Sent event approval notification for "${doc.title}"`)
+
 
             // Send confirmation email to the submitter
             if (submitterEmail && submitterEmail !== 'Unknown') {

@@ -3,8 +3,15 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { sendMailingListConfirmation } from '@/utilities/email'
 import { randomBytes } from 'crypto'
+import { rateLimiters } from '@/utilities/rateLimit'
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 requests per hour per IP
+  const rateLimitResponse = rateLimiters.mailingListSubscribe(req)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   const payload = await getPayload({ config })
 
   try {

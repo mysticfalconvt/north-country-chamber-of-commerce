@@ -3,16 +3,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { cookies } from 'next/headers'
 import { sendWelcomeEmail, sendBusinessRejectedEmail } from '@/utilities/email'
-
-// Generate a random temporary password
-function generateTempPassword(length: number = 10): string {
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let password = ''
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length))
-  }
-  return password
-}
+import { generateSecurePassword } from '@/utilities/generatePassword'
 
 export async function POST(req: NextRequest) {
   const payload = await getPayload({ config })
@@ -115,7 +106,7 @@ export async function POST(req: NextRequest) {
       if (businessOwner.docs.length > 0) {
         const owner = businessOwner.docs[0]
         // Generate a new temporary password
-        const tempPassword = generateTempPassword(12)
+        const tempPassword = generateSecurePassword(12)
 
         // Update user password
         await payload.update({

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { escapeHtml } from './sanitize'
 
 // Create reusable transporter
 export const transporter = nodemailer.createTransport({
@@ -98,7 +99,7 @@ North Country Chamber of Commerce
     <div class="content">
       <h1 style="text-align: center; margin-bottom: 30px;">Welcome to the Chamber!</h1>
 
-      <p>Dear ${businessName},</p>
+      <p>Dear ${escapeHtml(businessName)},</p>
 
       <p>Thank you for joining the North Country Chamber of Commerce! Your membership is now active.</p>
 
@@ -186,10 +187,10 @@ North Country Chamber of Commerce
       <p>A new event has been submitted and is awaiting approval.</p>
 
       <div class="info-box">
-        <h3 style="margin-top: 0;">${eventTitle}</h3>
+        <h3 style="margin-top: 0;">${escapeHtml(eventTitle)}</h3>
         <p><strong>Date:</strong> ${new Date(eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p><strong>Business:</strong> ${businessName}</p>
-        <p style="margin-bottom: 0;"><strong>Submitted by:</strong> ${submitterEmail}</p>
+        <p><strong>Business:</strong> ${escapeHtml(businessName)}</p>
+        <p style="margin-bottom: 0;"><strong>Submitted by:</strong> ${escapeHtml(submitterEmail)}</p>
       </div>
 
       <p style="text-align: center;">
@@ -250,7 +251,7 @@ North Country Chamber of Commerce
     <div class="content">
       <h1 style="text-align: center; margin-bottom: 30px;">Reset Your Password</h1>
 
-      <p>Hi ${name},</p>
+      <p>Hi ${escapeHtml(name)},</p>
 
       <p>You requested to reset your password for the North Country Chamber of Commerce member portal.</p>
 
@@ -322,10 +323,10 @@ North Country Chamber of Commerce
       <p>A new business has applied for chamber membership and requires approval.</p>
 
       <div class="info-box">
-        <h3 style="margin-top: 0;">${businessName}</h3>
-        <p><strong>Contact:</strong> ${contactName}</p>
-        <p><strong>Email:</strong> ${contactEmail}</p>
-        <p style="margin-bottom: 0;"><strong>Membership Tier:</strong> ${tier}</p>
+        <h3 style="margin-top: 0;">${escapeHtml(businessName)}</h3>
+        <p><strong>Contact:</strong> ${escapeHtml(contactName)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(contactEmail)}</p>
+        <p style="margin-bottom: 0;"><strong>Membership Tier:</strong> ${escapeHtml(tier)}</p>
       </div>
 
       <p style="text-align: center;">
@@ -385,13 +386,13 @@ North Country Chamber of Commerce
     <div class="content">
       <h1 style="text-align: center; margin-bottom: 30px;">Application Update</h1>
 
-      <p>Dear ${businessName},</p>
+      <p>Dear ${escapeHtml(businessName)},</p>
 
       <p>Thank you for your interest in joining the North Country Chamber of Commerce.</p>
 
       <p>After reviewing your application, we are unable to approve your membership at this time.</p>
 
-      ${reason ? `<div class="info-box" style="background-color: #fef2f2; border-color: #fecaca;"><p style="margin: 0;"><strong>Reason:</strong> ${reason}</p></div>` : ''}
+      ${reason ? `<div class="info-box" style="background-color: #fef2f2; border-color: #fecaca;"><p style="margin: 0;"><strong>Reason:</strong> ${escapeHtml(reason)}</p></div>` : ''}
 
       <p>If you have any questions or would like to discuss this further, please contact us.</p>
 
@@ -475,9 +476,9 @@ North Country Chamber of Commerce
     <div class="content">
       <h1 style="text-align: center; margin-bottom: 30px;">Application Received!</h1>
 
-      <p>Dear ${contactName},</p>
+      <p>Dear ${escapeHtml(contactName)},</p>
 
-      <p>Thank you for submitting your membership application for <strong>${businessName}</strong>!</p>
+      <p>Thank you for submitting your membership application for <strong>${escapeHtml(businessName)}</strong>!</p>
 
       <p>Your application is now pending review by our chamber staff. You'll receive another email once your application has been approved.</p>
 
@@ -490,8 +491,8 @@ North Country Chamber of Commerce
 
       <div class="info-box">
         <h3 style="margin-top: 0;">Application Details</h3>
-        <p><strong>Business Name:</strong> ${businessName}</p>
-        <p><strong>Membership Tier:</strong> ${tier}</p>
+        <p><strong>Business Name:</strong> ${escapeHtml(businessName)}</p>
+        <p><strong>Membership Tier:</strong> ${escapeHtml(tier)}</p>
         <p style="margin-bottom: 0;"><strong>Annual Dues:</strong> $${tierPrice}</p>
       </div>
 
@@ -601,12 +602,12 @@ export async function sendNewsletterEmail({
         .map(
           (event) => `
         <div style="background-color: #f9fafb; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #1e3a5f;">
-          <h3 style="margin: 0 0 10px 0; color: #1f2937;">${event.title}</h3>
+          <h3 style="margin: 0 0 10px 0; color: #1f2937;">${escapeHtml(event.title)}</h3>
           <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">
             <strong>Date:</strong> ${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
           ${event.startTime ? `<p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Time:</strong> ${event.startTime}${event.endTime ? ` - ${event.endTime}` : ''}</p>` : ''}
-          ${event.location ? `<p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Location:</strong> ${event.location}</p>` : ''}
+          ${event.location ? `<p style="margin: 5px 0; color: #6b7280; font-size: 14px;"><strong>Location:</strong> ${escapeHtml(event.location)}</p>` : ''}
           <p style="margin-top: 10px;">
             <a href="${baseUrl}/events/${event.slug}" style="color: #1e3a5f; text-decoration: none; font-weight: 600;">Learn more →</a>
           </p>
@@ -650,7 +651,7 @@ North Country Chamber of Commerce
     <div class="content">
       ${imageHTML}
 
-      <h1 style="color: #1f2937; margin-bottom: 10px;">${announcement.title}</h1>
+      <h1 style="color: #1f2937; margin-bottom: 10px;">${escapeHtml(announcement.title)}</h1>
       <p style="color: #6b7280; font-size: 14px; margin-bottom: 30px;">
         ${new Date(announcement.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
       </p>
@@ -720,7 +721,7 @@ North Country Chamber of Commerce
     <div class="content">
       <h1 style="text-align: center; margin-bottom: 30px;">Welcome to Our Newsletter!</h1>
 
-      <p>${name ? `Hi ${name},` : 'Hello,'}</p>
+      <p>${name ? `Hi ${escapeHtml(name)},` : 'Hello,'}</p>
 
       <p>Thank you for subscribing to the North Country Chamber of Commerce newsletter!</p>
 
@@ -796,9 +797,9 @@ North Country Chamber of Commerce
       <p>Thank you for submitting your event!</p>
 
       <div class="info-box">
-        <h3 style="margin-top: 0;">${eventTitle}</h3>
+        <h3 style="margin-top: 0;">${escapeHtml(eventTitle)}</h3>
         <p><strong>Date:</strong> ${new Date(eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p style="margin-bottom: 0;"><strong>Business:</strong> ${businessName}</p>
+        <p style="margin-bottom: 0;"><strong>Business:</strong> ${escapeHtml(businessName)}</p>
       </div>
 
       <p>Your event has been submitted and is now pending review by our chamber staff. You'll receive another email once your event has been approved and published.</p>
@@ -860,7 +861,7 @@ North Country Chamber of Commerce
       <p>Great news! Your event has been approved and is now published on our website.</p>
 
       <div class="info-box">
-        <h3 style="margin-top: 0;">${eventTitle}</h3>
+        <h3 style="margin-top: 0;">${escapeHtml(eventTitle)}</h3>
         <p style="margin-bottom: 0;">Your event is now visible to the public and will appear on our events calendar.</p>
       </div>
 

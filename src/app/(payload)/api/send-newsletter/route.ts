@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { sendNewsletterEmail } from '@/utilities/email'
 import { headers } from 'next/headers'
+import { getSafeErrorMessage } from '@/utilities/errorLogging'
 
 // Helper function to delay execution
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -93,19 +94,34 @@ export async function POST(req: NextRequest) {
       depth: 0,
     })
 
-    // Fetch all active subscribers
-    const subscribers = await payload.find({
-      collection: 'mailing-list' as any,
-      where: {
-        subscribed: {
-          equals: true,
-        },
-      },
-      limit: 1000, // Adjust if needed
-      depth: 0,
-    })
+    // Fetch all active subscribers with pagination to handle any list size
+    let allSubscribers: any[] = []
+    let page = 1
+    const pageSize = 500
 
-    if (subscribers.docs.length === 0) {
+    // Paginate through all subscribers
+    while (true) {
+      const subscriberPage = await payload.find({
+        collection: 'mailing-list' as any,
+        where: {
+          subscribed: {
+            equals: true,
+          },
+        },
+        limit: pageSize,
+        page,
+        depth: 0,
+      })
+
+      allSubscribers = allSubscribers.concat(subscriberPage.docs)
+
+      if (!subscriberPage.hasNextPage) {
+        break
+      }
+      page++
+    }
+
+    if (allSubscribers.length === 0) {
       return NextResponse.json(
         { error: 'No active subscribers found' },
         { status: 400 }
@@ -113,7 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     payload.logger.info(
-      `Sending newsletter to ${subscribers.docs.length} subscribers for news item: ${newsItem.title}`
+      `Sending newsletter to ${allSubscribers.length} subscribers for news item: ${newsItem.title}`
     )
 
     // Send emails to all subscribers (batch 100 at a time with 1s delay)
@@ -121,8 +137,8 @@ export async function POST(req: NextRequest) {
     let failCount = 0
     const batchSize = 100
 
-    for (let i = 0; i < subscribers.docs.length; i += batchSize) {
-      const batch = subscribers.docs.slice(i, i + batchSize)
+    for (let i = 0; i < allSubscribers.length; i += batchSize) {
+      const batch = allSubscribers.slice(i, i + batchSize)
 
       await Promise.all(
         batch.map(async (subscriber) => {
@@ -135,14 +151,14 @@ export async function POST(req: NextRequest) {
             })
             successCount++
           } catch (error) {
-            payload.logger.error(`Failed to send to ${subscriber.email}: ${error}`)
+            payload.logger.error(`Failed to send to subscriber: ${getSafeErrorMessage(error)}`)
             failCount++
           }
         })
       )
 
       // Delay between batches to avoid rate limits
-      if (i + batchSize < subscribers.docs.length) {
+      if (i + batchSize < allSubscribers.length) {
         await delay(1000)
       }
     }
@@ -185,7 +201,7 @@ export async function POST(req: NextRequest) {
       eventsIncluded: events.docs.length,
     })
   } catch (error) {
-    payload.logger.error(`Failed to send newsletter: ${error}`)
+    payload.logger.error(`Failed to send newsletter: ${getSafeErrorMessage(error)}`)
     return NextResponse.json(
       { error: 'Failed to send newsletter. Please try again.' },
       { status: 500 }

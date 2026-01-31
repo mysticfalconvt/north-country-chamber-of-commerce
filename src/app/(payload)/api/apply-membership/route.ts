@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { sendBusinessApprovalNotification, sendApplicationReceivedEmail } from '@/utilities/email'
-
-// Generate a random temporary password
-function generateTempPassword(length: number = 10): string {
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let password = ''
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length))
-  }
-  return password
-}
+import { generateSecurePassword } from '@/utilities/generatePassword'
+import { rateLimiters } from '@/utilities/rateLimit'
+import { getAdminNotificationEmails } from '@/utilities/getAdminEmails'
+import { validateImageFile, sanitizeFilename } from '@/utilities/fileValidation'
+import { getSafeErrorMessage } from '@/utilities/errorLogging'
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 requests per 15 minutes per IP
+  const rateLimitResponse = rateLimiters.membershipApplication(req)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   const payload = await getPayload({ config })
 
   try {
@@ -65,10 +66,22 @@ export async function POST(req: NextRequest) {
     // Upload logo if provided
     let logoId: number | null = null
     if (logoFile && logoFile.size > 0) {
+      // Validate file before upload
+      const validation = validateImageFile(logoFile)
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: `Invalid logo file: ${validation.error}` },
+          { status: 400 }
+        )
+      }
+
       try {
         // Convert File to Buffer
         const arrayBuffer = await logoFile.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
+
+        // Sanitize filename to prevent path traversal
+        const safeName = sanitizeFilename(logoFile.name)
 
         // Upload to media collection
         const mediaResult = await payload.create({
@@ -79,14 +92,14 @@ export async function POST(req: NextRequest) {
           file: {
             data: buffer,
             mimetype: logoFile.type,
-            name: logoFile.name,
+            name: safeName,
             size: logoFile.size,
           },
         })
 
         logoId = typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
       } catch (error) {
-        payload.logger.error(`Failed to upload logo: ${error}`)
+        payload.logger.error('Failed to upload logo')
         // Continue without logo rather than failing the application
       }
     }
@@ -129,7 +142,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Generate temporary password for user account
-    const tempPassword = generateTempPassword(12)
+    const tempPassword = generateSecurePassword(12)
 
     // Create user account
     const user = await payload.create({
@@ -159,19 +172,8 @@ export async function POST(req: NextRequest) {
 
     payload.logger.info(`Set business ${business.id} owner to user ${user.id}`)
 
-    // Get all admin and chamber_staff emails
-    const admins = await payload.find({
-      collection: 'users',
-      where: {
-        or: [
-          { role: { equals: 'admin' } },
-          { role: { equals: 'chamber_staff' } },
-        ],
-      },
-      limit: 100,
-    })
-
-    const adminEmails = admins.docs.map(admin => admin.email).filter(Boolean) as string[]
+    // Get admin notification emails (from env var or fallback to database)
+    const adminEmails = await getAdminNotificationEmails(payload)
 
     // Send approval notification emails to admins
     if (adminEmails.length > 0) {
@@ -184,9 +186,9 @@ export async function POST(req: NextRequest) {
           contactName,
           adminEmails,
         })
-        payload.logger.info(`Sent approval notification to ${adminEmails.length} admins`)
+        payload.logger.info('Sent business approval notification to admins')
       } catch (error) {
-        payload.logger.error(`Failed to send approval notification: ${error}`)
+        payload.logger.error(`Failed to send approval notification: ${getSafeErrorMessage(error)}`)
         // Continue - don't fail the application if email fails
       }
     }
@@ -203,7 +205,7 @@ export async function POST(req: NextRequest) {
       })
       payload.logger.info(`Sent application received email to ${email}`)
     } catch (error) {
-      payload.logger.error(`Failed to send application received email: ${error}`)
+      payload.logger.error(`Failed to send application received email: ${getSafeErrorMessage(error)}`)
       // Continue - don't fail the application if email fails
     }
 
@@ -215,7 +217,7 @@ export async function POST(req: NextRequest) {
       tierPrice: tierData.annualPrice,
     })
   } catch (error) {
-    payload.logger.error(`Failed to process business application: ${error}`)
+    payload.logger.error(`Failed to process business application: ${getSafeErrorMessage(error)}`)
     return NextResponse.json(
       { error: 'Failed to process application. Please try again.' },
       { status: 500 }
