@@ -6,6 +6,7 @@ import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
 import { sendEventApprovalNotification, sendEventSubmissionConfirmation } from '../../utilities/email'
+import { autoTranslate } from './hooks'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -90,6 +91,7 @@ export const Events: CollectionConfig = {
 
         return data
       },
+      autoTranslate,
     ],
     afterChange: [
       async ({ doc, operation, req }) => {

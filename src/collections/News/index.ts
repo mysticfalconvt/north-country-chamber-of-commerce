@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
+import { autoTranslate } from './hooks'
 
 // Helper to create URL-safe slugs
 const formatSlug = (val: string): string =>
@@ -46,6 +47,7 @@ export const News: CollectionConfig = {
 
         return data
       },
+      autoTranslate,
     ],
     beforeDelete: [
       async ({ id, req }) => {

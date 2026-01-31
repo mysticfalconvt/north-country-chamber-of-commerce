@@ -4,6 +4,7 @@ import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { isAdminOrOwner } from '../../access/isAdminOrOwner'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
+import { autoTranslate } from './hooks'
 
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
@@ -95,6 +96,7 @@ export const Businesses: CollectionConfig = {
         req.payload.logger.info('[BUSINESS beforeChange] Done, returning data')
         return data
       },
+      autoTranslate,
     ],
     afterChange: [
       async ({ doc, req, operation, context }) => {

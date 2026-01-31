@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { link } from '@/fields/link'
 import { revalidateHeader } from './hooks/revalidateHeader'
+import { autoTranslate } from './hooks/autoTranslate'
 
 export const Header: GlobalConfig = {
   slug: 'header',
@@ -28,6 +29,7 @@ export const Header: GlobalConfig = {
     },
   ],
   hooks: {
+    beforeChange: [autoTranslate],
     afterChange: [revalidateHeader],
   },
 }
