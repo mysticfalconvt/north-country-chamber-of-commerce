@@ -9,13 +9,11 @@ import nodemailer from 'nodemailer'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
 import { EmailCampaigns } from './collections/EmailCampaigns'
-import { EventApplications } from './collections/EventApplications'
 import { Events } from './collections/Events'
 import { MailingList } from './collections/MailingList'
 import { Media } from './collections/Media'
 import { News } from './collections/News'
 import { Pages } from './collections/Pages'
-import { SignatureEvents } from './collections/SignatureEvents'
 import { Users } from './collections/Users'
 import { Banners } from './globals/Banners/config'
 import { Footer } from './Footer/config'
@@ -116,9 +114,7 @@ export default buildConfig({
     Pages,
     Businesses,
     Events,
-    EventApplications,
     News,
-    SignatureEvents,
     MailingList,
     EmailCampaigns,
     Media,

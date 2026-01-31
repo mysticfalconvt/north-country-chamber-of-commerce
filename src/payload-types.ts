@@ -70,9 +70,7 @@ export interface Config {
     pages: Page;
     businesses: Business;
     events: Event;
-    'event-applications': EventApplication;
     news: News;
-    'signature-events': SignatureEvent;
     'mailing-list': MailingList;
     'email-campaigns': EmailCampaign;
     media: Media;
@@ -98,9 +96,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
-    'event-applications': EventApplicationsSelect<false> | EventApplicationsSelect<true>;
     news: NewsSelect<false> | NewsSelect<true>;
-    'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
     'mailing-list': MailingListSelect<false> | MailingListSelect<true>;
     'email-campaigns': EmailCampaignsSelect<false> | EmailCampaignsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -988,9 +984,13 @@ export interface Event {
     [k: string]: unknown;
   };
   image?: (number | null) | Media;
+  /**
+   * PDF flyer or event document
+   */
+  attachment?: (number | null) | Media;
   date: string;
   /**
-   * For multi-day events
+   * End of multi-day event, or when recurring series ends
    */
   endDate?: string | null;
   /**
@@ -1042,15 +1042,32 @@ export interface Event {
    * For external organizations
    */
   organizer?: string | null;
-  category?: ('chamber' | 'community' | 'networking' | 'workshop' | 'festival' | 'fundraiser' | 'social') | null;
   /**
-   * Is this a recurring event?
+   * Official Chamber of Commerce event
    */
-  recurring?: boolean | null;
+  isChamberEvent?: boolean | null;
   /**
    * Link to external registration/info page
    */
   externalUrl?: string | null;
+  /**
+   * Custom text for registration link (e.g., "Buy Tickets", "RSVP")
+   */
+  linkTitle?: string | null;
+  /**
+   * Is this a recurring event?
+   */
+  isRecurring?: boolean | null;
+  recurrence?: {
+    /**
+     * How often this event repeats (pattern from start date, ends on end date)
+     */
+    recurrenceType: 'weekly' | 'monthly';
+    /**
+     * How to determine the monthly date (auto-calculated from start date)
+     */
+    monthlyType?: ('dayOfMonth' | 'dayOfWeek') | null;
+  };
   /**
    * Highlight on homepage
    */
@@ -1060,218 +1077,6 @@ export interface Event {
    * User who submitted this event (for tracking)
    */
   submittedBy?: (number | null) | User;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "event-applications".
- */
-export interface EventApplication {
-  id: number;
-  /**
-   * Which signature event is this application for?
-   */
-  event: number | SignatureEvent;
-  /**
-   * Individual or business name
-   */
-  applicantName: string;
-  applicantEmail: string;
-  applicantPhone: string;
-  /**
-   * Link to member business (if applicable)
-   */
-  business?: (number | null) | Business;
-  /**
-   * Entry category (e.g., "Hot Rod", "Chili", "Vendor")
-   */
-  category?: string | null;
-  /**
-   * Application details/questions
-   */
-  details: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Supporting files (images, documents, etc.)
-   */
-  attachments?: (number | Media)[] | null;
-  /**
-   * Application status
-   */
-  status: 'pending' | 'approved' | 'rejected' | 'waitlist';
-  /**
-   * Auto-populated on submission
-   */
-  submittedDate?: string | null;
-  /**
-   * Internal chamber notes (not visible to applicant)
-   */
-  notes?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * User who submitted this application
-   */
-  submittedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "signature-events".
- */
-export interface SignatureEvent {
-  id: number;
-  /**
-   * e.g., "Hot Rod ChiliFest"
-   */
-  name: string;
-  description: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Event-specific branding/logo
-   */
-  logo?: (number | null) | Media;
-  gallery?:
-    | {
-        image: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Day-of schedule
-   */
-  schedule?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Vendor list/information
-   */
-  vendors?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Rules & regulations
-   */
-  rules?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Application instructions & requirements
-   */
-  applicationForm?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Accept applications?
-   */
-  applicationOpen?: boolean | null;
-  /**
-   * Deadline for entries
-   */
-  applicationDeadline?: string | null;
-  /**
-   * Event coordinator email
-   */
-  contactEmail?: string | null;
-  /**
-   * Current year's info
-   */
-  year: number;
-  eventStatus: 'upcoming' | 'active' | 'archived';
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -1554,16 +1359,8 @@ export interface PayloadLockedDocument {
         value: number | Event;
       } | null)
     | ({
-        relationTo: 'event-applications';
-        value: number | EventApplication;
-      } | null)
-    | ({
         relationTo: 'news';
         value: number | News;
-      } | null)
-    | ({
-        relationTo: 'signature-events';
-        value: number | SignatureEvent;
       } | null)
     | ({
         relationTo: 'mailing-list';
@@ -1848,6 +1645,7 @@ export interface EventsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   image?: T;
+  attachment?: T;
   date?: T;
   endDate?: T;
   startTime?: T;
@@ -1865,9 +1663,16 @@ export interface EventsSelect<T extends boolean = true> {
       };
   business?: T;
   organizer?: T;
-  category?: T;
-  recurring?: T;
+  isChamberEvent?: T;
   externalUrl?: T;
+  linkTitle?: T;
+  isRecurring?: T;
+  recurrence?:
+    | T
+    | {
+        recurrenceType?: T;
+        monthlyType?: T;
+      };
   featured?: T;
   eventStatus?: T;
   submittedBy?: T;
@@ -1876,26 +1681,6 @@ export interface EventsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "event-applications_select".
- */
-export interface EventApplicationsSelect<T extends boolean = true> {
-  event?: T;
-  applicantName?: T;
-  applicantEmail?: T;
-  applicantPhone?: T;
-  business?: T;
-  category?: T;
-  details?: T;
-  attachments?: T;
-  status?: T;
-  submittedDate?: T;
-  notes?: T;
-  submittedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1910,35 +1695,6 @@ export interface NewsSelect<T extends boolean = true> {
   author?: T;
   emailSent?: T;
   sentAt?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "signature-events_select".
- */
-export interface SignatureEventsSelect<T extends boolean = true> {
-  name?: T;
-  description?: T;
-  logo?: T;
-  gallery?:
-    | T
-    | {
-        image?: T;
-        id?: T;
-      };
-  schedule?: T;
-  vendors?: T;
-  rules?: T;
-  applicationForm?: T;
-  applicationOpen?: T;
-  applicationDeadline?: T;
-  contactEmail?: T;
-  year?: T;
-  eventStatus?: T;
-  generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -104,3 +104,28 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+
+/* Fix time input icon visibility in dark mode */
+/* The clock/calendar picker icon is black by default, invisible on dark backgrounds */
+
+/* Apply color-scheme to all time inputs when in dark mode - this tells the browser to use dark styling */
+html[data-theme='dark'] input[type='time'],
+html[data-theme='dark'] input[type='date'],
+html[data-theme='dark'] input[type='datetime-local'] {
+  color-scheme: dark !important;
+}
+
+/* WebKit browsers: invert the picker icon in dark mode */
+html[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(1) !important;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+html[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator:hover,
+html[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator:hover,
+html[data-theme='dark'] input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

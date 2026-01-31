@@ -19,6 +19,20 @@ export const Events: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, req, operation }) => {
+        // Only enforce isChamberEvent=false when a business_member is creating/updating
+        // Admins and chamber_staff can set isChamberEvent to whatever they want
+        if (operation === 'create' || operation === 'update') {
+          const user = req.user as { role?: string } | undefined
+
+          // Only restrict for business members
+          if (user?.role === 'business_member') {
+            data.isChamberEvent = false
+          }
+        }
+
+        return data
+      },
+      async ({ data, req, operation }) => {
         // Auto-geocode address to get coordinates
         if (operation === 'create' || operation === 'update') {
           const hasAddressData =
@@ -167,7 +181,7 @@ export const Events: CollectionConfig = {
     ],
   },
   admin: {
-    defaultColumns: ['title', 'date', 'category', 'eventStatus'],
+    defaultColumns: ['title', 'date', 'isChamberEvent', 'eventStatus'],
     useAsTitle: 'title',
   },
   fields: [
@@ -189,6 +203,14 @@ export const Events: CollectionConfig = {
       relationTo: 'media',
     },
     {
+      name: 'attachment',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'PDF flyer or event document',
+      },
+    },
+    {
       type: 'row',
       fields: [
         {
@@ -205,7 +227,7 @@ export const Events: CollectionConfig = {
           name: 'endDate',
           type: 'date',
           admin: {
-            description: 'For multi-day events',
+            description: 'End of multi-day event, or when recurring series ends',
             date: {
               pickerAppearance: 'dayOnly',
             },
@@ -324,34 +346,73 @@ export const Events: CollectionConfig = {
       ],
     },
     {
-      name: 'category',
-      type: 'select',
-      options: [
-        { label: 'Chamber Event', value: 'chamber' },
-        { label: 'Community Event', value: 'community' },
-        { label: 'Networking', value: 'networking' },
-        { label: 'Workshop', value: 'workshop' },
-        { label: 'Festival', value: 'festival' },
-        { label: 'Fundraiser', value: 'fundraiser' },
-        { label: 'Social', value: 'social' },
-      ],
+      name: 'isChamberEvent',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Official Chamber of Commerce event',
+        condition: (data, siblingData, { user }) =>
+          user?.role === 'admin' || user?.role === 'chamber_staff',
+      },
     },
     {
       type: 'row',
       fields: [
         {
-          name: 'recurring',
-          type: 'checkbox',
-          defaultValue: false,
-          admin: {
-            description: 'Is this a recurring event?',
-          },
-        },
-        {
           name: 'externalUrl',
           type: 'text',
           admin: {
             description: 'Link to external registration/info page',
+          },
+        },
+        {
+          name: 'linkTitle',
+          type: 'text',
+          admin: {
+            description: 'Custom text for registration link (e.g., "Buy Tickets", "RSVP")',
+            condition: (data) => !!data?.externalUrl,
+          },
+        },
+      ],
+    },
+    {
+      name: 'isRecurring',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Is this a recurring event?',
+      },
+    },
+    {
+      type: 'group',
+      name: 'recurrence',
+      label: 'Recurrence Settings',
+      admin: {
+        condition: (data) => data?.isRecurring === true,
+      },
+      fields: [
+        {
+          name: 'recurrenceType',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Weekly', value: 'weekly' },
+            { label: 'Monthly', value: 'monthly' },
+          ],
+          admin: {
+            description: 'How often this event repeats (pattern from start date, ends on end date)',
+          },
+        },
+        {
+          name: 'monthlyType',
+          type: 'select',
+          options: [
+            { label: 'Same day of month (e.g., 15th)', value: 'dayOfMonth' },
+            { label: 'Same week & day (e.g., 2nd Tuesday)', value: 'dayOfWeek' },
+          ],
+          admin: {
+            description: 'How to determine the monthly date (auto-calculated from start date)',
+            condition: (data, siblingData) => siblingData?.recurrenceType === 'monthly',
           },
         },
       ],
