@@ -878,3 +878,197 @@ North Country Chamber of Commerce
     `.trim(),
   })
 }
+
+// Send benefit approval notification to admins/chamber staff
+export async function sendBenefitApprovalNotification({
+  benefitId,
+  benefitTitle,
+  businessName,
+  submitterEmail,
+  adminEmails,
+}: {
+  benefitId: number
+  benefitTitle: string
+  businessName: string
+  submitterEmail: string
+  adminEmails: string[]
+}) {
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+  const adminUrl = `${baseUrl}/admin/collections/benefits/${benefitId}`
+  const approveUrl = `${baseUrl}/approve/benefit/${benefitId}`
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    to: adminEmails.join(', '),
+    subject: `New Benefit Awaiting Approval: ${benefitTitle}`,
+    text: `
+A new member benefit has been submitted and is awaiting approval.
+
+Benefit: ${benefitTitle}
+Business: ${businessName}
+Submitted by: ${submitterEmail}
+
+Quick approve: ${approveUrl}
+Review in admin: ${adminUrl}
+
+North Country Chamber of Commerce
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>${getEmailStyles()}</style>
+</head>
+<body>
+  <div class="container">
+    ${getLogoHeader(baseUrl)}
+    <div class="content">
+      <h1 style="text-align: center; margin-bottom: 30px;">New Benefit Awaiting Approval</h1>
+
+      <p>A new member benefit has been submitted and is awaiting approval.</p>
+
+      <div class="info-box">
+        <h3 style="margin-top: 0;">${escapeHtml(benefitTitle)}</h3>
+        <p><strong>Business:</strong> ${escapeHtml(businessName)}</p>
+        <p style="margin-bottom: 0;"><strong>Submitted by:</strong> ${escapeHtml(submitterEmail)}</p>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${approveUrl}" class="button button-green">Quick Approve</a>
+        <a href="${adminUrl}" class="button" style="margin-left: 10px;">Review & Edit</a>
+      </p>
+
+      <p style="font-size: 12px; color: #6b7280; text-align: center;">Click "Quick Approve" to view details and approve, or "Review & Edit" to access the admin panel.</p>
+    </div>
+    ${getFooter()}
+  </div>
+</body>
+</html>
+    `.trim(),
+  })
+}
+
+// Send benefit submission confirmation to the submitter
+export async function sendBenefitSubmissionConfirmation({
+  to,
+  benefitTitle,
+  businessName,
+}: {
+  to: string
+  benefitTitle: string
+  businessName: string
+}) {
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    to,
+    subject: `Benefit Submitted: ${benefitTitle}`,
+    text: `
+Thank you for submitting your member benefit!
+
+Benefit: ${benefitTitle}
+Business: ${businessName}
+
+Your benefit has been submitted and is now pending review by our chamber staff. You'll receive another email once your benefit has been approved and published.
+
+If you have any questions, please don't hesitate to contact us.
+
+Thank you,
+North Country Chamber of Commerce
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>${getEmailStyles()}</style>
+</head>
+<body>
+  <div class="container">
+    ${getLogoHeader(baseUrl)}
+    <div class="content">
+      <h1 style="text-align: center; margin-bottom: 30px;">Benefit Submitted!</h1>
+
+      <p>Thank you for submitting your member benefit!</p>
+
+      <div class="info-box">
+        <h3 style="margin-top: 0;">${escapeHtml(benefitTitle)}</h3>
+        <p style="margin-bottom: 0;"><strong>Business:</strong> ${escapeHtml(businessName)}</p>
+      </div>
+
+      <p>Your benefit has been submitted and is now pending review by our chamber staff. You'll receive another email once your benefit has been approved and published.</p>
+
+      <p>If you have any questions, please don't hesitate to contact us.</p>
+
+      <p>Thank you!</p>
+    </div>
+    ${getFooter()}
+  </div>
+</body>
+</html>
+    `.trim(),
+  })
+}
+
+// Send benefit approved notification to the submitter
+export async function sendBenefitApprovedEmail({
+  to,
+  benefitTitle,
+  benefitSlug,
+}: {
+  to: string
+  benefitTitle: string
+  benefitSlug: string
+}) {
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+  const benefitUrl = `${baseUrl}/benefits/${benefitSlug}`
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
+    to,
+    subject: `Your Benefit is Published: ${benefitTitle}`,
+    text: `
+Great news! Your member benefit has been approved and is now published on our website.
+
+Benefit: ${benefitTitle}
+
+View your benefit: ${benefitUrl}
+
+Your benefit is now visible to the public and will appear on our benefits page.
+
+Thank you for being a member of the North Country Chamber of Commerce!
+
+North Country Chamber of Commerce
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>${getEmailStyles()}</style>
+</head>
+<body>
+  <div class="container">
+    ${getLogoHeader(baseUrl)}
+    <div class="content">
+      <h1 style="text-align: center; margin-bottom: 30px;">Your Benefit is Published!</h1>
+
+      <p>Great news! Your member benefit has been approved and is now published on our website.</p>
+
+      <div class="info-box">
+        <h3 style="margin-top: 0;">${escapeHtml(benefitTitle)}</h3>
+        <p style="margin-bottom: 0;">Your benefit is now visible to the public and will appear on our benefits page.</p>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${benefitUrl}" class="button">View Your Benefit</a>
+      </p>
+
+      <p>Thank you for being a member of the North Country Chamber of Commerce!</p>
+    </div>
+    ${getFooter()}
+  </div>
+</body>
+</html>
+    `.trim(),
+  })
+}

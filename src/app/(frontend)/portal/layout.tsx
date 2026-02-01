@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/utilities/auth'
 import Link from 'next/link'
-import { Building2, Calendar, ExternalLink, Home, LogOut } from 'lucide-react'
+import { Building2, Calendar, ExternalLink, Gift, Home, LogOut } from 'lucide-react'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -77,6 +77,13 @@ export default async function PortalLayout({ children }: { children: React.React
               >
                 <Calendar className="h-5 w-5" />
                 My Events
+              </Link>
+              <Link
+                href="/portal/benefits"
+                className="flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Gift className="h-5 w-5" />
+                My Benefits
               </Link>
             </nav>
           </aside>

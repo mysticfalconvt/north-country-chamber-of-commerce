@@ -6,6 +6,7 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 
+import { Benefits } from './collections/Benefits'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
 import { EmailCampaigns } from './collections/EmailCampaigns'
@@ -113,6 +114,7 @@ export default buildConfig({
   collections: [
     Pages,
     Businesses,
+    Benefits,
     Events,
     News,
     MailingList,

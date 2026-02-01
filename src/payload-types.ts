@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     pages: Page;
     businesses: Business;
+    benefits: Benefit;
     events: Event;
     news: News;
     'mailing-list': MailingList;
@@ -95,6 +96,7 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    benefits: BenefitsSelect<false> | BenefitsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     news: NewsSelect<false> | NewsSelect<true>;
     'mailing-list': MailingListSelect<false> | MailingListSelect<true>;
@@ -962,6 +964,90 @@ export interface Form {
   createdAt: string;
 }
 /**
+ * Member business benefits, offers, coupons, and discounts
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "benefits".
+ */
+export interface Benefit {
+  id: number;
+  /**
+   * Name of the benefit or offer
+   */
+  title: string;
+  /**
+   * Full description of the benefit/offer including terms and conditions
+   */
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * e.g., "10% off", "$5 off", "Buy 1 Get 1 Free"
+   */
+  discountValue?: string | null;
+  /**
+   * Promotional image for this benefit
+   */
+  image?: (number | null) | Media;
+  /**
+   * PDF coupon or flyer for printing
+   */
+  attachment?: (number | null) | Media;
+  /**
+   * Link to redeem online or more info
+   */
+  externalUrl?: string | null;
+  /**
+   * Text to display for the link (e.g., "Redeem Online", "Learn More")
+   */
+  linkText?: string | null;
+  /**
+   * Promo/discount code if applicable
+   */
+  code?: string | null;
+  /**
+   * When this benefit becomes active
+   */
+  startDate?: string | null;
+  /**
+   * When this benefit expires
+   */
+  expirationDate?: string | null;
+  /**
+   * Business offering this benefit
+   */
+  business: number | Business;
+  /**
+   * Highlight on benefits page
+   */
+  featured?: boolean | null;
+  benefitStatus: 'pending' | 'published' | 'draft' | 'expired';
+  /**
+   * User who submitted this benefit (for tracking)
+   */
+  submittedBy?: (number | null) | User;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
@@ -1355,6 +1441,10 @@ export interface PayloadLockedDocument {
         value: number | Business;
       } | null)
     | ({
+        relationTo: 'benefits';
+        value: number | Benefit;
+      } | null)
+    | ({
         relationTo: 'events';
         value: number | Event;
       } | null)
@@ -1632,6 +1722,31 @@ export interface BusinessesSelect<T extends boolean = true> {
   approvedAt?: T;
   applicationDate?: T;
   rejectionReason?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "benefits_select".
+ */
+export interface BenefitsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  discountValue?: T;
+  image?: T;
+  attachment?: T;
+  externalUrl?: T;
+  linkText?: T;
+  code?: T;
+  startDate?: T;
+  expirationDate?: T;
+  business?: T;
+  featured?: T;
+  benefitStatus?: T;
+  submittedBy?: T;
+  generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
