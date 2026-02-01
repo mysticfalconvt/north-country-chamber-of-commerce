@@ -98,15 +98,19 @@ async function translatePageLayout(englishLayout: any[]): Promise<any[]> {
 
           if (block.links && Array.isArray(block.links)) {
             translatedBlock.links = await Promise.all(
-              block.links.map(async (link: any) => {
-                const translatedLink = { ...link }
-                if (link.link?.label) {
+              block.links.map(async (linkItem: any) => {
+                // IMPORTANT: Preserve the original link structure including ID
+                // Only translate the label field - keep everything else intact
+                const translatedLink = {
+                  ...linkItem, // Keep id and all other fields
+                  link: {
+                    ...linkItem.link, // Keep all link fields
+                  },
+                }
+                if (linkItem.link?.label) {
                   // label is localized - when fetched with locale 'en', it's a direct string
                   // Translate it to French string
-                  translatedLink.link = {
-                    ...link.link,
-                    label: await translateToFrench(link.link.label),
-                  }
+                  translatedLink.link.label = await translateToFrench(linkItem.link.label)
                 }
                 return translatedLink
               }),
@@ -135,7 +139,9 @@ async function translatePageLayout(englishLayout: any[]): Promise<any[]> {
     }),
   )
 
-  // Remove id fields from all blocks and nested structures
+  // Layout is a localized field - each locale has its own blocks array
+  // We must remove IDs so Payload generates new unique IDs for the French locale
+  // (IDs from English layout can't be reused as they'd be duplicates)
   return removeIds(translated)
 }
 
@@ -338,20 +344,13 @@ export async function POST(req: Request) {
                         JSON.stringify(linkItem, null, 2),
                       )
 
-                      // Build the link structure - keep all non-localized fields, translate label
+                      // IMPORTANT: Preserve the original link structure including ID
+                      // Only translate the label field - keep everything else intact
                       const translatedLink: any = {
+                        ...linkItem, // Keep id and all other fields
                         link: {
-                          type: linkItem.link?.type || 'reference',
-                          newTab: linkItem.link?.newTab ?? false,
-                          appearance: linkItem.link?.appearance || 'default',
+                          ...linkItem.link, // Keep all link fields including non-localized ones
                         },
-                      }
-
-                      // Handle reference vs custom URL
-                      if (linkItem.link?.type === 'custom' && linkItem.link?.url) {
-                        translatedLink.link.url = linkItem.link.url
-                      } else if (linkItem.link?.type === 'reference' && linkItem.link?.reference) {
-                        translatedLink.link.reference = linkItem.link.reference
                       }
 
                       // Translate the label (localized field, required)
@@ -403,6 +402,10 @@ export async function POST(req: Request) {
                 (page.hero.richText && !heroUpdate.richText) ||
                 (page.hero.links && !heroUpdate.links)
               ) {
+                // IMPORTANT: Do NOT use removeIds() on hero!
+                // hero.links is NOT localized (shared array) - we need to preserve IDs
+                // so Payload updates existing links instead of creating new ones.
+                // Only the label field within links is localized.
                 updateData.hero = heroUpdate
                 needsUpdate = true
               }
@@ -664,14 +667,18 @@ export async function POST(req: Request) {
                 sendProgress(controller, `  Translating ${header.navItems.length} header nav items...`)
                 const translatedNavItems = await Promise.all(
                   header.navItems.map(async (item: any) => {
-                    const translatedItem = { ...item }
+                    // IMPORTANT: Preserve the original item structure including ID
+                    // Only translate the label field
+                    const translatedItem = {
+                      ...item,
+                      link: {
+                        ...item.link,
+                      },
+                    }
                     if (item.link?.label) {
                       const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
                       if (label) {
-                        translatedItem.link = {
-                          ...item.link,
-                          label: await translateToFrench(label),
-                        }
+                        translatedItem.link.label = await translateToFrench(label)
                       }
                     }
                     return translatedItem
@@ -729,14 +736,18 @@ export async function POST(req: Request) {
                 sendProgress(controller, `  Translating ${footer.navItems.length} footer nav items...`)
                 footerUpdateData.navItems = await Promise.all(
                   footer.navItems.map(async (item: any) => {
-                    const translatedItem = { ...item }
+                    // IMPORTANT: Preserve the original item structure including ID
+                    // Only translate the label field
+                    const translatedItem = {
+                      ...item,
+                      link: {
+                        ...item.link,
+                      },
+                    }
                     if (item.link?.label) {
                       const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
                       if (label) {
-                        translatedItem.link = {
-                          ...item.link,
-                          label: await translateToFrench(label),
-                        }
+                        translatedItem.link.label = await translateToFrench(label)
                       }
                     }
                     return translatedItem

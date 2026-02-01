@@ -248,24 +248,28 @@ async function translateBlocks(blocks: any[]): Promise<any[]> {
 
           // Translate link labels (links is an array of link objects)
           // link.label is localized, but within French blocks it should be direct string
+          // IMPORTANT: Preserve the original link structure including ID
           if (block.links && Array.isArray(block.links)) {
             translatedBlock.links = await Promise.all(
-              block.links.map(async (link: any) => {
-                const translatedLink = { ...link }
-                if (link.link?.label) {
+              block.links.map(async (linkItem: any) => {
+                // Keep id and all other fields, only translate the label
+                const translatedLink = {
+                  ...linkItem,
+                  link: {
+                    ...linkItem.link,
+                  },
+                }
+                if (linkItem.link?.label) {
                   let englishLabel: string | null = null
-                  if (typeof link.link.label === 'string') {
-                    englishLabel = link.link.label
-                  } else if (link.link.label.en) {
-                    englishLabel = link.link.label.en
+                  if (typeof linkItem.link.label === 'string') {
+                    englishLabel = linkItem.link.label
+                  } else if (linkItem.link.label.en) {
+                    englishLabel = linkItem.link.label.en
                   }
 
                   if (englishLabel) {
                     // Translate to French - direct string for French locale
-                    translatedLink.link = {
-                      ...link.link,
-                      label: await translateToFrench(englishLabel),
-                    }
+                    translatedLink.link.label = await translateToFrench(englishLabel)
                   }
                 }
                 return translatedLink

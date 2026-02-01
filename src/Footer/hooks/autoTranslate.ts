@@ -32,7 +32,14 @@ export const autoTranslate: GlobalAfterChangeHook = async ({ doc, req, context }
       const translatedNavItems = await Promise.all(
         doc.navItems.map(async (navItem: any, index: number) => {
           const frenchNavItem = frenchDoc.navItems?.[index]
-          const translatedItem = { ...navItem }
+          // IMPORTANT: Preserve the original item structure including ID
+          // Only translate the label field
+          const translatedItem = {
+            ...navItem,
+            link: {
+              ...navItem.link,
+            },
+          }
 
           // Check if French label exists
           const englishLabel = typeof navItem.link?.label === 'string' ? navItem.link.label : null
@@ -40,10 +47,7 @@ export const autoTranslate: GlobalAfterChangeHook = async ({ doc, req, context }
 
           if (englishLabel && !frenchLabel) {
             console.log(`[autoTranslate] Translating footer nav label: ${englishLabel}`)
-            translatedItem.link = {
-              ...navItem.link,
-              label: await translateToFrench(englishLabel),
-            }
+            translatedItem.link.label = await translateToFrench(englishLabel)
             needsUpdate = true
           }
 
