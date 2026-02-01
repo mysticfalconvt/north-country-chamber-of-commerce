@@ -1,27 +1,9 @@
-import * as migration_20260131_145338 from './20260131_145338';
-import * as migration_20260131_195626_events_overhaul from './20260131_195626_events_overhaul';
-import * as migration_20260131_220000_remove_recurrence_start_date from './20260131_220000_remove_recurrence_start_date';
-import * as migration_20260201_154720_benefits_schema_update from './20260201_154720_benefits_schema_update';
+import * as migration_20260201_171749_initial from './20260201_171749_initial';
 
 export const migrations = [
   {
-    up: migration_20260131_145338.up,
-    down: migration_20260131_145338.down,
-    name: '20260131_145338',
-  },
-  {
-    up: migration_20260131_195626_events_overhaul.up,
-    down: migration_20260131_195626_events_overhaul.down,
-    name: '20260131_195626_events_overhaul',
-  },
-  {
-    up: migration_20260131_220000_remove_recurrence_start_date.up,
-    down: migration_20260131_220000_remove_recurrence_start_date.down,
-    name: '20260131_220000_remove_recurrence_start_date',
-  },
-  {
-    up: migration_20260201_154720_benefits_schema_update.up,
-    down: migration_20260201_154720_benefits_schema_update.down,
-    name: '20260201_154720_benefits_schema_update'
+    up: migration_20260201_171749_initial.up,
+    down: migration_20260201_171749_initial.down,
+    name: '20260201_171749_initial'
   },
 ];

@@ -39,22 +39,23 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum__businesses_v_version_approval_status" AS ENUM('pending', 'approved', 'rejected');
   CREATE TYPE "public"."enum__businesses_v_version_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__businesses_v_published_locale" AS ENUM('en', 'fr');
-  CREATE TYPE "public"."enum_events_category" AS ENUM('chamber', 'community', 'networking', 'workshop', 'festival', 'fundraiser', 'social');
+  CREATE TYPE "public"."enum_benefits_benefit_status" AS ENUM('pending', 'published', 'draft', 'expired');
+  CREATE TYPE "public"."enum_benefits_status" AS ENUM('draft', 'published');
+  CREATE TYPE "public"."enum__benefits_v_version_benefit_status" AS ENUM('pending', 'published', 'draft', 'expired');
+  CREATE TYPE "public"."enum__benefits_v_version_status" AS ENUM('draft', 'published');
+  CREATE TYPE "public"."enum__benefits_v_published_locale" AS ENUM('en', 'fr');
+  CREATE TYPE "public"."enum_events_recurrence_recurrence_type" AS ENUM('weekly', 'monthly');
+  CREATE TYPE "public"."enum_events_recurrence_monthly_type" AS ENUM('dayOfMonth', 'dayOfWeek');
   CREATE TYPE "public"."enum_events_event_status" AS ENUM('pending', 'published', 'draft', 'cancelled');
   CREATE TYPE "public"."enum_events_status" AS ENUM('draft', 'published');
-  CREATE TYPE "public"."enum__events_v_version_category" AS ENUM('chamber', 'community', 'networking', 'workshop', 'festival', 'fundraiser', 'social');
+  CREATE TYPE "public"."enum__events_v_version_recurrence_recurrence_type" AS ENUM('weekly', 'monthly');
+  CREATE TYPE "public"."enum__events_v_version_recurrence_monthly_type" AS ENUM('dayOfMonth', 'dayOfWeek');
   CREATE TYPE "public"."enum__events_v_version_event_status" AS ENUM('pending', 'published', 'draft', 'cancelled');
   CREATE TYPE "public"."enum__events_v_version_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__events_v_published_locale" AS ENUM('en', 'fr');
-  CREATE TYPE "public"."enum_event_applications_status" AS ENUM('pending', 'approved', 'rejected', 'waitlist');
   CREATE TYPE "public"."enum_news_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__news_v_version_status" AS ENUM('draft', 'published');
   CREATE TYPE "public"."enum__news_v_published_locale" AS ENUM('en', 'fr');
-  CREATE TYPE "public"."enum_signature_events_event_status" AS ENUM('upcoming', 'active', 'archived');
-  CREATE TYPE "public"."enum_signature_events_status" AS ENUM('draft', 'published');
-  CREATE TYPE "public"."enum__signature_events_v_version_event_status" AS ENUM('upcoming', 'active', 'archived');
-  CREATE TYPE "public"."enum__signature_events_v_version_status" AS ENUM('draft', 'published');
-  CREATE TYPE "public"."enum__signature_events_v_published_locale" AS ENUM('en', 'fr');
   CREATE TYPE "public"."enum_users_role" AS ENUM('admin', 'chamber_staff', 'business_member');
   CREATE TYPE "public"."enum_redirects_to_type" AS ENUM('reference', 'custom');
   CREATE TYPE "public"."enum_forms_confirmation_type" AS ENUM('message', 'redirect');
@@ -500,9 +501,75 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"categories_id" integer
   );
   
+  CREATE TABLE "benefits" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"discount_value" varchar,
+  	"image_id" integer,
+  	"attachment_id" integer,
+  	"external_url" varchar,
+  	"link_text" varchar,
+  	"code" varchar,
+  	"start_date" timestamp(3) with time zone,
+  	"expiration_date" timestamp(3) with time zone,
+  	"business_id" integer,
+  	"featured" boolean DEFAULT false,
+  	"benefit_status" "enum_benefits_benefit_status" DEFAULT 'pending',
+  	"submitted_by_id" integer,
+  	"generate_slug" boolean DEFAULT true,
+  	"slug" varchar,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"_status" "enum_benefits_status" DEFAULT 'draft'
+  );
+  
+  CREATE TABLE "benefits_locales" (
+  	"title" varchar,
+  	"description" jsonb,
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"_locale" "_locales" NOT NULL,
+  	"_parent_id" integer NOT NULL
+  );
+  
+  CREATE TABLE "_benefits_v" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"parent_id" integer,
+  	"version_discount_value" varchar,
+  	"version_image_id" integer,
+  	"version_attachment_id" integer,
+  	"version_external_url" varchar,
+  	"version_link_text" varchar,
+  	"version_code" varchar,
+  	"version_start_date" timestamp(3) with time zone,
+  	"version_expiration_date" timestamp(3) with time zone,
+  	"version_business_id" integer,
+  	"version_featured" boolean DEFAULT false,
+  	"version_benefit_status" "enum__benefits_v_version_benefit_status" DEFAULT 'pending',
+  	"version_submitted_by_id" integer,
+  	"version_generate_slug" boolean DEFAULT true,
+  	"version_slug" varchar,
+  	"version_updated_at" timestamp(3) with time zone,
+  	"version_created_at" timestamp(3) with time zone,
+  	"version__status" "enum__benefits_v_version_status" DEFAULT 'draft',
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"snapshot" boolean,
+  	"published_locale" "enum__benefits_v_published_locale",
+  	"latest" boolean,
+  	"autosave" boolean
+  );
+  
+  CREATE TABLE "_benefits_v_locales" (
+  	"version_title" varchar,
+  	"version_description" jsonb,
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"_locale" "_locales" NOT NULL,
+  	"_parent_id" integer NOT NULL
+  );
+  
   CREATE TABLE "events" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"image_id" integer,
+  	"attachment_id" integer,
   	"date" timestamp(3) with time zone,
   	"end_date" timestamp(3) with time zone,
   	"start_time" varchar,
@@ -516,9 +583,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"coordinates_longitude" numeric,
   	"business_id" integer,
   	"organizer" varchar,
-  	"category" "enum_events_category",
-  	"recurring" boolean DEFAULT false,
+  	"is_chamber_event" boolean DEFAULT false,
   	"external_url" varchar,
+  	"link_title" varchar,
+  	"is_recurring" boolean DEFAULT false,
+  	"recurrence_recurrence_type" "enum_events_recurrence_recurrence_type",
+  	"recurrence_monthly_type" "enum_events_recurrence_monthly_type",
   	"featured" boolean DEFAULT false,
   	"event_status" "enum_events_event_status" DEFAULT 'pending',
   	"submitted_by_id" integer,
@@ -541,6 +611,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"id" serial PRIMARY KEY NOT NULL,
   	"parent_id" integer,
   	"version_image_id" integer,
+  	"version_attachment_id" integer,
   	"version_date" timestamp(3) with time zone,
   	"version_end_date" timestamp(3) with time zone,
   	"version_start_time" varchar,
@@ -554,9 +625,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"version_coordinates_longitude" numeric,
   	"version_business_id" integer,
   	"version_organizer" varchar,
-  	"version_category" "enum__events_v_version_category",
-  	"version_recurring" boolean DEFAULT false,
+  	"version_is_chamber_event" boolean DEFAULT false,
   	"version_external_url" varchar,
+  	"version_link_title" varchar,
+  	"version_is_recurring" boolean DEFAULT false,
+  	"version_recurrence_recurrence_type" "enum__events_v_version_recurrence_recurrence_type",
+  	"version_recurrence_monthly_type" "enum__events_v_version_recurrence_monthly_type",
   	"version_featured" boolean DEFAULT false,
   	"version_event_status" "enum__events_v_version_event_status" DEFAULT 'pending',
   	"version_submitted_by_id" integer,
@@ -581,31 +655,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_parent_id" integer NOT NULL
   );
   
-  CREATE TABLE "event_applications" (
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"event_id" integer NOT NULL,
-  	"applicant_name" varchar NOT NULL,
-  	"applicant_email" varchar NOT NULL,
-  	"applicant_phone" varchar NOT NULL,
-  	"business_id" integer,
-  	"category" varchar,
-  	"details" jsonb NOT NULL,
-  	"status" "enum_event_applications_status" DEFAULT 'pending' NOT NULL,
-  	"submitted_date" timestamp(3) with time zone,
-  	"notes" jsonb,
-  	"submitted_by_id" integer,
-  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
-  );
-  
-  CREATE TABLE "event_applications_rels" (
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"order" integer,
-  	"parent_id" integer NOT NULL,
-  	"path" varchar NOT NULL,
-  	"media_id" integer
-  );
-  
   CREATE TABLE "news" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"image_id" integer,
@@ -614,7 +663,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"author_id" integer,
   	"email_sent" boolean DEFAULT false,
   	"sent_at" timestamp(3) with time zone,
-  	"generate_slug" boolean DEFAULT true,
   	"slug" varchar,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
@@ -638,7 +686,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"version_author_id" integer,
   	"version_email_sent" boolean DEFAULT false,
   	"version_sent_at" timestamp(3) with time zone,
-  	"version_generate_slug" boolean DEFAULT true,
   	"version_slug" varchar,
   	"version_updated_at" timestamp(3) with time zone,
   	"version_created_at" timestamp(3) with time zone,
@@ -659,82 +706,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_parent_id" integer NOT NULL
   );
   
-  CREATE TABLE "signature_events_gallery" (
-  	"_order" integer NOT NULL,
-  	"_parent_id" integer NOT NULL,
-  	"id" varchar PRIMARY KEY NOT NULL,
-  	"image_id" integer
-  );
-  
-  CREATE TABLE "signature_events" (
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"logo_id" integer,
-  	"application_open" boolean DEFAULT false,
-  	"application_deadline" timestamp(3) with time zone,
-  	"contact_email" varchar,
-  	"year" numeric,
-  	"event_status" "enum_signature_events_event_status" DEFAULT 'upcoming',
-  	"generate_slug" boolean DEFAULT true,
-  	"slug" varchar,
-  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-  	"_status" "enum_signature_events_status" DEFAULT 'draft'
-  );
-  
-  CREATE TABLE "signature_events_locales" (
-  	"name" varchar,
-  	"description" jsonb,
-  	"schedule" jsonb,
-  	"vendors" jsonb,
-  	"rules" jsonb,
-  	"application_form" jsonb,
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"_locale" "_locales" NOT NULL,
-  	"_parent_id" integer NOT NULL
-  );
-  
-  CREATE TABLE "_signature_events_v_version_gallery" (
-  	"_order" integer NOT NULL,
-  	"_parent_id" integer NOT NULL,
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"image_id" integer,
-  	"_uuid" varchar
-  );
-  
-  CREATE TABLE "_signature_events_v" (
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"parent_id" integer,
-  	"version_logo_id" integer,
-  	"version_application_open" boolean DEFAULT false,
-  	"version_application_deadline" timestamp(3) with time zone,
-  	"version_contact_email" varchar,
-  	"version_year" numeric,
-  	"version_event_status" "enum__signature_events_v_version_event_status" DEFAULT 'upcoming',
-  	"version_generate_slug" boolean DEFAULT true,
-  	"version_slug" varchar,
-  	"version_updated_at" timestamp(3) with time zone,
-  	"version_created_at" timestamp(3) with time zone,
-  	"version__status" "enum__signature_events_v_version_status" DEFAULT 'draft',
-  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-  	"snapshot" boolean,
-  	"published_locale" "enum__signature_events_v_published_locale",
-  	"latest" boolean,
-  	"autosave" boolean
-  );
-  
-  CREATE TABLE "_signature_events_v_locales" (
-  	"version_name" varchar,
-  	"version_description" jsonb,
-  	"version_schedule" jsonb,
-  	"version_vendors" jsonb,
-  	"version_rules" jsonb,
-  	"version_application_form" jsonb,
-  	"id" serial PRIMARY KEY NOT NULL,
-  	"_locale" "_locales" NOT NULL,
-  	"_parent_id" integer NOT NULL
-  );
-  
   CREATE TABLE "mailing_list" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"email" varchar NOT NULL,
@@ -749,7 +720,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   
   CREATE TABLE "email_campaigns" (
   	"id" serial PRIMARY KEY NOT NULL,
-  	"news_item_id" integer NOT NULL,
+  	"news_item_id" integer,
   	"subject" varchar NOT NULL,
   	"sent_at" timestamp(3) with time zone NOT NULL,
   	"recipient_count" numeric NOT NULL,
@@ -826,22 +797,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"sizes_og_filename" varchar
   );
   
-  CREATE TABLE "categories_breadcrumbs" (
-  	"_order" integer NOT NULL,
-  	"_parent_id" integer NOT NULL,
-  	"_locale" "_locales" NOT NULL,
-  	"id" varchar PRIMARY KEY NOT NULL,
-  	"doc_id" integer,
-  	"url" varchar,
-  	"label" varchar
-  );
-  
   CREATE TABLE "categories" (
   	"id" serial PRIMARY KEY NOT NULL,
-  	"icon" varchar,
   	"generate_slug" boolean DEFAULT true,
   	"slug" varchar NOT NULL,
-  	"parent_id" integer,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
@@ -1225,10 +1184,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"path" varchar NOT NULL,
   	"pages_id" integer,
   	"businesses_id" integer,
+  	"benefits_id" integer,
   	"events_id" integer,
-  	"event_applications_id" integer,
   	"news_id" integer,
-  	"signature_events_id" integer,
   	"mailing_list_id" integer,
   	"email_campaigns_id" integer,
   	"media_id" integer,
@@ -1345,22 +1303,12 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"news_id" integer
   );
   
-  CREATE TABLE "membership_tiers_tiers_features" (
-  	"_order" integer NOT NULL,
-  	"_parent_id" varchar NOT NULL,
-  	"_locale" "_locales" NOT NULL,
-  	"id" varchar PRIMARY KEY NOT NULL,
-  	"feature" varchar NOT NULL
-  );
-  
   CREATE TABLE "membership_tiers_tiers" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
   	"slug" varchar NOT NULL,
   	"annual_price" numeric NOT NULL,
-  	"advertising_slots" numeric DEFAULT 0,
-  	"featured_in_directory" boolean DEFAULT false,
   	"active" boolean DEFAULT true,
   	"display_badge" boolean DEFAULT false,
   	"sort_order" numeric DEFAULT 99 NOT NULL
@@ -1368,7 +1316,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   
   CREATE TABLE "membership_tiers_tiers_locales" (
   	"name" varchar NOT NULL,
-  	"description" jsonb NOT NULL,
+  	"description" jsonb,
   	"id" serial PRIMARY KEY NOT NULL,
   	"_locale" "_locales" NOT NULL,
   	"_parent_id" varchar NOT NULL
@@ -1462,20 +1410,28 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_businesses_v_locales" ADD CONSTRAINT "_businesses_v_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_businesses_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_businesses_v_rels" ADD CONSTRAINT "_businesses_v_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."_businesses_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_businesses_v_rels" ADD CONSTRAINT "_businesses_v_rels_categories_fk" FOREIGN KEY ("categories_id") REFERENCES "public"."categories"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "benefits" ADD CONSTRAINT "benefits_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "benefits" ADD CONSTRAINT "benefits_attachment_id_media_id_fk" FOREIGN KEY ("attachment_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "benefits" ADD CONSTRAINT "benefits_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "benefits" ADD CONSTRAINT "benefits_submitted_by_id_users_id_fk" FOREIGN KEY ("submitted_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "benefits_locales" ADD CONSTRAINT "benefits_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."benefits"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "_benefits_v" ADD CONSTRAINT "_benefits_v_parent_id_benefits_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."benefits"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_benefits_v" ADD CONSTRAINT "_benefits_v_version_image_id_media_id_fk" FOREIGN KEY ("version_image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_benefits_v" ADD CONSTRAINT "_benefits_v_version_attachment_id_media_id_fk" FOREIGN KEY ("version_attachment_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_benefits_v" ADD CONSTRAINT "_benefits_v_version_business_id_businesses_id_fk" FOREIGN KEY ("version_business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_benefits_v" ADD CONSTRAINT "_benefits_v_version_submitted_by_id_users_id_fk" FOREIGN KEY ("version_submitted_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_benefits_v_locales" ADD CONSTRAINT "_benefits_v_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_benefits_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "events" ADD CONSTRAINT "events_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "events" ADD CONSTRAINT "events_attachment_id_media_id_fk" FOREIGN KEY ("attachment_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "events" ADD CONSTRAINT "events_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "events" ADD CONSTRAINT "events_submitted_by_id_users_id_fk" FOREIGN KEY ("submitted_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "events_locales" ADD CONSTRAINT "events_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."events"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_events_v" ADD CONSTRAINT "_events_v_parent_id_events_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."events"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_events_v" ADD CONSTRAINT "_events_v_version_image_id_media_id_fk" FOREIGN KEY ("version_image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_events_v" ADD CONSTRAINT "_events_v_version_attachment_id_media_id_fk" FOREIGN KEY ("version_attachment_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_events_v" ADD CONSTRAINT "_events_v_version_business_id_businesses_id_fk" FOREIGN KEY ("version_business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_events_v" ADD CONSTRAINT "_events_v_version_submitted_by_id_users_id_fk" FOREIGN KEY ("version_submitted_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_events_v_locales" ADD CONSTRAINT "_events_v_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_events_v"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "event_applications" ADD CONSTRAINT "event_applications_event_id_signature_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."signature_events"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "event_applications" ADD CONSTRAINT "event_applications_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "event_applications" ADD CONSTRAINT "event_applications_submitted_by_id_users_id_fk" FOREIGN KEY ("submitted_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "event_applications_rels" ADD CONSTRAINT "event_applications_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."event_applications"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "event_applications_rels" ADD CONSTRAINT "event_applications_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "news" ADD CONSTRAINT "news_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "news" ADD CONSTRAINT "news_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "news_locales" ADD CONSTRAINT "news_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."news"("id") ON DELETE cascade ON UPDATE no action;
@@ -1483,23 +1439,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_news_v" ADD CONSTRAINT "_news_v_version_image_id_media_id_fk" FOREIGN KEY ("version_image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_news_v" ADD CONSTRAINT "_news_v_version_author_id_users_id_fk" FOREIGN KEY ("version_author_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_news_v_locales" ADD CONSTRAINT "_news_v_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_news_v"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "signature_events_gallery" ADD CONSTRAINT "signature_events_gallery_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "signature_events_gallery" ADD CONSTRAINT "signature_events_gallery_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."signature_events"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "signature_events" ADD CONSTRAINT "signature_events_logo_id_media_id_fk" FOREIGN KEY ("logo_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "signature_events_locales" ADD CONSTRAINT "signature_events_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."signature_events"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_signature_events_v_version_gallery" ADD CONSTRAINT "_signature_events_v_version_gallery_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "_signature_events_v_version_gallery" ADD CONSTRAINT "_signature_events_v_version_gallery_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_signature_events_v"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_signature_events_v" ADD CONSTRAINT "_signature_events_v_parent_id_signature_events_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."signature_events"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "_signature_events_v" ADD CONSTRAINT "_signature_events_v_version_logo_id_media_id_fk" FOREIGN KEY ("version_logo_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "_signature_events_v_locales" ADD CONSTRAINT "_signature_events_v_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_signature_events_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "email_campaigns" ADD CONSTRAINT "email_campaigns_news_item_id_news_id_fk" FOREIGN KEY ("news_item_id") REFERENCES "public"."news"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "email_campaigns" ADD CONSTRAINT "email_campaigns_sent_by_id_users_id_fk" FOREIGN KEY ("sent_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "email_campaigns_rels" ADD CONSTRAINT "email_campaigns_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."email_campaigns"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "email_campaigns_rels" ADD CONSTRAINT "email_campaigns_rels_events_fk" FOREIGN KEY ("events_id") REFERENCES "public"."events"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "media" ADD CONSTRAINT "media_folder_id_payload_folders_id_fk" FOREIGN KEY ("folder_id") REFERENCES "public"."payload_folders"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "categories_breadcrumbs" ADD CONSTRAINT "categories_breadcrumbs_doc_id_categories_id_fk" FOREIGN KEY ("doc_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "categories_breadcrumbs" ADD CONSTRAINT "categories_breadcrumbs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."categories"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_id_categories_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "categories_locales" ADD CONSTRAINT "categories_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."categories"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "users_sessions" ADD CONSTRAINT "users_sessions_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "users" ADD CONSTRAINT "users_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE set null ON UPDATE no action;
@@ -1542,10 +1486,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_businesses_fk" FOREIGN KEY ("businesses_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_benefits_fk" FOREIGN KEY ("benefits_id") REFERENCES "public"."benefits"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_events_fk" FOREIGN KEY ("events_id") REFERENCES "public"."events"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_event_applications_fk" FOREIGN KEY ("event_applications_id") REFERENCES "public"."event_applications"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_news_fk" FOREIGN KEY ("news_id") REFERENCES "public"."news"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_signature_events_fk" FOREIGN KEY ("signature_events_id") REFERENCES "public"."signature_events"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_mailing_list_fk" FOREIGN KEY ("mailing_list_id") REFERENCES "public"."mailing_list"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_email_campaigns_fk" FOREIGN KEY ("email_campaigns_id") REFERENCES "public"."email_campaigns"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
@@ -1570,7 +1513,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "footer_rels" ADD CONSTRAINT "footer_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."footer"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "footer_rels" ADD CONSTRAINT "footer_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "footer_rels" ADD CONSTRAINT "footer_rels_news_fk" FOREIGN KEY ("news_id") REFERENCES "public"."news"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "membership_tiers_tiers_features" ADD CONSTRAINT "membership_tiers_tiers_features_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."membership_tiers_tiers"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "membership_tiers_tiers" ADD CONSTRAINT "membership_tiers_tiers_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."membership_tiers"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "membership_tiers_tiers_locales" ADD CONSTRAINT "membership_tiers_tiers_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."membership_tiers_tiers"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "banners_active_banners" ADD CONSTRAINT "banners_active_banners_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."banners"("id") ON DELETE cascade ON UPDATE no action;
@@ -1715,7 +1657,33 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_businesses_v_rels_parent_idx" ON "_businesses_v_rels" USING btree ("parent_id");
   CREATE INDEX "_businesses_v_rels_path_idx" ON "_businesses_v_rels" USING btree ("path");
   CREATE INDEX "_businesses_v_rels_categories_id_idx" ON "_businesses_v_rels" USING btree ("categories_id");
+  CREATE INDEX "benefits_image_idx" ON "benefits" USING btree ("image_id");
+  CREATE INDEX "benefits_attachment_idx" ON "benefits" USING btree ("attachment_id");
+  CREATE INDEX "benefits_business_idx" ON "benefits" USING btree ("business_id");
+  CREATE INDEX "benefits_submitted_by_idx" ON "benefits" USING btree ("submitted_by_id");
+  CREATE UNIQUE INDEX "benefits_slug_idx" ON "benefits" USING btree ("slug");
+  CREATE INDEX "benefits_updated_at_idx" ON "benefits" USING btree ("updated_at");
+  CREATE INDEX "benefits_created_at_idx" ON "benefits" USING btree ("created_at");
+  CREATE INDEX "benefits__status_idx" ON "benefits" USING btree ("_status");
+  CREATE UNIQUE INDEX "benefits_locales_locale_parent_id_unique" ON "benefits_locales" USING btree ("_locale","_parent_id");
+  CREATE INDEX "_benefits_v_parent_idx" ON "_benefits_v" USING btree ("parent_id");
+  CREATE INDEX "_benefits_v_version_version_image_idx" ON "_benefits_v" USING btree ("version_image_id");
+  CREATE INDEX "_benefits_v_version_version_attachment_idx" ON "_benefits_v" USING btree ("version_attachment_id");
+  CREATE INDEX "_benefits_v_version_version_business_idx" ON "_benefits_v" USING btree ("version_business_id");
+  CREATE INDEX "_benefits_v_version_version_submitted_by_idx" ON "_benefits_v" USING btree ("version_submitted_by_id");
+  CREATE INDEX "_benefits_v_version_version_slug_idx" ON "_benefits_v" USING btree ("version_slug");
+  CREATE INDEX "_benefits_v_version_version_updated_at_idx" ON "_benefits_v" USING btree ("version_updated_at");
+  CREATE INDEX "_benefits_v_version_version_created_at_idx" ON "_benefits_v" USING btree ("version_created_at");
+  CREATE INDEX "_benefits_v_version_version__status_idx" ON "_benefits_v" USING btree ("version__status");
+  CREATE INDEX "_benefits_v_created_at_idx" ON "_benefits_v" USING btree ("created_at");
+  CREATE INDEX "_benefits_v_updated_at_idx" ON "_benefits_v" USING btree ("updated_at");
+  CREATE INDEX "_benefits_v_snapshot_idx" ON "_benefits_v" USING btree ("snapshot");
+  CREATE INDEX "_benefits_v_published_locale_idx" ON "_benefits_v" USING btree ("published_locale");
+  CREATE INDEX "_benefits_v_latest_idx" ON "_benefits_v" USING btree ("latest");
+  CREATE INDEX "_benefits_v_autosave_idx" ON "_benefits_v" USING btree ("autosave");
+  CREATE UNIQUE INDEX "_benefits_v_locales_locale_parent_id_unique" ON "_benefits_v_locales" USING btree ("_locale","_parent_id");
   CREATE INDEX "events_image_idx" ON "events" USING btree ("image_id");
+  CREATE INDEX "events_attachment_idx" ON "events" USING btree ("attachment_id");
   CREATE INDEX "events_business_idx" ON "events" USING btree ("business_id");
   CREATE INDEX "events_submitted_by_idx" ON "events" USING btree ("submitted_by_id");
   CREATE UNIQUE INDEX "events_slug_idx" ON "events" USING btree ("slug");
@@ -1725,6 +1693,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE UNIQUE INDEX "events_locales_locale_parent_id_unique" ON "events_locales" USING btree ("_locale","_parent_id");
   CREATE INDEX "_events_v_parent_idx" ON "_events_v" USING btree ("parent_id");
   CREATE INDEX "_events_v_version_version_image_idx" ON "_events_v" USING btree ("version_image_id");
+  CREATE INDEX "_events_v_version_version_attachment_idx" ON "_events_v" USING btree ("version_attachment_id");
   CREATE INDEX "_events_v_version_version_business_idx" ON "_events_v" USING btree ("version_business_id");
   CREATE INDEX "_events_v_version_version_submitted_by_idx" ON "_events_v" USING btree ("version_submitted_by_id");
   CREATE INDEX "_events_v_version_version_slug_idx" ON "_events_v" USING btree ("version_slug");
@@ -1738,15 +1707,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_events_v_latest_idx" ON "_events_v" USING btree ("latest");
   CREATE INDEX "_events_v_autosave_idx" ON "_events_v" USING btree ("autosave");
   CREATE UNIQUE INDEX "_events_v_locales_locale_parent_id_unique" ON "_events_v_locales" USING btree ("_locale","_parent_id");
-  CREATE INDEX "event_applications_event_idx" ON "event_applications" USING btree ("event_id");
-  CREATE INDEX "event_applications_business_idx" ON "event_applications" USING btree ("business_id");
-  CREATE INDEX "event_applications_submitted_by_idx" ON "event_applications" USING btree ("submitted_by_id");
-  CREATE INDEX "event_applications_updated_at_idx" ON "event_applications" USING btree ("updated_at");
-  CREATE INDEX "event_applications_created_at_idx" ON "event_applications" USING btree ("created_at");
-  CREATE INDEX "event_applications_rels_order_idx" ON "event_applications_rels" USING btree ("order");
-  CREATE INDEX "event_applications_rels_parent_idx" ON "event_applications_rels" USING btree ("parent_id");
-  CREATE INDEX "event_applications_rels_path_idx" ON "event_applications_rels" USING btree ("path");
-  CREATE INDEX "event_applications_rels_media_id_idx" ON "event_applications_rels" USING btree ("media_id");
   CREATE INDEX "news_image_idx" ON "news" USING btree ("image_id");
   CREATE INDEX "news_author_idx" ON "news" USING btree ("author_id");
   CREATE UNIQUE INDEX "news_slug_idx" ON "news" USING btree ("slug");
@@ -1768,31 +1728,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_news_v_latest_idx" ON "_news_v" USING btree ("latest");
   CREATE INDEX "_news_v_autosave_idx" ON "_news_v" USING btree ("autosave");
   CREATE UNIQUE INDEX "_news_v_locales_locale_parent_id_unique" ON "_news_v_locales" USING btree ("_locale","_parent_id");
-  CREATE INDEX "signature_events_gallery_order_idx" ON "signature_events_gallery" USING btree ("_order");
-  CREATE INDEX "signature_events_gallery_parent_id_idx" ON "signature_events_gallery" USING btree ("_parent_id");
-  CREATE INDEX "signature_events_gallery_image_idx" ON "signature_events_gallery" USING btree ("image_id");
-  CREATE INDEX "signature_events_logo_idx" ON "signature_events" USING btree ("logo_id");
-  CREATE UNIQUE INDEX "signature_events_slug_idx" ON "signature_events" USING btree ("slug");
-  CREATE INDEX "signature_events_updated_at_idx" ON "signature_events" USING btree ("updated_at");
-  CREATE INDEX "signature_events_created_at_idx" ON "signature_events" USING btree ("created_at");
-  CREATE INDEX "signature_events__status_idx" ON "signature_events" USING btree ("_status");
-  CREATE UNIQUE INDEX "signature_events_locales_locale_parent_id_unique" ON "signature_events_locales" USING btree ("_locale","_parent_id");
-  CREATE INDEX "_signature_events_v_version_gallery_order_idx" ON "_signature_events_v_version_gallery" USING btree ("_order");
-  CREATE INDEX "_signature_events_v_version_gallery_parent_id_idx" ON "_signature_events_v_version_gallery" USING btree ("_parent_id");
-  CREATE INDEX "_signature_events_v_version_gallery_image_idx" ON "_signature_events_v_version_gallery" USING btree ("image_id");
-  CREATE INDEX "_signature_events_v_parent_idx" ON "_signature_events_v" USING btree ("parent_id");
-  CREATE INDEX "_signature_events_v_version_version_logo_idx" ON "_signature_events_v" USING btree ("version_logo_id");
-  CREATE INDEX "_signature_events_v_version_version_slug_idx" ON "_signature_events_v" USING btree ("version_slug");
-  CREATE INDEX "_signature_events_v_version_version_updated_at_idx" ON "_signature_events_v" USING btree ("version_updated_at");
-  CREATE INDEX "_signature_events_v_version_version_created_at_idx" ON "_signature_events_v" USING btree ("version_created_at");
-  CREATE INDEX "_signature_events_v_version_version__status_idx" ON "_signature_events_v" USING btree ("version__status");
-  CREATE INDEX "_signature_events_v_created_at_idx" ON "_signature_events_v" USING btree ("created_at");
-  CREATE INDEX "_signature_events_v_updated_at_idx" ON "_signature_events_v" USING btree ("updated_at");
-  CREATE INDEX "_signature_events_v_snapshot_idx" ON "_signature_events_v" USING btree ("snapshot");
-  CREATE INDEX "_signature_events_v_published_locale_idx" ON "_signature_events_v" USING btree ("published_locale");
-  CREATE INDEX "_signature_events_v_latest_idx" ON "_signature_events_v" USING btree ("latest");
-  CREATE INDEX "_signature_events_v_autosave_idx" ON "_signature_events_v" USING btree ("autosave");
-  CREATE UNIQUE INDEX "_signature_events_v_locales_locale_parent_id_unique" ON "_signature_events_v_locales" USING btree ("_locale","_parent_id");
   CREATE UNIQUE INDEX "mailing_list_email_idx" ON "mailing_list" USING btree ("email");
   CREATE UNIQUE INDEX "mailing_list_unsubscribe_token_idx" ON "mailing_list" USING btree ("unsubscribe_token");
   CREATE INDEX "mailing_list_updated_at_idx" ON "mailing_list" USING btree ("updated_at");
@@ -1816,12 +1751,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "media_sizes_large_sizes_large_filename_idx" ON "media" USING btree ("sizes_large_filename");
   CREATE INDEX "media_sizes_xlarge_sizes_xlarge_filename_idx" ON "media" USING btree ("sizes_xlarge_filename");
   CREATE INDEX "media_sizes_og_sizes_og_filename_idx" ON "media" USING btree ("sizes_og_filename");
-  CREATE INDEX "categories_breadcrumbs_order_idx" ON "categories_breadcrumbs" USING btree ("_order");
-  CREATE INDEX "categories_breadcrumbs_parent_id_idx" ON "categories_breadcrumbs" USING btree ("_parent_id");
-  CREATE INDEX "categories_breadcrumbs_locale_idx" ON "categories_breadcrumbs" USING btree ("_locale");
-  CREATE INDEX "categories_breadcrumbs_doc_idx" ON "categories_breadcrumbs" USING btree ("doc_id");
   CREATE UNIQUE INDEX "categories_slug_idx" ON "categories" USING btree ("slug");
-  CREATE INDEX "categories_parent_idx" ON "categories" USING btree ("parent_id");
   CREATE INDEX "categories_updated_at_idx" ON "categories" USING btree ("updated_at");
   CREATE INDEX "categories_created_at_idx" ON "categories" USING btree ("created_at");
   CREATE UNIQUE INDEX "categories_locales_locale_parent_id_unique" ON "categories_locales" USING btree ("_locale","_parent_id");
@@ -1926,10 +1856,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_path_idx" ON "payload_locked_documents_rels" USING btree ("path");
   CREATE INDEX "payload_locked_documents_rels_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("pages_id");
   CREATE INDEX "payload_locked_documents_rels_businesses_id_idx" ON "payload_locked_documents_rels" USING btree ("businesses_id");
+  CREATE INDEX "payload_locked_documents_rels_benefits_id_idx" ON "payload_locked_documents_rels" USING btree ("benefits_id");
   CREATE INDEX "payload_locked_documents_rels_events_id_idx" ON "payload_locked_documents_rels" USING btree ("events_id");
-  CREATE INDEX "payload_locked_documents_rels_event_applications_id_idx" ON "payload_locked_documents_rels" USING btree ("event_applications_id");
   CREATE INDEX "payload_locked_documents_rels_news_id_idx" ON "payload_locked_documents_rels" USING btree ("news_id");
-  CREATE INDEX "payload_locked_documents_rels_signature_events_id_idx" ON "payload_locked_documents_rels" USING btree ("signature_events_id");
   CREATE INDEX "payload_locked_documents_rels_mailing_list_id_idx" ON "payload_locked_documents_rels" USING btree ("mailing_list_id");
   CREATE INDEX "payload_locked_documents_rels_email_campaigns_id_idx" ON "payload_locked_documents_rels" USING btree ("email_campaigns_id");
   CREATE INDEX "payload_locked_documents_rels_media_id_idx" ON "payload_locked_documents_rels" USING btree ("media_id");
@@ -1968,9 +1897,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "footer_rels_path_idx" ON "footer_rels" USING btree ("path");
   CREATE INDEX "footer_rels_pages_id_idx" ON "footer_rels" USING btree ("pages_id");
   CREATE INDEX "footer_rels_news_id_idx" ON "footer_rels" USING btree ("news_id");
-  CREATE INDEX "membership_tiers_tiers_features_order_idx" ON "membership_tiers_tiers_features" USING btree ("_order");
-  CREATE INDEX "membership_tiers_tiers_features_parent_id_idx" ON "membership_tiers_tiers_features" USING btree ("_parent_id");
-  CREATE INDEX "membership_tiers_tiers_features_locale_idx" ON "membership_tiers_tiers_features" USING btree ("_locale");
   CREATE INDEX "membership_tiers_tiers_order_idx" ON "membership_tiers_tiers" USING btree ("_order");
   CREATE INDEX "membership_tiers_tiers_parent_id_idx" ON "membership_tiers_tiers" USING btree ("_parent_id");
   CREATE UNIQUE INDEX "membership_tiers_tiers_slug_idx" ON "membership_tiers_tiers" USING btree ("slug");
@@ -2018,27 +1944,22 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "_businesses_v" CASCADE;
   DROP TABLE "_businesses_v_locales" CASCADE;
   DROP TABLE "_businesses_v_rels" CASCADE;
+  DROP TABLE "benefits" CASCADE;
+  DROP TABLE "benefits_locales" CASCADE;
+  DROP TABLE "_benefits_v" CASCADE;
+  DROP TABLE "_benefits_v_locales" CASCADE;
   DROP TABLE "events" CASCADE;
   DROP TABLE "events_locales" CASCADE;
   DROP TABLE "_events_v" CASCADE;
   DROP TABLE "_events_v_locales" CASCADE;
-  DROP TABLE "event_applications" CASCADE;
-  DROP TABLE "event_applications_rels" CASCADE;
   DROP TABLE "news" CASCADE;
   DROP TABLE "news_locales" CASCADE;
   DROP TABLE "_news_v" CASCADE;
   DROP TABLE "_news_v_locales" CASCADE;
-  DROP TABLE "signature_events_gallery" CASCADE;
-  DROP TABLE "signature_events" CASCADE;
-  DROP TABLE "signature_events_locales" CASCADE;
-  DROP TABLE "_signature_events_v_version_gallery" CASCADE;
-  DROP TABLE "_signature_events_v" CASCADE;
-  DROP TABLE "_signature_events_v_locales" CASCADE;
   DROP TABLE "mailing_list" CASCADE;
   DROP TABLE "email_campaigns" CASCADE;
   DROP TABLE "email_campaigns_rels" CASCADE;
   DROP TABLE "media" CASCADE;
-  DROP TABLE "categories_breadcrumbs" CASCADE;
   DROP TABLE "categories" CASCADE;
   DROP TABLE "categories_locales" CASCADE;
   DROP TABLE "users_sessions" CASCADE;
@@ -2095,7 +2016,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "footer" CASCADE;
   DROP TABLE "footer_locales" CASCADE;
   DROP TABLE "footer_rels" CASCADE;
-  DROP TABLE "membership_tiers_tiers_features" CASCADE;
   DROP TABLE "membership_tiers_tiers" CASCADE;
   DROP TABLE "membership_tiers_tiers_locales" CASCADE;
   DROP TABLE "membership_tiers" CASCADE;
@@ -2139,22 +2059,23 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE "public"."enum__businesses_v_version_approval_status";
   DROP TYPE "public"."enum__businesses_v_version_status";
   DROP TYPE "public"."enum__businesses_v_published_locale";
-  DROP TYPE "public"."enum_events_category";
+  DROP TYPE "public"."enum_benefits_benefit_status";
+  DROP TYPE "public"."enum_benefits_status";
+  DROP TYPE "public"."enum__benefits_v_version_benefit_status";
+  DROP TYPE "public"."enum__benefits_v_version_status";
+  DROP TYPE "public"."enum__benefits_v_published_locale";
+  DROP TYPE "public"."enum_events_recurrence_recurrence_type";
+  DROP TYPE "public"."enum_events_recurrence_monthly_type";
   DROP TYPE "public"."enum_events_event_status";
   DROP TYPE "public"."enum_events_status";
-  DROP TYPE "public"."enum__events_v_version_category";
+  DROP TYPE "public"."enum__events_v_version_recurrence_recurrence_type";
+  DROP TYPE "public"."enum__events_v_version_recurrence_monthly_type";
   DROP TYPE "public"."enum__events_v_version_event_status";
   DROP TYPE "public"."enum__events_v_version_status";
   DROP TYPE "public"."enum__events_v_published_locale";
-  DROP TYPE "public"."enum_event_applications_status";
   DROP TYPE "public"."enum_news_status";
   DROP TYPE "public"."enum__news_v_version_status";
   DROP TYPE "public"."enum__news_v_published_locale";
-  DROP TYPE "public"."enum_signature_events_event_status";
-  DROP TYPE "public"."enum_signature_events_status";
-  DROP TYPE "public"."enum__signature_events_v_version_event_status";
-  DROP TYPE "public"."enum__signature_events_v_version_status";
-  DROP TYPE "public"."enum__signature_events_v_published_locale";
   DROP TYPE "public"."enum_users_role";
   DROP TYPE "public"."enum_redirects_to_type";
   DROP TYPE "public"."enum_forms_confirmation_type";
