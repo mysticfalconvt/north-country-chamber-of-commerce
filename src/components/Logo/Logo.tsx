@@ -17,12 +17,10 @@ export const Logo = (props: Props) => {
     /* eslint-disable @next/next/no-img-element */
     <img
       alt="North Country Chamber of Commerce"
-      width={60}
-      height={60}
       loading={loading}
       fetchPriority={priority}
       decoding="async"
-      className={clsx('w-[60px] h-[60px]', className)}
+      className={className || 'w-[60px] h-[60px]'}
       src="/north-country-chamber-logo.png"
     />
   )

@@ -32,7 +32,6 @@ const translations = {
     of: 'of',
     businesses: 'businesses',
     noResults: 'No businesses found matching your criteria.',
-    featured: 'Featured',
     platinum: 'Platinum',
     gold: 'Gold',
     silver: 'Silver',
@@ -49,7 +48,6 @@ const translations = {
     of: 'sur',
     businesses: 'entreprises',
     noResults: 'Aucune entreprise trouvée correspondant à vos critères.',
-    featured: 'En vedette',
     platinum: 'Platine',
     gold: 'Or',
     silver: 'Argent',
@@ -261,9 +259,6 @@ export function BusinessDirectory({
                       <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
                         {business.name}
                       </h3>
-                      {business.featured && (
-                        <span className="text-amber-500 text-sm">★ {t.featured}</span>
-                      )}
                       {(() => {
                         const badge = getTierBadge(business.membershipTier ?? undefined)
                         if (!badge) return null

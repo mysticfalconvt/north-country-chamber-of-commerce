@@ -7,6 +7,7 @@ const client = new OpenAI({
 })
 
 const model = process.env.TRANSLATION_MODEL || 'qwen3:8b'
+const TRANSLATION_TIMEOUT_MS = 10000 // 10 second timeout
 
 /**
  * Translate text from English to Canadian French
@@ -18,22 +19,29 @@ export async function translateToFrench(text: string): Promise<string> {
     return text
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TRANSLATION_TIMEOUT_MS)
+
   try {
     console.log('[translateToFrench] Translating:', text.substring(0, 50))
-    const response = await client.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional translator. Translate the following text from English to Canadian French.
+    const response = await client.chat.completions.create(
+      {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a professional translator. Translate the following text from English to Canadian French.
 Keep proper nouns unchanged (business names, "Newport", "Northeast Kingdom", "Vermont", person names, organization names).
 Preserve any HTML tags, markdown formatting, or special characters exactly as they appear.
 Return ONLY the translated text, no explanations or additional commentary.`,
-        },
-        { role: 'user', content: text },
-      ],
-      temperature: 0.3,
-    })
+          },
+          { role: 'user', content: text },
+        ],
+        temperature: 0.3,
+      },
+      { signal: controller.signal },
+    )
+    clearTimeout(timeoutId)
 
     const result = response.choices[0]?.message?.content?.trim() || text
     console.log('[translateToFrench] Result:', result.substring(0, 50))
@@ -44,8 +52,13 @@ Return ONLY the translated text, no explanations or additional commentary.`,
     }
 
     return result
-  } catch (error) {
-    console.error('Translation error:', error)
+  } catch (error: unknown) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn('[translateToFrench] Translation timed out after', TRANSLATION_TIMEOUT_MS, 'ms')
+    } else {
+      console.error('Translation error:', error)
+    }
     // Fallback: return original text if translation fails
     return text
   }
@@ -222,16 +235,23 @@ export async function isTranslationAvailable(): Promise<boolean> {
     return false
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TRANSLATION_TIMEOUT_MS)
+
   try {
     console.log('Checking translation service at:', process.env.TRANSLATION_API_URL)
     console.log('Using model:', model)
 
-    const response = await client.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: 'Hello' }],
-      max_tokens: 10,
-      temperature: 0,
-    })
+    const response = await client.chat.completions.create(
+      {
+        model,
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 10,
+        temperature: 0,
+      },
+      { signal: controller.signal },
+    )
+    clearTimeout(timeoutId)
 
     console.log('Translation service response:', JSON.stringify(response, null, 2))
 
@@ -257,10 +277,15 @@ export async function isTranslationAvailable(): Promise<boolean> {
     console.log('Translation service check failed: Invalid response structure')
     return false
   } catch (error) {
-    console.error('Translation service check failed with error:', error)
-    if (error instanceof Error) {
-      console.error('Error message:', error.message)
-      console.error('Error stack:', error.stack)
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn('[isTranslationAvailable] Check timed out after', TRANSLATION_TIMEOUT_MS, 'ms')
+    } else {
+      console.error('Translation service check failed with error:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
     }
     return false
   }

@@ -38,13 +38,17 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-visible"
       {...(theme ? { 'data-theme': theme } : {})}
     >
       <Container>
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <Logo loading="eager" priority="high" className="h-8 w-auto" />
+            <Logo
+              loading="eager"
+              priority="high"
+              className="h-20 md:h-28 w-auto mt-2 md:mt-3 -mb-8 md:-mb-[3.25rem] z-50 relative [filter:drop-shadow(0_3px_4px_rgba(0,0,0,0.4))_drop-shadow(0_3px_6px_rgba(255,255,255,0.3))]"
+            />
           </Link>
           <div className="flex items-center gap-4">
             <HeaderNav data={data} />

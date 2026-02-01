@@ -20,6 +20,11 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
     return doc
   }
 
+  // Only translate when content is published, not on drafts/autosave
+  if (doc._status && doc._status !== 'published') {
+    return doc
+  }
+
   // Only translate when editing in English locale
   if (req.locale !== 'en') {
     return doc

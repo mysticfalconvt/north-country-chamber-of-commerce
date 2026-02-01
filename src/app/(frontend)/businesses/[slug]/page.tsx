@@ -58,7 +58,6 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold tracking-tight">{business.name}</h1>
-                {business.featured && <span className="text-amber-500 text-xl">★</span>}
               </div>
               {business.category &&
                 Array.isArray(business.category) &&

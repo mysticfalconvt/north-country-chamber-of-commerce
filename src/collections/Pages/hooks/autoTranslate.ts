@@ -11,6 +11,11 @@ export const autoTranslate: CollectionBeforeChangeHook = async ({ data, operatio
     return data
   }
 
+  // Only translate when content is published, not on drafts/autosave
+  if (data._status && data._status !== 'published') {
+    return data
+  }
+
   try {
     // Translate title (simple localized field - safe to do in beforeChange)
     if (data.title?.en && !data.title?.fr) {
@@ -41,6 +46,11 @@ export const autoTranslateLayout: CollectionAfterChangeHook = async ({
   }
 
   if (operation !== 'create' && operation !== 'update') {
+    return doc
+  }
+
+  // Only translate when content is published, not on drafts/autosave
+  if (doc._status && doc._status !== 'published') {
     return doc
   }
 
