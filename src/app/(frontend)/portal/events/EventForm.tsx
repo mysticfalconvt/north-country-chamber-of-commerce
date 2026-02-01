@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { TimeInput } from '@/components/ui/time-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -14,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function EventForm({ event }: { event?: any }) {
   const router = useRouter()
@@ -30,8 +32,8 @@ export default function EventForm({ event }: { event?: any }) {
     city: event?.city || '',
     state: event?.state || 'VT',
     zipCode: event?.zipCode || '',
-    category: event?.category || 'community',
     externalUrl: event?.externalUrl || '',
+    linkTitle: event?.linkTitle || '',
   })
 
   const [date, setDate] = useState<Date | undefined>(event?.date ? new Date(event.date) : undefined)
@@ -40,6 +42,11 @@ export default function EventForm({ event }: { event?: any }) {
   )
   const [startTime, setStartTime] = useState(event?.startTime || '')
   const [endTime, setEndTime] = useState(event?.endTime || '')
+
+  // Recurring event state
+  const [isRecurring, setIsRecurring] = useState(event?.isRecurring || false)
+  const [recurrenceType, setRecurrenceType] = useState(event?.recurrence?.recurrenceType || '')
+  const [monthlyType, setMonthlyType] = useState(event?.recurrence?.monthlyType || 'dayOfMonth')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -52,13 +59,6 @@ export default function EventForm({ event }: { event?: any }) {
     setError('')
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -68,6 +68,19 @@ export default function EventForm({ event }: { event?: any }) {
       // Validate required fields
       if (!date) {
         throw new Error('Start date is required')
+      }
+
+      // Validate recurring event fields
+      if (isRecurring) {
+        if (!recurrenceType) {
+          throw new Error('Please select a recurrence pattern')
+        }
+        if (!endDate) {
+          throw new Error('End date is required for recurring events')
+        }
+        if (date && endDate && date > endDate) {
+          throw new Error('End date must be after start date')
+        }
       }
 
       // Convert to Lexical format
@@ -99,29 +112,42 @@ export default function EventForm({ event }: { event?: any }) {
         }
       }
 
+      const eventData: any = {
+        ...(event && { id: event.id }),
+        title: formData.title,
+        description,
+        date: startDateTime.toISOString(),
+        endDate: endDateTime ? endDateTime.toISOString() : null,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        location: formData.location,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        externalUrl: formData.externalUrl || null,
+        linkTitle: formData.linkTitle || null,
+        isRecurring,
+        eventStatus: 'pending',
+        _status: 'published',
+      }
+
+      // Add recurrence data if recurring
+      if (isRecurring) {
+        eventData.recurrence = {
+          recurrenceType,
+          monthlyType: recurrenceType === 'monthly' ? monthlyType : null,
+        }
+      } else {
+        eventData.recurrence = null
+      }
+
       const response = await fetch('/api/portal/events', {
         method: event ? 'PATCH' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...(event && { id: event.id }),
-          title: formData.title,
-          description,
-          date: startDateTime.toISOString(),
-          endDate: endDateTime ? endDateTime.toISOString() : null,
-          startTime: startTime || null,
-          endTime: endTime || null,
-          location: formData.location,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          category: formData.category,
-          externalUrl: formData.externalUrl,
-          eventStatus: 'pending',
-          _status: 'published',
-        }),
+        body: JSON.stringify(eventData),
       })
 
       if (!response.ok) {
@@ -150,6 +176,7 @@ export default function EventForm({ event }: { event?: any }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Info */}
         <div>
           <Label htmlFor="title">Event Title *</Label>
           <Input
@@ -175,6 +202,7 @@ export default function EventForm({ event }: { event?: any }) {
           />
         </div>
 
+        {/* Date & Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Start Date *</Label>
@@ -187,11 +215,11 @@ export default function EventForm({ event }: { event?: any }) {
           </div>
 
           <div>
-            <Label>End Date (optional)</Label>
+            <Label>End Date {isRecurring ? '*' : '(optional)'}</Label>
             <DatePicker
               date={endDate}
               onDateChange={setEndDate}
-              placeholder="Pick an end date"
+              placeholder={isRecurring ? 'When recurrence ends' : 'Pick an end date'}
               className="mt-1"
             />
           </div>
@@ -200,10 +228,9 @@ export default function EventForm({ event }: { event?: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="startTime">Start Time</Label>
-            <Input
+            <TimeInput
               id="startTime"
               name="startTime"
-              type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               className="mt-1"
@@ -212,10 +239,9 @@ export default function EventForm({ event }: { event?: any }) {
 
           <div>
             <Label htmlFor="endTime">End Time</Label>
-            <Input
+            <TimeInput
               id="endTime"
               name="endTime"
-              type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               className="mt-1"
@@ -223,25 +249,70 @@ export default function EventForm({ event }: { event?: any }) {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="category">Event Category</Label>
-          <Select
-            value={formData.category}
-            onValueChange={(value) => handleSelectChange('category', value)}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="chamber">Chamber Event</SelectItem>
-              <SelectItem value="community">Community Event</SelectItem>
-              <SelectItem value="networking">Networking</SelectItem>
-              <SelectItem value="workshop">Workshop</SelectItem>
-              <SelectItem value="festival">Festival</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Recurring Event Settings */}
+        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="isRecurring"
+              checked={isRecurring}
+              onCheckedChange={(checked) => setIsRecurring(checked as boolean)}
+            />
+            <Label htmlFor="isRecurring" className="font-medium flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              This is a recurring event
+            </Label>
+          </div>
+
+          {isRecurring && (
+            <div className="space-y-4 mt-4 pl-7">
+              <div>
+                <Label>Recurrence Pattern *</Label>
+                <Select value={recurrenceType} onValueChange={setRecurrenceType}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select pattern" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+                {recurrenceType === 'weekly' && date && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Repeats every {date.toLocaleDateString('en-US', { weekday: 'long' })}
+                  </p>
+                )}
+              </div>
+
+              {recurrenceType === 'monthly' && (
+                <div>
+                  <Label>Monthly Pattern</Label>
+                  <Select value={monthlyType} onValueChange={setMonthlyType}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dayOfMonth">Same day of month (e.g., 15th)</SelectItem>
+                      <SelectItem value="dayOfWeek">Same week & day (e.g., 2nd Tuesday)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {date && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {monthlyType === 'dayOfMonth'
+                        ? `Repeats on the ${date.getDate()}${getOrdinalSuffix(date.getDate())} of each month`
+                        : `Repeats on the ${getWeekOrdinal(date)} ${date.toLocaleDateString('en-US', { weekday: 'long' })} of each month`}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Use the <strong>End Date</strong> field above to set when the recurring series ends.
+              </p>
+            </div>
+          )}
         </div>
 
+        {/* Location */}
         <div>
           <Label htmlFor="location">Location Name</Label>
           <Input
@@ -300,6 +371,7 @@ export default function EventForm({ event }: { event?: any }) {
           </div>
         </div>
 
+        {/* External Link */}
         <div>
           <Label htmlFor="externalUrl">External URL (optional)</Label>
           <Input
@@ -316,6 +388,23 @@ export default function EventForm({ event }: { event?: any }) {
           </p>
         </div>
 
+        {formData.externalUrl && (
+          <div>
+            <Label htmlFor="linkTitle">Link Button Text</Label>
+            <Input
+              id="linkTitle"
+              name="linkTitle"
+              value={formData.linkTitle}
+              onChange={handleChange}
+              className="mt-1"
+              placeholder="e.g., Buy Tickets, Register, RSVP"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Custom text for the link button (defaults to "Register Now")
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-4 justify-end">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
             Cancel
@@ -327,4 +416,16 @@ export default function EventForm({ event }: { event?: any }) {
       </form>
     </div>
   )
+}
+
+function getOrdinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return s[(v - 20) % 10] || s[v] || s[0]
+}
+
+function getWeekOrdinal(date: Date): string {
+  const weekOfMonth = Math.ceil(date.getDate() / 7)
+  const ordinals = ['1st', '2nd', '3rd', '4th', '5th']
+  return ordinals[weekOfMonth - 1] || `${weekOfMonth}th`
 }

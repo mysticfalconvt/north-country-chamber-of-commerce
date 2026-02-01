@@ -52,7 +52,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               <img
                 src={business.logo.url || ''}
                 alt={business.logo.alt || business.name}
-                className="w-24 h-24 object-contain rounded-lg border bg-white"
+                className="w-24 h-24 object-contain rounded-lg"
               />
             )}
             <div className="flex-1">

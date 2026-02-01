@@ -5,7 +5,9 @@ import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
-import { sendEventApprovalNotification } from '../../utilities/email'
+import { sendEventApprovalNotification, sendEventSubmissionConfirmation } from '../../utilities/email'
+import { autoTranslate } from './hooks'
+import { getAdminNotificationEmails } from '../../utilities/getAdminEmails'
 
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -18,6 +20,20 @@ export const Events: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
+      async ({ data, req, operation }) => {
+        // Only enforce isChamberEvent=false when a business_member is creating/updating
+        // Admins and chamber_staff can set isChamberEvent to whatever they want
+        if (operation === 'create' || operation === 'update') {
+          const user = req.user as { role?: string } | undefined
+
+          // Only restrict for business members
+          if (user?.role === 'business_member') {
+            data.isChamberEvent = false
+          }
+        }
+
+        return data
+      },
       async ({ data, req, operation }) => {
         // Auto-geocode address to get coordinates
         if (operation === 'create' || operation === 'update') {
@@ -78,26 +94,17 @@ export const Events: CollectionConfig = {
       },
     ],
     afterChange: [
+      autoTranslate,
       async ({ doc, operation, req }) => {
         // Send notification email when a new event is created with pending status
         if (operation === 'create' && doc.eventStatus === 'pending') {
           try {
-            // Get all admin and chamber_staff users
-            const adminUsers = await req.payload.find({
-              collection: 'users',
-              where: {
-                or: [{ role: { equals: 'admin' } }, { role: { equals: 'chamber_staff' } }],
-              },
-              limit: 100,
-            })
-
-            const adminEmails = adminUsers.docs
-              .map((user) => user.email)
-              .filter((email): email is string => !!email)
+            // Get admin notification emails (from env var or fallback to database)
+            const adminEmails = await getAdminNotificationEmails(req.payload)
 
             if (adminEmails.length === 0) {
               req.payload.logger.warn(
-                'No admin or chamber staff emails found for event approval notification',
+                'No admin notification emails configured. Set ADMIN_NOTIFICATION_EMAIL env var.',
               )
               return
             }
@@ -136,9 +143,28 @@ export const Events: CollectionConfig = {
               adminEmails,
             })
 
-            req.payload.logger.info(
-              `Sent event approval notification for "${doc.title}" to ${adminEmails.length} recipient(s)`,
-            )
+            req.payload.logger.info(`Sent event approval notification for "${doc.title}"`)
+
+
+            // Send confirmation email to the submitter
+            if (submitterEmail && submitterEmail !== 'Unknown') {
+              try {
+                await sendEventSubmissionConfirmation({
+                  to: submitterEmail,
+                  eventTitle:
+                    typeof doc.title === 'string' ? doc.title : doc.title?.en || 'Untitled Event',
+                  eventDate: doc.date,
+                  businessName,
+                })
+                req.payload.logger.info(
+                  `Sent event submission confirmation to ${submitterEmail} for "${doc.title}"`,
+                )
+              } catch (confirmError) {
+                req.payload.logger.error(
+                  `Failed to send event submission confirmation: ${confirmError}`,
+                )
+              }
+            }
           } catch (error) {
             req.payload.logger.error(`Failed to send event approval notification: ${error}`)
           }
@@ -147,7 +173,7 @@ export const Events: CollectionConfig = {
     ],
   },
   admin: {
-    defaultColumns: ['title', 'date', 'category', 'eventStatus'],
+    defaultColumns: ['title', 'date', 'isChamberEvent', 'eventStatus'],
     useAsTitle: 'title',
   },
   fields: [
@@ -169,6 +195,14 @@ export const Events: CollectionConfig = {
       relationTo: 'media',
     },
     {
+      name: 'attachment',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'PDF flyer or event document',
+      },
+    },
+    {
       type: 'row',
       fields: [
         {
@@ -185,7 +219,7 @@ export const Events: CollectionConfig = {
           name: 'endDate',
           type: 'date',
           admin: {
-            description: 'For multi-day events',
+            description: 'End of multi-day event, or when recurring series ends',
             date: {
               pickerAppearance: 'dayOnly',
             },
@@ -304,34 +338,73 @@ export const Events: CollectionConfig = {
       ],
     },
     {
-      name: 'category',
-      type: 'select',
-      options: [
-        { label: 'Chamber Event', value: 'chamber' },
-        { label: 'Community Event', value: 'community' },
-        { label: 'Networking', value: 'networking' },
-        { label: 'Workshop', value: 'workshop' },
-        { label: 'Festival', value: 'festival' },
-        { label: 'Fundraiser', value: 'fundraiser' },
-        { label: 'Social', value: 'social' },
-      ],
+      name: 'isChamberEvent',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Official Chamber of Commerce event',
+        condition: (data, siblingData, { user }) =>
+          user?.role === 'admin' || user?.role === 'chamber_staff',
+      },
     },
     {
       type: 'row',
       fields: [
         {
-          name: 'recurring',
-          type: 'checkbox',
-          defaultValue: false,
-          admin: {
-            description: 'Is this a recurring event?',
-          },
-        },
-        {
           name: 'externalUrl',
           type: 'text',
           admin: {
             description: 'Link to external registration/info page',
+          },
+        },
+        {
+          name: 'linkTitle',
+          type: 'text',
+          admin: {
+            description: 'Custom text for registration link (e.g., "Buy Tickets", "RSVP")',
+            condition: (data) => !!data?.externalUrl,
+          },
+        },
+      ],
+    },
+    {
+      name: 'isRecurring',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Is this a recurring event?',
+      },
+    },
+    {
+      type: 'group',
+      name: 'recurrence',
+      label: 'Recurrence Settings',
+      admin: {
+        condition: (data) => data?.isRecurring === true,
+      },
+      fields: [
+        {
+          name: 'recurrenceType',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Weekly', value: 'weekly' },
+            { label: 'Monthly', value: 'monthly' },
+          ],
+          admin: {
+            description: 'How often this event repeats (pattern from start date, ends on end date)',
+          },
+        },
+        {
+          name: 'monthlyType',
+          type: 'select',
+          options: [
+            { label: 'Same day of month (e.g., 15th)', value: 'dayOfMonth' },
+            { label: 'Same week & day (e.g., 2nd Tuesday)', value: 'dayOfWeek' },
+          ],
+          admin: {
+            description: 'How to determine the monthly date (auto-calculated from start date)',
+            condition: (data, siblingData) => siblingData?.recurrenceType === 'monthly',
           },
         },
       ],

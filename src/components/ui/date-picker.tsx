@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { format } from 'date-fns'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, X } from 'lucide-react'
 
 import { cn } from '@/utilities/ui'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ interface DatePickerProps {
   placeholder?: string
   disabled?: boolean
   className?: string
+  clearable?: boolean
 }
 
 export function DatePicker({
@@ -23,26 +24,48 @@ export function DatePicker({
   placeholder = 'Pick a date',
   disabled = false,
   className,
+  clearable = true,
 }: DatePickerProps) {
+  const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onDateChange(undefined)
+  }
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <div className="relative flex items-center">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={'outline'}
+            className={cn(
+              'w-full justify-start text-left font-normal',
+              !date && 'text-muted-foreground',
+              clearable && date && 'pr-10',
+              className,
+            )}
+            disabled={disabled}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date ? format(date, 'PPP') : <span>{placeholder}</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar mode="single" selected={date} onSelect={onDateChange} initialFocus />
+        </PopoverContent>
+      </Popover>
+      {clearable && date && !disabled && (
         <Button
-          variant={'outline'}
-          className={cn(
-            'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground',
-            className,
-          )}
-          disabled={disabled}
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-1 h-7 w-7 text-muted-foreground hover:text-foreground"
+          onClick={handleClear}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP') : <span>{placeholder}</span>}
+          <X className="h-4 w-4" />
+          <span className="sr-only">Clear date</span>
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar mode="single" selected={date} onSelect={onDateChange} initialFocus />
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   )
 }

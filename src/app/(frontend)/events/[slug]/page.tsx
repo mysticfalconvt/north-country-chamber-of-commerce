@@ -3,24 +3,30 @@ import { Container } from '@/design-system/Container'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { Calendar, Clock, MapPin, User, ExternalLink } from 'lucide-react'
+import { Calendar, Clock, MapPin, User, ExternalLink, RefreshCw, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getLocaleFromPathname } from '@/utilities/getLocale'
+import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 import { serializeLexical } from '@/utilities/serializeLexical'
 import Image from 'next/image'
-import { getMediaUrl } from '@/utilities/getMediaUrl'
+import { getOptimizedImageUrl } from '@/utilities/getMediaUrl'
 import { BusinessMap } from '@/components/BusinessMap'
+import type { Media, Business } from '@/payload-types'
 
 interface EventPageProps {
   params: Promise<{
     slug: string
   }>
+  searchParams: Promise<{
+    date?: string
+  }>
 }
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { slug } = await params
+  const { date: occurrenceDate } = await searchParams
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') || ''
   const locale = getLocaleFromPathname(pathname)
@@ -45,6 +51,9 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound()
   }
 
+  // Use occurrence date if provided (for recurring events), otherwise use event date
+  const displayDate = occurrenceDate || event.date
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US', {
@@ -55,6 +64,50 @@ export default async function EventPage({ params }: EventPageProps) {
     })
   }
 
+  // Get recurrence description - uses event.date as the pattern source
+  const getRecurrenceDescription = () => {
+    if (!event.isRecurring || !event.recurrence || !event.date) return null
+
+    const { recurrenceType, monthlyType } = event.recurrence
+    const startDate = new Date(event.date)
+
+    if (recurrenceType === 'weekly') {
+      const dayName = startDate.toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US', {
+        weekday: 'long',
+      })
+      return locale === 'fr' ? `Chaque ${dayName}` : `Every ${dayName}`
+    }
+
+    if (recurrenceType === 'monthly') {
+      if (monthlyType === 'dayOfMonth') {
+        const dayOfMonth = startDate.getDate()
+        return locale === 'fr'
+          ? `Le ${dayOfMonth} de chaque mois`
+          : `${dayOfMonth}${getOrdinalSuffix(dayOfMonth)} of each month`
+      } else {
+        const weekOfMonth = Math.ceil(startDate.getDate() / 7)
+        const dayName = startDate.toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US', {
+          weekday: 'long',
+        })
+        const ordinals =
+          locale === 'fr'
+            ? ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième']
+            : ['1st', '2nd', '3rd', '4th', '5th']
+        return locale === 'fr'
+          ? `Le ${ordinals[weekOfMonth - 1]} ${dayName} de chaque mois`
+          : `${ordinals[weekOfMonth - 1]} ${dayName} of each month`
+      }
+    }
+
+    return null
+  }
+
+  const getOrdinalSuffix = (n: number) => {
+    const s = ['th', 'st', 'nd', 'rd']
+    const v = n % 100
+    return s[(v - 20) % 10] || s[v] || s[0]
+  }
+
   const translations = {
     en: {
       organizer: 'Organizer',
@@ -63,6 +116,10 @@ export default async function EventPage({ params }: EventPageProps) {
       registerNow: 'Register Now',
       cancelled: 'This event has been cancelled',
       getDirections: 'Get Directions',
+      chamberEvent: 'Chamber Event',
+      recurringEvent: 'Recurring Event',
+      attachment: 'Attachment',
+      downloadPdf: 'Download PDF',
     },
     fr: {
       organizer: 'Organisateur',
@@ -71,10 +128,15 @@ export default async function EventPage({ params }: EventPageProps) {
       registerNow: "S'inscrire maintenant",
       cancelled: 'Cet événement a été annulé',
       getDirections: 'Obtenir un itinéraire',
+      chamberEvent: 'Événement de la chambre',
+      recurringEvent: 'Événement récurrent',
+      attachment: 'Pièce jointe',
+      downloadPdf: 'Télécharger le PDF',
     },
   }
 
   const t = translations[locale]
+  const recurrenceDescription = getRecurrenceDescription()
 
   return (
     <Container className="py-12 md:py-16">
@@ -87,26 +149,78 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           )}
 
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{event.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl flex-1">{event.title}</h1>
+            {/* Right side: Business and Chamber logos */}
+            {(() => {
+              const business = event.business as Business | null
+              const businessLogo = business?.logo as Media | null
+              const businessLogoUrl = getOptimizedImageUrl(businessLogo, 'thumbnail')
+              const hasLogos = businessLogoUrl || event.isChamberEvent
 
-          {event.category && (
-            <span className="inline-block text-sm bg-muted px-3 py-1 rounded capitalize">
-              {event.category}
-            </span>
+              if (!hasLogos) return null
+
+              return (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {businessLogoUrl && business?.slug && (
+                    <Link href={addLocaleToPathname(`/directory/${business.slug}`, locale)} title={business?.name || ''}>
+                      <Image
+                        src={businessLogoUrl}
+                        alt={business?.name || 'Business'}
+                        width={44}
+                        height={44}
+                        className="rounded-full object-cover hover:ring-2 hover:ring-primary transition-all"
+                      />
+                    </Link>
+                  )}
+                  {event.isChamberEvent && (
+                    <span title={t.chamberEvent}>
+                      <Image
+                        src="/north-country-chamber-logo.png"
+                        alt={t.chamberEvent}
+                        width={44}
+                        height={44}
+                        className="rounded-full"
+                      />
+                    </span>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Left side: Event badges */}
+          {event.isRecurring && (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 text-sm bg-muted px-3 py-1 rounded text-muted-foreground">
+                <RefreshCw className="h-3.5 w-3.5" />
+                {t.recurringEvent}
+              </span>
+            </div>
+          )}
+
+          {/* Recurrence description */}
+          {recurrenceDescription && (
+            <p className="text-sm text-muted-foreground">{recurrenceDescription}</p>
           )}
         </div>
 
         {/* Event Image */}
-        {event.image && typeof event.image !== 'string' && typeof event.image !== 'number' && (
-          <div className="relative w-full h-96 rounded-lg overflow-hidden">
-            <Image
-              src={getMediaUrl(event.image.url)}
-              alt={event.image.alt || event.title}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+        {(() => {
+          const image = event.image as Media | null
+          const imageUrl = getOptimizedImageUrl(image, 'large')
+          if (!imageUrl) return null
+          return (
+            <div className="relative w-full h-96 rounded-lg overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt={image?.alt || event.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )
+        })()}
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
@@ -124,11 +238,35 @@ export default async function EventPage({ params }: EventPageProps) {
                 href={event.externalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-primary hover:underline"
+                className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
               >
                 <ExternalLink className="h-4 w-4" />
-                {t.registerNow}
+                {event.linkTitle || t.registerNow}
               </a>
+            )}
+
+            {/* PDF Attachment */}
+            {event.attachment && typeof event.attachment === 'object' && event.attachment.url && (
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">{t.attachment}</h3>
+                <a
+                  href={event.attachment.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-primary hover:underline"
+                >
+                  <FileText className="h-5 w-5" />
+                  {event.attachment.filename || t.downloadPdf}
+                </a>
+                {/* Inline PDF viewer for larger screens */}
+                <div className="hidden lg:block mt-4 h-96 border rounded overflow-hidden">
+                  <iframe
+                    src={`${event.attachment.url}#view=FitH`}
+                    className="w-full h-full"
+                    title={t.attachment}
+                  />
+                </div>
+              </Card>
             )}
           </div>
 
@@ -139,8 +277,8 @@ export default async function EventPage({ params }: EventPageProps) {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="space-y-1">
-                  <p className="font-medium">{formatDate(event.date)}</p>
-                  {event.endDate && event.endDate !== event.date && (
+                  <p className="font-medium">{formatDate(displayDate)}</p>
+                  {!event.isRecurring && event.endDate && event.endDate !== event.date && (
                     <p className="text-sm text-muted-foreground">to {formatDate(event.endDate)}</p>
                   )}
                 </div>

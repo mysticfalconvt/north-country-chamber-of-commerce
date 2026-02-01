@@ -27,13 +27,6 @@ export const Categories: CollectionConfig = {
       type: 'textarea',
       localized: true,
     },
-    {
-      name: 'icon',
-      type: 'text',
-      admin: {
-        description: 'Lucide icon name (e.g., "store", "utensils", "home")',
-      },
-    },
-    slugField(),
+    slugField({ fieldToUse: 'name' }),
   ],
 }

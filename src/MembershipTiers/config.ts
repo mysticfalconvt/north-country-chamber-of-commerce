@@ -44,83 +44,48 @@ export const MembershipTiers: GlobalConfig = {
         {
           name: 'description',
           type: 'richText',
-          required: true,
           localized: true,
           admin: {
             description: 'Full description of benefits and features',
           },
         },
         {
-          type: 'row',
-          fields: [
-            {
-              name: 'annualPrice',
-              type: 'number',
-              required: true,
-              admin: {
-                description: 'Annual membership price in dollars (e.g., 100 for $100)',
-              },
-            },
-            {
-              name: 'advertisingSlots',
-              type: 'number',
-              defaultValue: 0,
-              admin: {
-                description: 'Number of advertising slots on business page',
-              },
-            },
-          ],
-        },
-        {
-          name: 'features',
-          type: 'array',
-          label: 'Features',
+          name: 'annualPrice',
+          type: 'number',
           required: true,
-          localized: true,
           admin: {
-            description: 'List of benefits included in this tier',
-            initCollapsed: true,
+            description: 'Annual membership price in dollars (e.g., 100 for $100)',
           },
-          fields: [
-            {
-              name: 'feature',
-              type: 'text',
-              required: true,
-              admin: {
-                description: 'Feature description (e.g., "Business directory listing")',
-              },
-            },
-          ],
+        },
+        {
+          name: 'active',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Available for new sign-ups',
+          },
         },
         {
           type: 'row',
           fields: [
             {
-              name: 'featuredInDirectory',
+              name: 'displayBadge',
               type: 'checkbox',
               defaultValue: false,
               admin: {
-                description: 'Show at top of directory listings',
+                description: 'Show tier badge in business directory (for silver, gold, platinum)',
               },
             },
             {
-              name: 'active',
-              type: 'checkbox',
-              defaultValue: true,
+              name: 'sortOrder',
+              type: 'number',
+              required: true,
+              defaultValue: 99,
               admin: {
-                description: 'Available for new sign-ups',
+                description: 'Sort order for directory (1=highest/platinum, 2=gold, 3=silver, 4=bronze)',
               },
             },
           ],
-        },
-        {
-          name: 'stripePriceId',
-          type: 'text',
-          admin: {
-            description:
-              'Stripe Price ID for payment integration (leave empty until Stripe is configured)',
-            position: 'sidebar',
-          },
         },
       ],
     },

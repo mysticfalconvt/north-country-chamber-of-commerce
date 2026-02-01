@@ -20,7 +20,6 @@ import { useSearchParams } from 'next/navigation'
 function MembershipApplicationForm() {
   const searchParams = useSearchParams()
   const tierFromUrl = searchParams.get('tier')
-  const canceled = searchParams.get('canceled')
 
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
@@ -40,6 +39,7 @@ function MembershipApplicationForm() {
     description: '',
     tier: tierFromUrl || '',
     categories: [] as string[],
+    logo: null as File | null,
   })
 
   // Fetch tiers and categories on mount
@@ -85,73 +85,54 @@ function MembershipApplicationForm() {
     })
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    setFormData({
+      ...formData,
+      logo: file,
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      // First, create the business in Payload
-      const createBusinessResponse = await fetch('/api/businesses', {
+      // Create FormData for file upload
+      const submitFormData = new FormData()
+      submitFormData.append('businessName', formData.businessName)
+      submitFormData.append('contactName', formData.contactName)
+      submitFormData.append('email', formData.email)
+      submitFormData.append('phone', formData.phone)
+      submitFormData.append('address', formData.address)
+      submitFormData.append('city', formData.city)
+      submitFormData.append('state', formData.state)
+      submitFormData.append('zipCode', formData.zipCode)
+      submitFormData.append('website', formData.website)
+      submitFormData.append('description', formData.description)
+      submitFormData.append('tier', formData.tier)
+      submitFormData.append('categories', formData.categories.join(','))
+
+      if (formData.logo) {
+        submitFormData.append('logo', formData.logo)
+      }
+
+      // Submit application
+      const response = await fetch('/api/apply-membership', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.businessName,
-          description: {
-            root: {
-              type: 'root',
-              children: [
-                {
-                  type: 'paragraph',
-                  children: [{ type: 'text', text: formData.description }],
-                },
-              ],
-            },
-          },
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          phone: formData.phone,
-          email: formData.email,
-          website: formData.website,
-          membershipStatus: 'inactive', // Will be activated after payment
-          category: formData.categories.map((id) => parseInt(id)),
-        }),
+        body: submitFormData,
       })
 
-      if (!createBusinessResponse.ok) {
-        throw new Error('Failed to create business profile')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit application')
       }
 
-      const { doc: business } = await createBusinessResponse.json()
+      const result = await response.json()
 
-      // Create Stripe checkout session
-      const checkoutResponse = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          businessId: business.id,
-          tier: formData.tier,
-        }),
-      })
-
-      if (!checkoutResponse.ok) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      const { url } = await checkoutResponse.json()
-
-      // Redirect to Stripe Checkout
-      if (url) {
-        window.location.href = url
-      } else {
-        throw new Error('No checkout URL returned')
-      }
+      // Redirect to success page with tier info
+      window.location.href = `/join/apply/success?tier=${encodeURIComponent(result.tier)}&price=${result.tierPrice}`
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setLoading(false)
@@ -172,14 +153,6 @@ function MembershipApplicationForm() {
               Complete the form below to join the North Country Chamber of Commerce.
             </p>
           </div>
-
-          {canceled && (
-            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                Payment was canceled. You can try again when you&apos;re ready.
-              </p>
-            </div>
-          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
@@ -274,6 +247,20 @@ function MembershipApplicationForm() {
                       onChange={handleChange}
                       placeholder="https://..."
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="logo">Business Logo</Label>
+                    <Input
+                      id="logo"
+                      name="logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Optional: Upload your business logo (PNG, JPG, or SVG)
+                    </p>
                   </div>
                 </div>
 
@@ -372,10 +359,10 @@ function MembershipApplicationForm() {
                 {/* Submit Button */}
                 <div className="pt-4">
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                    {loading ? 'Processing...' : 'Proceed to Payment'}
+                    {loading ? 'Submitting Application...' : 'Submit Application'}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    You&apos;ll be redirected to Stripe to complete your payment securely.
+                    Your application will be reviewed by chamber staff. You&apos;ll receive payment instructions via email once approved.
                   </p>
                 </div>
               </>

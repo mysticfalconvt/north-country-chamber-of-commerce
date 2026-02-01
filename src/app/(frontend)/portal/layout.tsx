@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/utilities/auth'
 import Link from 'next/link'
-import { Building2, Calendar, CreditCard, Home, LogOut } from 'lucide-react'
+import { Building2, Calendar, ExternalLink, Gift, Home, LogOut } from 'lucide-react'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -17,14 +17,21 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative z-40 isolate">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="relative z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+            <div className="flex items-center gap-6">
               <Link href="/portal" className="text-xl font-bold text-gray-900 dark:text-white">
                 Member Portal
+              </Link>
+              <Link
+                href="/"
+                className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Back to Website
               </Link>
             </div>
             <div className="flex items-center gap-4">
@@ -72,11 +79,11 @@ export default async function PortalLayout({ children }: { children: React.React
                 My Events
               </Link>
               <Link
-                href="/portal/membership"
+                href="/portal/benefits"
                 className="flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                <CreditCard className="h-5 w-5" />
-                Membership
+                <Gift className="h-5 w-5" />
+                My Benefits
               </Link>
             </nav>
           </aside>

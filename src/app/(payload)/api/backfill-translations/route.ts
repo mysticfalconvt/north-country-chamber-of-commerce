@@ -181,11 +181,11 @@ export async function POST(req: Request) {
 
           const stats = {
             pages: { total: 0, translated: 0, skipped: 0 },
-            posts: { total: 0, translated: 0, skipped: 0 },
             events: { total: 0, translated: 0, skipped: 0 },
-            announcements: { total: 0, translated: 0, skipped: 0 },
+            news: { total: 0, translated: 0, skipped: 0 },
             businesses: { total: 0, translated: 0, skipped: 0 },
-            signatureEvents: { total: 0, translated: 0, skipped: 0 },
+            header: { translated: false },
+            footer: { translated: false },
           }
 
           // Translate Pages
@@ -476,56 +476,6 @@ export async function POST(req: Request) {
             }
           }
 
-          // Translate Posts
-          sendProgress(controller, '📝 Processing Posts...')
-          const posts = await payload.find({
-            collection: 'posts',
-            limit: 1000,
-            locale: 'en',
-            depth: 0,
-          })
-
-          stats.posts.total = posts.totalDocs
-
-          for (const post of posts.docs) {
-            // When fetching with locale 'en', title is a string
-            const postTitle =
-              typeof post.title === 'string' ? post.title : (post.title as { en?: string })?.en
-            let needsUpdate = false
-            const updateData: any = {}
-
-            // Check if we need to translate title
-            if (postTitle && !(await checkFrenchField(payload, 'posts', post.id, 'title', force))) {
-              sendProgress(controller, `  Translating post "${postTitle}" title...`)
-              updateData.title = await translateToFrench(postTitle)
-              needsUpdate = true
-            }
-
-            // Check if we need to translate content
-            if (
-              post.content &&
-              !(await checkFrenchField(payload, 'posts', post.id, 'content', force))
-            ) {
-              sendProgress(controller, `  Translating post "${postTitle || post.id}" content...`)
-              updateData.content = await translateLexicalJSON(post.content)
-              needsUpdate = true
-            }
-
-            if (needsUpdate) {
-              await payload.update({
-                collection: 'posts',
-                id: post.id,
-                data: updateData,
-                locale: 'fr',
-                context: { skipTranslation: true },
-              })
-              stats.posts.translated++
-              sendProgress(controller, `  ✓ Translated post "${postTitle || post.id}"`)
-            } else {
-              stats.posts.skipped++
-            }
-          }
-
           // Translate Events
           sendProgress(controller, '📅 Processing Events...')
           const events = await payload.find({
@@ -580,62 +530,62 @@ export async function POST(req: Request) {
             }
           }
 
-          // Translate Announcements
-          sendProgress(controller, '📢 Processing Announcements...')
-          const announcements = await payload.find({
-            collection: 'announcements',
+          // Translate News
+          sendProgress(controller, '📢 Processing News...')
+          const newsItems = await payload.find({
+            collection: 'news',
             limit: 1000,
             locale: 'en',
             depth: 0,
           })
 
-          stats.announcements.total = announcements.totalDocs
+          stats.news.total = newsItems.totalDocs
 
-          for (const announcement of announcements.docs) {
+          for (const newsItem of newsItems.docs) {
             // When fetching with locale 'en', title is a string
-            const announcementTitle =
-              typeof announcement.title === 'string'
-                ? announcement.title
-                : (announcement.title as { en?: string })?.en
+            const newsTitle =
+              typeof newsItem.title === 'string'
+                ? newsItem.title
+                : (newsItem.title as { en?: string })?.en
             let needsUpdate = false
             const updateData: any = {}
 
             if (
-              announcementTitle &&
-              !(await checkFrenchField(payload, 'announcements', announcement.id, 'title', force))
+              newsTitle &&
+              !(await checkFrenchField(payload, 'news', newsItem.id, 'title', force))
             ) {
-              sendProgress(controller, `  Translating announcement "${announcementTitle}" title...`)
-              updateData.title = await translateToFrench(announcementTitle)
+              sendProgress(controller, `  Translating news item "${newsTitle}" title...`)
+              updateData.title = await translateToFrench(newsTitle)
               needsUpdate = true
             }
 
             if (
-              announcement.content &&
-              !(await checkFrenchField(payload, 'announcements', announcement.id, 'content', force))
+              newsItem.content &&
+              !(await checkFrenchField(payload, 'news', newsItem.id, 'content', force))
             ) {
               sendProgress(
                 controller,
-                `  Translating announcement "${announcementTitle || announcement.id}" content...`,
+                `  Translating news item "${newsTitle || newsItem.id}" content...`,
               )
-              updateData.content = await translateLexicalJSON(announcement.content)
+              updateData.content = await translateLexicalJSON(newsItem.content)
               needsUpdate = true
             }
 
             if (needsUpdate) {
               await payload.update({
-                collection: 'announcements',
-                id: announcement.id,
+                collection: 'news',
+                id: newsItem.id,
                 data: updateData,
                 locale: 'fr',
                 context: { skipTranslation: true },
               })
-              stats.announcements.translated++
+              stats.news.translated++
               sendProgress(
                 controller,
-                `  ✓ Translated announcement "${announcementTitle || announcement.id}"`,
+                `  ✓ Translated news item "${newsTitle || newsItem.id}"`,
               )
             } else {
-              stats.announcements.skipped++
+              stats.news.skipped++
             }
           }
 
@@ -681,105 +631,162 @@ export async function POST(req: Request) {
             }
           }
 
-          // Translate Signature Events
-          sendProgress(controller, '🎉 Processing Signature Events...')
-          const signatureEvents = await payload.find({
-            collection: 'signature-events',
-            limit: 1000,
-            locale: 'en',
-            depth: 0,
-          })
+          // Translate Header
+          sendProgress(controller, '🔗 Processing Header...')
+          try {
+            const header = await payload.findGlobal({
+              slug: 'header',
+              locale: 'en',
+              depth: 0,
+            })
 
-          stats.signatureEvents.total = signatureEvents.totalDocs
+            if (header.navItems && Array.isArray(header.navItems) && header.navItems.length > 0) {
+              // Check if French translations exist
+              let needsTranslation = force
+              if (!force) {
+                try {
+                  const frenchHeader = await payload.findGlobal({
+                    slug: 'header',
+                    locale: 'fr',
+                    depth: 0,
+                  })
+                  // Check if any French labels are missing
+                  needsTranslation = frenchHeader.navItems?.some((item: any) => {
+                    const label = typeof item.link?.label === 'string' ? item.link.label : null
+                    return !label
+                  }) ?? true
+                } catch {
+                  needsTranslation = true
+                }
+              }
 
-          for (const sigEvent of signatureEvents.docs) {
-            // When fetching with locale 'en', name is a string
-            const sigEventName =
-              typeof sigEvent.name === 'string'
-                ? sigEvent.name
-                : (sigEvent.name as { en?: string })?.en
-            let needsUpdate = false
-            const updateData: any = {}
+              if (needsTranslation) {
+                sendProgress(controller, `  Translating ${header.navItems.length} header nav items...`)
+                const translatedNavItems = await Promise.all(
+                  header.navItems.map(async (item: any) => {
+                    const translatedItem = { ...item }
+                    if (item.link?.label) {
+                      const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
+                      if (label) {
+                        translatedItem.link = {
+                          ...item.link,
+                          label: await translateToFrench(label),
+                        }
+                      }
+                    }
+                    return translatedItem
+                  }),
+                )
 
-            if (
-              sigEventName &&
-              !(await checkFrenchField(payload, 'signature-events', sigEvent.id, 'name', force))
-            ) {
-              sendProgress(controller, `  Translating signature event "${sigEventName}" name...`)
-              updateData.name = await translateToFrench(sigEventName)
-              needsUpdate = true
+                await payload.updateGlobal({
+                  slug: 'header',
+                  data: { navItems: translatedNavItems },
+                  locale: 'fr',
+                })
+                stats.header.translated = true
+                sendProgress(controller, '  ✓ Translated header nav items')
+              } else {
+                sendProgress(controller, '  Skipped - French translations already exist')
+              }
+            }
+          } catch (error) {
+            console.error('[backfill-translations] Error translating header:', error)
+            sendProgress(controller, '  ⚠️ Error translating header')
+          }
+
+          // Translate Footer
+          sendProgress(controller, '🔗 Processing Footer...')
+          try {
+            const footer = await payload.findGlobal({
+              slug: 'footer',
+              locale: 'en',
+              depth: 0,
+            })
+
+            let footerNeedsUpdate = false
+            const footerUpdateData: any = {}
+
+            // Check and translate navItems
+            if (footer.navItems && Array.isArray(footer.navItems) && footer.navItems.length > 0) {
+              let needsNavTranslation = force
+              if (!force) {
+                try {
+                  const frenchFooter = await payload.findGlobal({
+                    slug: 'footer',
+                    locale: 'fr',
+                    depth: 0,
+                  })
+                  needsNavTranslation = frenchFooter.navItems?.some((item: any) => {
+                    const label = typeof item.link?.label === 'string' ? item.link.label : null
+                    return !label
+                  }) ?? true
+                } catch {
+                  needsNavTranslation = true
+                }
+              }
+
+              if (needsNavTranslation) {
+                sendProgress(controller, `  Translating ${footer.navItems.length} footer nav items...`)
+                footerUpdateData.navItems = await Promise.all(
+                  footer.navItems.map(async (item: any) => {
+                    const translatedItem = { ...item }
+                    if (item.link?.label) {
+                      const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
+                      if (label) {
+                        translatedItem.link = {
+                          ...item.link,
+                          label: await translateToFrench(label),
+                        }
+                      }
+                    }
+                    return translatedItem
+                  }),
+                )
+                footerNeedsUpdate = true
+              }
             }
 
-            if (
-              sigEvent.description &&
-              !(await checkFrenchField(
-                payload,
-                'signature-events',
-                sigEvent.id,
-                'description',
-                force,
-              ))
-            ) {
-              sendProgress(
-                controller,
-                `  Translating signature event "${sigEventName || sigEvent.id}" description...`,
-              )
-              updateData.description = await translateLexicalJSON(sigEvent.description)
-              needsUpdate = true
+            // Check and translate copyright
+            if (footer.copyright) {
+              let needsCopyrightTranslation = force
+              if (!force) {
+                try {
+                  const frenchFooter = await payload.findGlobal({
+                    slug: 'footer',
+                    locale: 'fr',
+                    depth: 0,
+                  })
+                  const frenchCopyright = typeof frenchFooter.copyright === 'string' ? frenchFooter.copyright : null
+                  needsCopyrightTranslation = !frenchCopyright
+                } catch {
+                  needsCopyrightTranslation = true
+                }
+              }
+
+              if (needsCopyrightTranslation) {
+                const copyright = typeof footer.copyright === 'string' ? footer.copyright : (footer.copyright as { en?: string })?.en
+                if (copyright) {
+                  sendProgress(controller, '  Translating footer copyright...')
+                  footerUpdateData.copyright = await translateToFrench(copyright)
+                  footerNeedsUpdate = true
+                }
+              }
             }
 
-            if (
-              sigEvent.schedule &&
-              !(await checkFrenchField(payload, 'signature-events', sigEvent.id, 'schedule', force))
-            ) {
-              sendProgress(
-                controller,
-                `  Translating signature event "${sigEventName || sigEvent.id}" schedule...`,
-              )
-              updateData.schedule = await translateLexicalJSON(sigEvent.schedule)
-              needsUpdate = true
-            }
-
-            if (
-              sigEvent.vendors &&
-              !(await checkFrenchField(payload, 'signature-events', sigEvent.id, 'vendors', force))
-            ) {
-              sendProgress(
-                controller,
-                `  Translating signature event "${sigEventName || sigEvent.id}" vendors...`,
-              )
-              updateData.vendors = await translateLexicalJSON(sigEvent.vendors)
-              needsUpdate = true
-            }
-
-            if (
-              sigEvent.rules &&
-              !(await checkFrenchField(payload, 'signature-events', sigEvent.id, 'rules', force))
-            ) {
-              sendProgress(
-                controller,
-                `  Translating signature event "${sigEventName || sigEvent.id}" rules...`,
-              )
-              updateData.rules = await translateLexicalJSON(sigEvent.rules)
-              needsUpdate = true
-            }
-
-            if (needsUpdate) {
-              await payload.update({
-                collection: 'signature-events',
-                id: sigEvent.id,
-                data: updateData,
+            if (footerNeedsUpdate) {
+              await payload.updateGlobal({
+                slug: 'footer',
+                data: footerUpdateData,
                 locale: 'fr',
-                context: { skipTranslation: true },
               })
-              stats.signatureEvents.translated++
-              sendProgress(
-                controller,
-                `  ✓ Translated signature event "${sigEventName || sigEvent.id}"`,
-              )
+              stats.footer.translated = true
+              sendProgress(controller, '  ✓ Translated footer')
             } else {
-              stats.signatureEvents.skipped++
+              sendProgress(controller, '  Skipped - French translations already exist')
             }
+          } catch (error) {
+            console.error('[backfill-translations] Error translating footer:', error)
+            sendProgress(controller, '  ⚠️ Error translating footer')
           }
 
           // Send completion message
@@ -788,11 +795,11 @@ export async function POST(req: Request) {
 
 Summary:
 - Pages: ${stats.pages.translated} translated, ${stats.pages.skipped} skipped (${stats.pages.total} total)
-- Posts: ${stats.posts.translated} translated, ${stats.posts.skipped} skipped (${stats.posts.total} total)
 - Events: ${stats.events.translated} translated, ${stats.events.skipped} skipped (${stats.events.total} total)
-- Announcements: ${stats.announcements.translated} translated, ${stats.announcements.skipped} skipped (${stats.announcements.total} total)
+- News: ${stats.news.translated} translated, ${stats.news.skipped} skipped (${stats.news.total} total)
 - Businesses: ${stats.businesses.translated} translated, ${stats.businesses.skipped} skipped (${stats.businesses.total} total)
-- Signature Events: ${stats.signatureEvents.translated} translated, ${stats.signatureEvents.skipped} skipped (${stats.signatureEvents.total} total)
+- Header: ${stats.header.translated ? 'translated' : 'skipped'}
+- Footer: ${stats.footer.translated ? 'translated' : 'skipped'}
           `.trim()
 
           const completeData = JSON.stringify({ type: 'complete', message: summary })

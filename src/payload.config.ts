@@ -6,17 +6,17 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 
-import { Announcements } from './collections/Announcements'
+import { Benefits } from './collections/Benefits'
 import { Businesses } from './collections/Businesses'
 import { Categories } from './collections/Categories'
-import { EventApplications } from './collections/EventApplications'
+import { EmailCampaigns } from './collections/EmailCampaigns'
 import { Events } from './collections/Events'
+import { MailingList } from './collections/MailingList'
 import { Media } from './collections/Media'
-import { Memberships } from './collections/Memberships'
+import { News } from './collections/News'
 import { Pages } from './collections/Pages'
-import { Posts } from './collections/Posts'
-import { SignatureEvents } from './collections/SignatureEvents'
 import { Users } from './collections/Users'
+import { Banners } from './globals/Banners/config'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { MembershipTiers } from './MembershipTiers/config'
@@ -39,6 +39,7 @@ export default buildConfig({
       // Redirect users based on their role after login
       afterLogin: ['@/components/AfterLogin'],
     },
+    // Custom admin styles are loaded from src/app/(payload)/custom.scss automatically
     autoLogin:
       process.env.NEXT_PUBLIC_ENABLE_AUTOLOGIN === 'true'
         ? {
@@ -112,19 +113,18 @@ export default buildConfig({
   }),
   collections: [
     Pages,
-    Posts,
     Businesses,
+    Benefits,
     Events,
-    EventApplications,
-    Announcements,
-    SignatureEvents,
-    Memberships,
+    News,
+    MailingList,
+    EmailCampaigns,
     Media,
     Categories,
     Users,
   ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer, MembershipTiers],
+  globals: [Header, Footer, MembershipTiers, Banners],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

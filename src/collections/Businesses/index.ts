@@ -4,6 +4,7 @@ import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { isAdminOrOwner } from '../../access/isAdminOrOwner'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
+import { autoTranslate } from './hooks'
 
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
@@ -18,17 +19,6 @@ export const Businesses: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, req, operation, context }) => {
-        req.payload.logger.info(
-          `[BUSINESS beforeChange] operation=${operation}, data=${JSON.stringify({
-            id: data.id,
-            name: data.name,
-            address: data.address,
-            city: data.city,
-            state: data.state,
-            zipCode: data.zipCode,
-            hasCoordinates: !!data.coordinates?.latitude,
-          })}, context=${JSON.stringify(context)}`,
-        )
 
         // Auto-link business to the user creating it (for self-registration)
         if (operation === 'create' && req.user?.role === 'business_member' && !data.owner) {
@@ -39,35 +29,60 @@ export const Businesses: CollectionConfig = {
         // Auto-geocode address to get coordinates
         // Skip geocoding if called from membership hook to prevent hangs
         if ((operation === 'create' || operation === 'update') && !context?.skipMembershipUpdate) {
-          req.payload.logger.info('[BUSINESS beforeChange] Checking if geocoding needed...')
           const hasAddressData = data.address || data.city || data.state || data.zipCode
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 
           // Only geocode if we have address data but no coordinates
           if (hasAddressData && !hasCoordinates) {
-            req.payload.logger.info('[BUSINESS beforeChange] Starting geocoding...')
             const addressParts = [data.address, data.city, data.state, data.zipCode].filter(Boolean)
 
             if (addressParts.length > 0) {
-              const addressString = addressParts.join(', ')
-
               try {
                 // Use Nominatim (OpenStreetMap) geocoding API with timeout
                 const controller = new AbortController()
                 const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
-                const response = await fetch(
-                  `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressString)}&limit=1`,
-                  {
-                    headers: {
-                      'User-Agent': 'North Country Chamber of Commerce',
-                    },
-                    signal: controller.signal,
+                // Build structured query parameters for better results
+                const params = new URLSearchParams({
+                  format: 'json',
+                  limit: '1',
+                  country: 'USA',
+                })
+
+                // Add available address components
+                if (data.address) params.append('street', data.address)
+                if (data.city) params.append('city', data.city)
+                if (data.state) params.append('state', data.state)
+                if (data.zipCode) params.append('postalcode', data.zipCode)
+
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?${params.toString()}`
+                const response = await fetch(geocodeUrl, {
+                  headers: {
+                    'User-Agent': 'North Country Chamber of Commerce (contact@northcountrychamber.com)',
                   },
-                )
+                  signal: controller.signal,
+                })
 
                 clearTimeout(timeoutId)
-                const results = await response.json()
+                let results = await response.json()
+
+                // If no results with structured query, try fallback with just city/state
+                if ((!results || results.length === 0) && data.city && data.state) {
+                  const fallbackParams = new URLSearchParams({
+                    format: 'json',
+                    limit: '1',
+                    q: `${data.city}, ${data.state}, USA`,
+                  })
+                  const fallbackUrl = `https://nominatim.openstreetmap.org/search?${fallbackParams.toString()}`
+                  const fallbackResponse = await fetch(fallbackUrl, {
+                    headers: {
+                      'User-Agent':
+                        'North Country Chamber of Commerce (contact@northcountrychamber.com)',
+                    },
+                    signal: controller.signal,
+                  })
+                  results = await fallbackResponse.json()
+                }
 
                 if (results && results.length > 0) {
                   const { lat, lon } = results[0]
@@ -79,38 +94,30 @@ export const Businesses: CollectionConfig = {
                   data.coordinates.latitude = parseFloat(lat)
                   data.coordinates.longitude = parseFloat(lon)
 
-                  req.payload.logger.info(`Geocoded address for ${data.name}: ${lat}, ${lon}`)
+                  req.payload.logger.info(
+                    `Geocoded ${data.name}: ${lat}, ${lon}`,
+                  )
                 }
               } catch (error) {
-                req.payload.logger.error(`Failed to geocode address for ${data.name}: ${error}`)
+                req.payload.logger.error(`Failed to geocode ${data.name}: ${error}`)
               }
             }
           }
-        } else {
-          req.payload.logger.info(
-            '[BUSINESS beforeChange] Skipping geocoding (skipMembershipUpdate=true or wrong operation)',
-          )
         }
 
-        req.payload.logger.info('[BUSINESS beforeChange] Done, returning data')
         return data
       },
     ],
     afterChange: [
+      autoTranslate,
       async ({ doc, req, operation, context }) => {
-        req.payload.logger.info(
-          `[BUSINESS afterChange] operation=${operation}, context=${JSON.stringify(context)}`,
-        )
-
         // Prevent infinite loops from cascading hooks
         if (context?.skipUserUpdate) {
-          req.payload.logger.info('[BUSINESS afterChange] Skipping (skipUserUpdate=true)')
           return
         }
 
         // When a business is created by a business_member, link it back to their user account
         if (operation === 'create' && doc.owner && req.user?.role === 'business_member') {
-          req.payload.logger.info('[BUSINESS afterChange] Linking business to user...')
           try {
             await req.payload.update({
               collection: 'users',
@@ -123,18 +130,16 @@ export const Businesses: CollectionConfig = {
               },
             })
 
-            req.payload.logger.info(`Updated user ${doc.owner} with business ${doc.id}`)
+            req.payload.logger.info(`Linked business ${doc.id} to user ${doc.owner}`)
           } catch (error) {
-            req.payload.logger.error(`Failed to update user with business reference: ${error}`)
+            req.payload.logger.error(`Failed to link business to user: ${error}`)
           }
         }
-
-        req.payload.logger.info('[BUSINESS afterChange] Done')
       },
     ],
   },
   admin: {
-    defaultColumns: ['name', 'category', 'membershipStatus', 'memberSince'],
+    defaultColumns: ['name', 'category', 'approvalStatus', 'membershipStatus', 'memberSince'],
     useAsTitle: 'name',
     description: 'Member business directory listings',
   },
@@ -420,14 +425,78 @@ export const Businesses: CollectionConfig = {
       name: 'membershipStatus',
       type: 'select',
       required: true,
-      defaultValue: 'active',
+      defaultValue: 'pending',
       options: [
         { label: 'Active', value: 'active' },
         { label: 'Inactive', value: 'inactive' },
+        { label: 'Pending', value: 'pending' },
       ],
       admin: {
         position: 'sidebar',
         description: 'Membership status',
+      },
+    },
+    {
+      name: 'paymentStatus',
+      type: 'select',
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'Paid', value: 'paid' },
+        { label: 'Overdue', value: 'overdue' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Has this business paid their membership dues?',
+      },
+    },
+    {
+      name: 'approvalStatus',
+      type: 'select',
+      required: true,
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Approval status for new business applications',
+      },
+    },
+    {
+      name: 'approvedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        position: 'sidebar',
+        description: 'Admin who approved this business',
+      },
+    },
+    {
+      name: 'approvedAt',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        description: 'When this business was approved',
+      },
+    },
+    {
+      name: 'applicationDate',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        description: 'When application was submitted',
+      },
+    },
+    {
+      name: 'rejectionReason',
+      type: 'textarea',
+      admin: {
+        position: 'sidebar',
+        description: 'Reason for rejection (if applicable)',
+        condition: (data) => data.approvalStatus === 'rejected',
       },
     },
     {

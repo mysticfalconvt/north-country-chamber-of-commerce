@@ -1,27 +1,27 @@
-import * as migration_20251221_112306 from './20251221_112306'
-import * as migration_20251221_183343 from './20251221_183343'
-import * as migration_20251224_214242 from './20251224_214242'
-import * as migration_20251230_164034_add_membership_system from './20251230_164034_add_membership_system'
+import * as migration_20260131_145338 from './20260131_145338';
+import * as migration_20260131_195626_events_overhaul from './20260131_195626_events_overhaul';
+import * as migration_20260131_220000_remove_recurrence_start_date from './20260131_220000_remove_recurrence_start_date';
+import * as migration_20260201_154720_benefits_schema_update from './20260201_154720_benefits_schema_update';
 
 export const migrations = [
   {
-    up: migration_20251221_112306.up,
-    down: migration_20251221_112306.down,
-    name: '20251221_112306',
+    up: migration_20260131_145338.up,
+    down: migration_20260131_145338.down,
+    name: '20260131_145338',
   },
   {
-    up: migration_20251221_183343.up,
-    down: migration_20251221_183343.down,
-    name: '20251221_183343',
+    up: migration_20260131_195626_events_overhaul.up,
+    down: migration_20260131_195626_events_overhaul.down,
+    name: '20260131_195626_events_overhaul',
   },
   {
-    up: migration_20251224_214242.up,
-    down: migration_20251224_214242.down,
-    name: '20251224_214242',
+    up: migration_20260131_220000_remove_recurrence_start_date.up,
+    down: migration_20260131_220000_remove_recurrence_start_date.down,
+    name: '20260131_220000_remove_recurrence_start_date',
   },
   {
-    up: migration_20251230_164034_add_membership_system.up,
-    down: migration_20251230_164034_add_membership_system.down,
-    name: '20251230_164034_add_membership_system',
+    up: migration_20260201_154720_benefits_schema_update.up,
+    down: migration_20260201_154720_benefits_schema_update.down,
+    name: '20260201_154720_benefits_schema_update'
   },
-]
+];

@@ -68,13 +68,12 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
-    posts: Post;
     businesses: Business;
+    benefits: Benefit;
     events: Event;
-    'event-applications': EventApplication;
-    announcements: Announcement;
-    'signature-events': SignatureEvent;
-    memberships: Membership;
+    news: News;
+    'mailing-list': MailingList;
+    'email-campaigns': EmailCampaign;
     media: Media;
     categories: Category;
     users: User;
@@ -96,13 +95,12 @@ export interface Config {
   };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    benefits: BenefitsSelect<false> | BenefitsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
-    'event-applications': EventApplicationsSelect<false> | EventApplicationsSelect<true>;
-    announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
-    'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
-    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
+    news: NewsSelect<false> | NewsSelect<true>;
+    'mailing-list': MailingListSelect<false> | MailingListSelect<true>;
+    'email-campaigns': EmailCampaignsSelect<false> | EmailCampaignsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -125,11 +123,13 @@ export interface Config {
     header: Header;
     footer: Footer;
     membershipTiers: MembershipTier;
+    banners: Banner;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     membershipTiers: MembershipTiersSelect<false> | MembershipTiersSelect<true>;
+    banners: BannersSelect<false> | BannersSelect<true>;
   };
   locale: 'en' | 'fr';
   user: User & {
@@ -199,8 +199,8 @@ export interface Page {
                   value: number | Page;
                 } | null)
               | ({
-                  relationTo: 'posts';
-                  value: number | Post;
+                  relationTo: 'news';
+                  value: number | News;
                 } | null);
             url?: string | null;
             label: string;
@@ -235,12 +235,11 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
+ * via the `definition` "news".
  */
-export interface Post {
+export interface News {
   id: number;
   title: string;
-  heroImage?: (number | null) | Media;
   content: {
     root: {
       type: string;
@@ -256,29 +255,25 @@ export interface Post {
     };
     [k: string]: unknown;
   };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  authors?: (number | User)[] | null;
-  populatedAuthors?:
-    | {
-        id?: string | null;
-        name?: string | null;
-      }[]
-    | null;
+  image?: (number | null) | Media;
+  publishDate: string;
+  featured?: boolean | null;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * Who wrote this news item
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  author?: (number | null) | User;
+  /**
+   * Has this news item been sent as a newsletter?
+   */
+  emailSent?: boolean | null;
+  /**
+   * When the newsletter was sent
+   */
+  sentAt?: string | null;
+  /**
+   * Auto-generated from title
+   */
+  slug?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -399,35 +394,6 @@ export interface FolderInterface {
     totalDocs?: number;
   };
   folderType?: 'media'[] | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  name: string;
-  description?: string | null;
-  /**
-   * Lucide icon name (e.g., "store", "utensils", "home")
-   */
-  icon?: string | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  parent?: (number | null) | Category;
-  breadcrumbs?:
-    | {
-        doc?: (number | null) | Category;
-        url?: string | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -610,11 +576,51 @@ export interface Business {
   /**
    * Membership status
    */
-  membershipStatus: 'active' | 'inactive';
+  membershipStatus: 'active' | 'inactive' | 'pending';
+  /**
+   * Has this business paid their membership dues?
+   */
+  paymentStatus?: ('pending' | 'paid' | 'overdue') | null;
+  /**
+   * Approval status for new business applications
+   */
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  /**
+   * Admin who approved this business
+   */
+  approvedBy?: (number | null) | User;
+  /**
+   * When this business was approved
+   */
+  approvedAt?: string | null;
+  /**
+   * When application was submitted
+   */
+  applicationDate?: string | null;
+  /**
+   * Reason for rejection (if applicable)
+   */
+  rejectionReason?: string | null;
   slug: string;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  description?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -647,8 +653,8 @@ export interface CallToActionBlock {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'news';
+                value: number | News;
               } | null);
           url?: string | null;
           label: string;
@@ -697,8 +703,8 @@ export interface ContentBlock {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'news';
+                value: number | News;
               } | null);
           url?: string | null;
           label: string;
@@ -745,13 +751,12 @@ export interface ArchiveBlock {
     [k: string]: unknown;
   } | null;
   populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (number | Category)[] | null;
+  relationTo?: 'news' | null;
   limit?: number | null;
   selectedDocs?:
     | {
-        relationTo: 'posts';
-        value: number | Post;
+        relationTo: 'news';
+        value: number | News;
       }[]
     | null;
   id?: string | null;
@@ -959,6 +964,90 @@ export interface Form {
   createdAt: string;
 }
 /**
+ * Member business benefits, offers, coupons, and discounts
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "benefits".
+ */
+export interface Benefit {
+  id: number;
+  /**
+   * Name of the benefit or offer
+   */
+  title: string;
+  /**
+   * Full description of the benefit/offer including terms and conditions
+   */
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * e.g., "10% off", "$5 off", "Buy 1 Get 1 Free"
+   */
+  discountValue?: string | null;
+  /**
+   * Promotional image for this benefit
+   */
+  image?: (number | null) | Media;
+  /**
+   * PDF coupon or flyer for printing
+   */
+  attachment?: (number | null) | Media;
+  /**
+   * Link to redeem online or more info
+   */
+  externalUrl?: string | null;
+  /**
+   * Text to display for the link (e.g., "Redeem Online", "Learn More")
+   */
+  linkText?: string | null;
+  /**
+   * Promo/discount code if applicable
+   */
+  code?: string | null;
+  /**
+   * When this benefit becomes active
+   */
+  startDate?: string | null;
+  /**
+   * When this benefit expires
+   */
+  expirationDate?: string | null;
+  /**
+   * Business offering this benefit
+   */
+  business: number | Business;
+  /**
+   * Highlight on benefits page
+   */
+  featured?: boolean | null;
+  benefitStatus: 'pending' | 'published' | 'draft' | 'expired';
+  /**
+   * User who submitted this benefit (for tracking)
+   */
+  submittedBy?: (number | null) | User;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
@@ -981,9 +1070,13 @@ export interface Event {
     [k: string]: unknown;
   };
   image?: (number | null) | Media;
+  /**
+   * PDF flyer or event document
+   */
+  attachment?: (number | null) | Media;
   date: string;
   /**
-   * For multi-day events
+   * End of multi-day event, or when recurring series ends
    */
   endDate?: string | null;
   /**
@@ -1035,15 +1128,32 @@ export interface Event {
    * For external organizations
    */
   organizer?: string | null;
-  category?: ('chamber' | 'community' | 'networking' | 'workshop' | 'festival' | 'fundraiser' | 'social') | null;
   /**
-   * Is this a recurring event?
+   * Official Chamber of Commerce event
    */
-  recurring?: boolean | null;
+  isChamberEvent?: boolean | null;
   /**
    * Link to external registration/info page
    */
   externalUrl?: string | null;
+  /**
+   * Custom text for registration link (e.g., "Buy Tickets", "RSVP")
+   */
+  linkTitle?: string | null;
+  /**
+   * Is this a recurring event?
+   */
+  isRecurring?: boolean | null;
+  recurrence?: {
+    /**
+     * How often this event repeats (pattern from start date, ends on end date)
+     */
+    recurrenceType: 'weekly' | 'monthly';
+    /**
+     * How to determine the monthly date (auto-calculated from start date)
+     */
+    monthlyType?: ('dayOfMonth' | 'dayOfWeek') | null;
+  };
   /**
    * Highlight on homepage
    */
@@ -1063,325 +1173,72 @@ export interface Event {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "event-applications".
- */
-export interface EventApplication {
-  id: number;
-  /**
-   * Which signature event is this application for?
-   */
-  event: number | SignatureEvent;
-  /**
-   * Individual or business name
-   */
-  applicantName: string;
-  applicantEmail: string;
-  applicantPhone: string;
-  /**
-   * Link to member business (if applicable)
-   */
-  business?: (number | null) | Business;
-  /**
-   * Entry category (e.g., "Hot Rod", "Chili", "Vendor")
-   */
-  category?: string | null;
-  /**
-   * Application details/questions
-   */
-  details: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Supporting files (images, documents, etc.)
-   */
-  attachments?: (number | Media)[] | null;
-  /**
-   * Application status
-   */
-  status: 'pending' | 'approved' | 'rejected' | 'waitlist';
-  /**
-   * Auto-populated on submission
-   */
-  submittedDate?: string | null;
-  /**
-   * Internal chamber notes (not visible to applicant)
-   */
-  notes?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * User who submitted this application
-   */
-  submittedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "signature-events".
- */
-export interface SignatureEvent {
-  id: number;
-  /**
-   * e.g., "Hot Rod ChiliFest"
-   */
-  name: string;
-  description: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Event-specific branding/logo
-   */
-  logo?: (number | null) | Media;
-  gallery?:
-    | {
-        image: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Day-of schedule
-   */
-  schedule?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Vendor list/information
-   */
-  vendors?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Rules & regulations
-   */
-  rules?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Application instructions & requirements
-   */
-  applicationForm?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Accept applications?
-   */
-  applicationOpen?: boolean | null;
-  /**
-   * Deadline for entries
-   */
-  applicationDeadline?: string | null;
-  /**
-   * Event coordinator email
-   */
-  contactEmail?: string | null;
-  /**
-   * Current year's info
-   */
-  year: number;
-  eventStatus: 'upcoming' | 'active' | 'archived';
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "announcements".
- */
-export interface Announcement {
-  id: number;
-  title: string;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  image?: (number | null) | Media;
-  publishDate: string;
-  featured?: boolean | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * Track membership payments and renewal status
+ * Newsletter and mailing list subscribers
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "memberships".
+ * via the `definition` "mailing-list".
  */
-export interface Membership {
+export interface MailingList {
   id: number;
   /**
-   * The business this membership belongs to
+   * Subscriber email address
    */
-  business: number | Business;
+  email: string;
   /**
-   * Membership tier slug (from MembershipTiers global)
+   * Subscriber name (optional)
    */
-  tier: string;
+  name?: string | null;
   /**
-   * Annual membership dues amount (in dollars)
+   * Currently subscribed to mailing list
    */
-  amount: number;
+  subscribed?: boolean | null;
   /**
-   * Current payment status
+   * Date subscribed
    */
-  paymentStatus: 'pending' | 'paid' | 'overdue' | 'cancelled' | 'refunded';
+  subscribedAt?: string | null;
   /**
-   * Membership period start date
+   * Date unsubscribed
    */
-  startDate: string;
+  unsubscribedAt?: string | null;
   /**
-   * Membership expiration date
+   * Secure token for unsubscribe links
    */
-  endDate: string;
+  unsubscribeToken?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * History of sent newsletters and email campaigns
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-campaigns".
+ */
+export interface EmailCampaign {
+  id: number;
   /**
-   * Automatic renewal via Stripe subscription
+   * The news item that was sent (may be null if news item was deleted)
    */
-  autoRenew?: boolean | null;
+  newsItem?: (number | null) | News;
   /**
-   * How this membership was paid
+   * Email subject line
    */
-  paymentMethod: 'stripe' | 'check' | 'cash' | 'comp';
+  subject: string;
   /**
-   * Stripe Customer ID (cus_xxxxx)
+   * When the email was sent
    */
-  stripeCustomerId?: string | null;
+  sentAt: string;
   /**
-   * Stripe Subscription ID (sub_xxxxx) for recurring payments
+   * Number of subscribers who received the email
    */
-  stripeSubscriptionId?: string | null;
+  recipientCount: number;
   /**
-   * Stripe Invoice ID (in_xxxxx)
+   * Admin/staff member who sent the campaign
    */
-  stripeInvoiceId?: string | null;
+  sentBy?: (number | null) | User;
   /**
-   * Link to Stripe invoice/receipt
+   * Upcoming events included in the email
    */
-  invoiceUrl?: string | null;
-  /**
-   * Internal notes (not visible to member)
-   */
-  notes?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+  includedEvents?: (number | Event)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1403,8 +1260,8 @@ export interface Redirect {
           value: number | Page;
         } | null)
       | ({
-          relationTo: 'posts';
-          value: number | Post;
+          relationTo: 'news';
+          value: number | News;
         } | null);
     url?: string | null;
   };
@@ -1439,8 +1296,8 @@ export interface Search {
   title?: string | null;
   priority?: number | null;
   doc: {
-    relationTo: 'posts';
-    value: number | Post;
+    relationTo: 'news';
+    value: number | News;
   };
   slug?: string | null;
   meta?: {
@@ -1580,32 +1437,28 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
-        relationTo: 'posts';
-        value: number | Post;
-      } | null)
-    | ({
         relationTo: 'businesses';
         value: number | Business;
+      } | null)
+    | ({
+        relationTo: 'benefits';
+        value: number | Benefit;
       } | null)
     | ({
         relationTo: 'events';
         value: number | Event;
       } | null)
     | ({
-        relationTo: 'event-applications';
-        value: number | EventApplication;
+        relationTo: 'news';
+        value: number | News;
       } | null)
     | ({
-        relationTo: 'announcements';
-        value: number | Announcement;
+        relationTo: 'mailing-list';
+        value: number | MailingList;
       } | null)
     | ({
-        relationTo: 'signature-events';
-        value: number | SignatureEvent;
-      } | null)
-    | ({
-        relationTo: 'memberships';
-        value: number | Membership;
+        relationTo: 'email-campaigns';
+        value: number | EmailCampaign;
       } | null)
     | ({
         relationTo: 'media';
@@ -1799,7 +1652,6 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   introContent?: T;
   populateBy?: T;
   relationTo?: T;
-  categories?: T;
   limit?: T;
   selectedDocs?: T;
   id?: T;
@@ -1815,37 +1667,6 @@ export interface FormBlockSelect<T extends boolean = true> {
   introContent?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  heroImage?: T;
-  content?: T;
-  relatedPosts?: T;
-  categories?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  authors?: T;
-  populatedAuthors?:
-    | T
-    | {
-        id?: T;
-        name?: T;
-      };
-  generateSlug?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1895,6 +1716,37 @@ export interface BusinessesSelect<T extends boolean = true> {
       };
   hoursOfOperation?: T;
   membershipStatus?: T;
+  paymentStatus?: T;
+  approvalStatus?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  applicationDate?: T;
+  rejectionReason?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "benefits_select".
+ */
+export interface BenefitsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  discountValue?: T;
+  image?: T;
+  attachment?: T;
+  externalUrl?: T;
+  linkText?: T;
+  code?: T;
+  startDate?: T;
+  expirationDate?: T;
+  business?: T;
+  featured?: T;
+  benefitStatus?: T;
+  submittedBy?: T;
+  generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1908,6 +1760,7 @@ export interface EventsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   image?: T;
+  attachment?: T;
   date?: T;
   endDate?: T;
   startTime?: T;
@@ -1925,9 +1778,16 @@ export interface EventsSelect<T extends boolean = true> {
       };
   business?: T;
   organizer?: T;
-  category?: T;
-  recurring?: T;
+  isChamberEvent?: T;
   externalUrl?: T;
+  linkTitle?: T;
+  isRecurring?: T;
+  recurrence?:
+    | T
+    | {
+        recurrenceType?: T;
+        monthlyType?: T;
+      };
   featured?: T;
   eventStatus?: T;
   submittedBy?: T;
@@ -1939,35 +1799,17 @@ export interface EventsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "event-applications_select".
+ * via the `definition` "news_select".
  */
-export interface EventApplicationsSelect<T extends boolean = true> {
-  event?: T;
-  applicantName?: T;
-  applicantEmail?: T;
-  applicantPhone?: T;
-  business?: T;
-  category?: T;
-  details?: T;
-  attachments?: T;
-  status?: T;
-  submittedDate?: T;
-  notes?: T;
-  submittedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "announcements_select".
- */
-export interface AnnouncementsSelect<T extends boolean = true> {
+export interface NewsSelect<T extends boolean = true> {
   title?: T;
   content?: T;
   image?: T;
   publishDate?: T;
   featured?: T;
-  generateSlug?: T;
+  author?: T;
+  emailSent?: T;
+  sentAt?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1975,51 +1817,29 @@ export interface AnnouncementsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "signature-events_select".
+ * via the `definition` "mailing-list_select".
  */
-export interface SignatureEventsSelect<T extends boolean = true> {
+export interface MailingListSelect<T extends boolean = true> {
+  email?: T;
   name?: T;
-  description?: T;
-  logo?: T;
-  gallery?:
-    | T
-    | {
-        image?: T;
-        id?: T;
-      };
-  schedule?: T;
-  vendors?: T;
-  rules?: T;
-  applicationForm?: T;
-  applicationOpen?: T;
-  applicationDeadline?: T;
-  contactEmail?: T;
-  year?: T;
-  eventStatus?: T;
-  generateSlug?: T;
-  slug?: T;
+  subscribed?: T;
+  subscribedAt?: T;
+  unsubscribedAt?: T;
+  unsubscribeToken?: T;
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "memberships_select".
+ * via the `definition` "email-campaigns_select".
  */
-export interface MembershipsSelect<T extends boolean = true> {
-  business?: T;
-  tier?: T;
-  amount?: T;
-  paymentStatus?: T;
-  startDate?: T;
-  endDate?: T;
-  autoRenew?: T;
-  paymentMethod?: T;
-  stripeCustomerId?: T;
-  stripeSubscriptionId?: T;
-  stripeInvoiceId?: T;
-  invoiceUrl?: T;
-  notes?: T;
+export interface EmailCampaignsSelect<T extends boolean = true> {
+  newsItem?: T;
+  subject?: T;
+  sentAt?: T;
+  recipientCount?: T;
+  sentBy?: T;
+  includedEvents?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2124,18 +1944,8 @@ export interface MediaSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
-  icon?: T;
   generateSlug?: T;
   slug?: T;
-  parent?: T;
-  breadcrumbs?:
-    | T
-    | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2446,7 +2256,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Header {
   id: number;
   /**
-   * Core navigation links (Home, Businesses, Events, etc.) are automatically added and cannot be removed. You can add additional custom links here.
+   * Add navigation links for the header. Common links include Home, Business Directory, Events, News, etc.
    */
   navItems?:
     | {
@@ -2459,8 +2269,8 @@ export interface Header {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'news';
+                value: number | News;
               } | null);
           url?: string | null;
           label: string;
@@ -2478,7 +2288,7 @@ export interface Header {
 export interface Footer {
   id: number;
   /**
-   * Core quick links (Businesses, Events, Contact, etc.) are automatically added and cannot be removed. You can add additional custom links here.
+   * Add navigation links for the footer. Common links include Business Directory, Events, News, and Contact.
    */
   navItems?:
     | {
@@ -2491,8 +2301,8 @@ export interface Footer {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'news';
+                value: number | News;
               } | null);
           url?: string | null;
           label: string;
@@ -2542,7 +2352,7 @@ export interface MembershipTier {
     /**
      * Full description of benefits and features
      */
-    description: {
+    description?: {
       root: {
         type: string;
         children: {
@@ -2556,39 +2366,82 @@ export interface MembershipTier {
         version: number;
       };
       [k: string]: unknown;
-    };
+    } | null;
     /**
      * Annual membership price in dollars (e.g., 100 for $100)
      */
     annualPrice: number;
     /**
-     * Number of advertising slots on business page
-     */
-    advertisingSlots?: number | null;
-    /**
-     * List of benefits included in this tier
-     */
-    features: {
-      /**
-       * Feature description (e.g., "Business directory listing")
-       */
-      feature: string;
-      id?: string | null;
-    }[];
-    /**
-     * Show at top of directory listings
-     */
-    featuredInDirectory?: boolean | null;
-    /**
      * Available for new sign-ups
      */
     active?: boolean | null;
     /**
-     * Stripe Price ID for payment integration (leave empty until Stripe is configured)
+     * Show tier badge in business directory (for silver, gold, platinum)
      */
-    stripePriceId?: string | null;
+    displayBadge?: boolean | null;
+    /**
+     * Sort order for directory (1=highest/platinum, 2=gold, 3=silver, 4=bronze)
+     */
+    sortOrder: number;
     id?: string | null;
   }[];
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Manage site-wide announcement banners
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "banners".
+ */
+export interface Banner {
+  id: number;
+  /**
+   * Banners displayed at the top of all pages
+   */
+  activeBanners?:
+    | {
+        /**
+         * Banner message (keep brief - 1-2 sentences)
+         */
+        message: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        /**
+         * Visual style of the banner
+         */
+        style: 'info' | 'warning' | 'error' | 'success';
+        /**
+         * When to start showing this banner
+         */
+        startDate: string;
+        /**
+         * When to stop showing this banner
+         */
+        endDate: string;
+        /**
+         * Enable/disable this banner
+         */
+        enabled?: boolean | null;
+        /**
+         * Allow users to close/dismiss this banner
+         */
+        dismissible?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2665,16 +2518,29 @@ export interface MembershipTiersSelect<T extends boolean = true> {
         slug?: T;
         description?: T;
         annualPrice?: T;
-        advertisingSlots?: T;
-        features?:
-          | T
-          | {
-              feature?: T;
-              id?: T;
-            };
-        featuredInDirectory?: T;
         active?: T;
-        stripePriceId?: T;
+        displayBadge?: T;
+        sortOrder?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "banners_select".
+ */
+export interface BannersSelect<T extends boolean = true> {
+  activeBanners?:
+    | T
+    | {
+        message?: T;
+        style?: T;
+        startDate?: T;
+        endDate?: T;
+        enabled?: T;
+        dismissible?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -2695,53 +2561,13 @@ export interface TaskSchedulePublish {
           value: number | Page;
         } | null)
       | ({
-          relationTo: 'posts';
-          value: number | Post;
-        } | null)
-      | ({
-          relationTo: 'announcements';
-          value: number | Announcement;
+          relationTo: 'news';
+          value: number | News;
         } | null);
     global?: string | null;
     user?: (number | null) | User;
   };
   output?: unknown;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "BannerBlock".
- */
-export interface BannerBlock {
-  style: 'info' | 'warning' | 'error' | 'success';
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'banner';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CodeBlock".
- */
-export interface CodeBlock {
-  language?: ('typescript' | 'javascript' | 'css') | null;
-  code: string;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'code';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

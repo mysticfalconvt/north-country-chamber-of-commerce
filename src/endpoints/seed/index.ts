@@ -6,37 +6,32 @@ import { home } from './home'
 import { image1 } from './image-1'
 import { image2 } from './image-2'
 import { imageHero1 } from './image-hero-1'
-import { post1 } from './post-1'
-import { post2 } from './post-2'
-import { post3 } from './post-3'
 
 const collections: CollectionSlug[] = [
   'categories',
   'media',
   'pages',
-  'posts',
+  'news',
   'forms',
   'form-submissions',
   'search',
   'businesses',
   'events',
-  'announcements',
-  'signature-events',
 ]
 
 const globals: GlobalSlug[] = ['header', 'footer']
 
 const categories = [
-  { name: 'Retail & Shopping', slug: 'retail-shopping', icon: 'store' },
-  { name: 'Food & Beverage', slug: 'food-beverage', icon: 'utensils' },
-  { name: 'Accommodations', slug: 'accommodations', icon: 'bed' },
-  { name: 'Health & Wellness', slug: 'health-wellness', icon: 'heart-pulse' },
-  { name: 'Professional Services', slug: 'professional-services', icon: 'briefcase' },
-  { name: 'Home & Garden', slug: 'home-garden', icon: 'home' },
-  { name: 'Arts & Entertainment', slug: 'arts-entertainment', icon: 'palette' },
-  { name: 'Automotive', slug: 'automotive', icon: 'car' },
-  { name: 'Construction & Trades', slug: 'construction-trades', icon: 'hammer' },
-  { name: 'Real Estate', slug: 'real-estate', icon: 'building' },
+  { name: 'Retail & Shopping', slug: 'retail-shopping' },
+  { name: 'Food & Beverage', slug: 'food-beverage' },
+  { name: 'Accommodations', slug: 'accommodations' },
+  { name: 'Health & Wellness', slug: 'health-wellness' },
+  { name: 'Professional Services', slug: 'professional-services' },
+  { name: 'Home & Garden', slug: 'home-garden' },
+  { name: 'Arts & Entertainment', slug: 'arts-entertainment' },
+  { name: 'Automotive', slug: 'automotive' },
+  { name: 'Construction & Trades', slug: 'construction-trades' },
+  { name: 'Real Estate', slug: 'real-estate' },
 ]
 
 // Next.js revalidation errors are normal when seeding the database without a server running
@@ -84,16 +79,19 @@ export const seed = async ({
 
   // Delete collections sequentially to avoid deadlocks from foreign key constraints
   // Delete dependent collections first, then the ones they depend on
-  // Order: posts, pages, events, businesses, announcements, signature-events (depend on media/categories)
-  //        then: media, categories, forms, form-submissions, users, search, redirects
+  // Order: email-campaigns, posts, pages, events, event-applications, businesses, announcements, memberships (depend on media/categories)
+  //        then: mailing-list, media, categories, forms, form-submissions, users, search, redirects
   const deletionOrder = [
+    'email-campaigns', // references announcements, events
     'posts', // references media
     'pages', // references media, posts
     'events', // references media, businesses
+    'event-applications', // references events
+    'memberships', // references businesses
     'businesses', // references media, categories
     'announcements', // references media
-    'signature-events', // references media
     'form-submissions', // references forms
+    'mailing-list', // no references
     'media', // referenced by others
     'categories', // referenced by others
     'forms', // referenced by form-submissions
@@ -170,7 +168,6 @@ export const seed = async ({
         data: {
           name: category.name,
           slug: category.slug,
-          icon: category.icon,
         },
       }),
     ),
@@ -208,69 +205,6 @@ export const seed = async ({
     }),
   ])
 
-  payload.logger.info(`— Seeding posts...`)
-
-  // Do not create posts with `Promise.all` because we want the posts to be created in order
-  // This way we can sort them by `createdAt` or `publishedAt` and they will be in the expected order
-  const post1Doc = await payload.create({
-    collection: 'posts',
-    depth: 0,
-    context: {
-      disableRevalidate: true,
-    },
-    data: post1({ heroImage: image1Doc, blockImage: image2Doc, author: demoAuthor }),
-  })
-
-  const post2Doc = await payload.create({
-    collection: 'posts',
-    depth: 0,
-    context: {
-      disableRevalidate: true,
-    },
-    data: post2({ heroImage: image2Doc, blockImage: image3Doc, author: demoAuthor }),
-  })
-
-  const post3Doc = await payload.create({
-    collection: 'posts',
-    depth: 0,
-    context: {
-      disableRevalidate: true,
-    },
-    data: post3({ heroImage: image3Doc, blockImage: image1Doc, author: demoAuthor }),
-  })
-
-  // update each post with related posts
-  await payload.update({
-    id: post1Doc.id,
-    collection: 'posts',
-    context: {
-      disableRevalidate: true,
-    },
-    data: {
-      relatedPosts: [post2Doc.id, post3Doc.id],
-    },
-  })
-  await payload.update({
-    id: post2Doc.id,
-    collection: 'posts',
-    context: {
-      disableRevalidate: true,
-    },
-    data: {
-      relatedPosts: [post1Doc.id, post3Doc.id],
-    },
-  })
-  await payload.update({
-    id: post3Doc.id,
-    collection: 'posts',
-    context: {
-      disableRevalidate: true,
-    },
-    data: {
-      relatedPosts: [post1Doc.id, post2Doc.id],
-    },
-  })
-
   payload.logger.info(`— Seeding businesses...`)
 
   const [_business1, business2, _business3] = await Promise.all([
@@ -306,11 +240,13 @@ export const seed = async ({
         email: 'info@mountainviewinn.com',
         website: 'https://mountainviewinn.com',
         memberSince: '2020-01-15',
-        membershipTier: '3-10-employees',
+        membershipTier: 'silver',
         membershipExpires: new Date('2026-01-15').toISOString(),
         featured: true,
         membershipStatus: 'active',
-      },
+        approvalStatus: 'approved',
+        approvedAt: '2020-01-15',
+      } as any,
     }),
     payload.create({
       collection: 'businesses',
@@ -344,15 +280,17 @@ export const seed = async ({
         email: 'hello@nccroasters.com',
         website: 'https://nccroasters.com',
         memberSince: '2018-06-01',
-        membershipTier: '11-25-employees',
+        membershipTier: 'gold',
         membershipExpires: new Date('2025-06-01').toISOString(),
         featured: true,
         membershipStatus: 'active',
+        approvalStatus: 'approved',
+        approvedAt: '2018-06-01',
         socialLinks: [
           { platform: 'facebook', url: 'https://facebook.com/nccroasters' },
           { platform: 'instagram', url: 'https://instagram.com/nccroasters' },
         ],
-      },
+      } as any,
     }),
     payload.create({
       collection: 'businesses',
@@ -385,11 +323,50 @@ export const seed = async ({
         phone: '(802) 555-9012',
         email: 'sales@greenmountainhardware.com',
         memberSince: '2015-03-20',
-        membershipTier: '1-2-employees',
+        membershipTier: 'bronze',
         membershipExpires: new Date('2025-03-20').toISOString(),
         featured: false,
         membershipStatus: 'active',
-      },
+        approvalStatus: 'approved',
+        approvedAt: '2015-03-20',
+      } as any,
+    }),
+    payload.create({
+      collection: 'businesses',
+      data: {
+        name: 'Lakeside Cafe',
+        slug: 'lakeside-cafe',
+        description: {
+          root: {
+            type: 'root',
+            children: [
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    type: 'text',
+                    text: 'New waterfront cafe offering fresh sandwiches, salads, and locally roasted coffee with stunning lake views.',
+                  },
+                ],
+                version: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            version: 1,
+          },
+        },
+        category: [categoryDocs[1].id], // Food & Beverage
+        address: '12 Waterfront Drive, Newport, VT 05855',
+        phone: '(802) 555-2468',
+        email: 'contact@lakesidecafe.com',
+        website: 'https://lakesidecafe.com',
+        membershipTier: 'bronze',
+        membershipStatus: 'pending',
+        approvalStatus: 'pending',
+        applicationDate: new Date().toISOString(),
+      } as any,
     }),
   ])
 
@@ -427,7 +404,6 @@ export const seed = async ({
         endTime: '9:30 AM',
         location: 'North Country Coffee Roasters',
         business: business2.id,
-        category: 'networking',
         featured: true,
         eventStatus: 'published',
       },
@@ -462,18 +438,17 @@ export const seed = async ({
         startTime: '10:00 AM',
         endTime: '4:00 PM',
         location: 'Downtown Newport',
-        category: 'community',
         featured: true,
         eventStatus: 'published',
       },
     }),
   ])
 
-  payload.logger.info(`— Seeding announcements...`)
+  payload.logger.info(`— Seeding news items...`)
 
   await Promise.all([
     payload.create({
-      collection: 'announcements',
+      collection: 'news',
       draft: false,
       data: {
         title: 'Chamber Annual Meeting - Save the Date',
@@ -504,7 +479,7 @@ export const seed = async ({
       },
     }),
     payload.create({
-      collection: 'announcements',
+      collection: 'news',
       draft: false,
       data: {
         title: 'New Member Spotlight: Mountain View Inn',
@@ -536,97 +511,6 @@ export const seed = async ({
     }),
   ])
 
-  payload.logger.info(`— Seeding signature events...`)
-
-  await Promise.all([
-    payload.create({
-      collection: 'signature-events',
-      data: {
-        name: 'Hot Rod ChiliFest',
-        slug: 'hot-rod-chilifest',
-        description: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [
-                  {
-                    type: 'text',
-                    text: 'Annual chili cook-off and car show featuring classic cars, delicious chili, and family fun.',
-                  },
-                ],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-        year: 2025,
-        eventStatus: 'upcoming',
-        schedule: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '10:00 AM - Gates Open' }],
-                version: 1,
-              },
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '11:00 AM - Chili Tasting Begins' }],
-                version: 1,
-              },
-              {
-                type: 'paragraph',
-                children: [{ type: 'text', text: '2:00 PM - Awards Ceremony' }],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-      },
-    }),
-    payload.create({
-      collection: 'signature-events',
-      data: {
-        name: 'AquaFest',
-        slug: 'aquafest',
-        description: {
-          root: {
-            type: 'root',
-            children: [
-              {
-                type: 'paragraph',
-                children: [
-                  {
-                    type: 'text',
-                    text: 'Celebrate summer on Lake Memphremagog with water activities, live music, food vendors, and fireworks.',
-                  },
-                ],
-                version: 1,
-              },
-            ],
-            direction: 'ltr',
-            format: '',
-            indent: 0,
-            version: 1,
-          },
-        },
-        year: 2025,
-        eventStatus: 'upcoming',
-      },
-    }),
-  ])
-
   payload.logger.info(`— Seeding contact form...`)
 
   const contactForm = await payload.create({
@@ -637,7 +521,7 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding pages...`)
 
-  const [_, contactPage] = await Promise.all([
+  const [_, contactPage, aboutPage] = await Promise.all([
     payload.create({
       collection: 'pages',
       depth: 0,
@@ -654,6 +538,115 @@ export const seed = async ({
       },
       data: contactPageData({ contactForm: contactForm }),
     }),
+    payload.create({
+      collection: 'pages',
+      depth: 0,
+      context: {
+        disableRevalidate: true,
+      },
+      data: {
+        title: 'About Us',
+        slug: 'about',
+        hero: {
+          type: 'none',
+        },
+        layout: [
+          {
+            blockType: 'content',
+            columns: [
+              {
+                size: 'full',
+                richText: {
+                  root: {
+                    type: 'root',
+                    children: [
+                      {
+                        type: 'heading',
+                        tag: 'h1',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'About North Country Chamber of Commerce',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'heading',
+                        tag: 'h2',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'Hours of Operation',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'Monday - Friday: 9:00 AM - 5:00 PM',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'Saturday - Sunday: Closed',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'Note: Hours may vary during holidays. Please call ahead.',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'heading',
+                        tag: 'h2',
+                        children: [
+                          {
+                            type: 'text',
+                            text: 'Our Mission',
+                          },
+                        ],
+                        version: 1,
+                      },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            type: 'text',
+                            text: "The North Country Chamber of Commerce serves Vermont's Northeast Kingdom by supporting local businesses, fostering economic development, and strengthening our community.",
+                          },
+                        ],
+                        version: 1,
+                      },
+                    ],
+                    direction: 'ltr',
+                    format: '',
+                    indent: 0,
+                    version: 1,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        _status: 'published',
+      },
+    }),
   ])
 
   payload.logger.info(`— Seeding globals...`)
@@ -664,9 +657,11 @@ export const seed = async ({
     data: {
       tiers: [
         {
-          name: '100+ employees',
-          slug: '100-plus-employees',
+          name: 'Platinum',
+          slug: 'platinum',
           annualPrice: 750,
+          sortOrder: 1,
+          displayBadge: true,
           description: {
             root: {
               type: 'root',
@@ -676,7 +671,7 @@ export const seed = async ({
                   children: [
                     {
                       type: 'text',
-                      text: 'For businesses with 100 or more employees',
+                      text: 'Our premium tier for established businesses seeking maximum visibility and benefits',
                     },
                   ],
                 },
@@ -686,16 +681,19 @@ export const seed = async ({
           features: [
             { feature: 'All benefits included' },
             { feature: 'Priority event registration' },
-            { feature: 'Featured business listing' },
+            { feature: 'Featured business listing with platinum badge' },
             { feature: 'Unlimited event promotions' },
             { feature: 'Premium advertising opportunities' },
+            { feature: 'Quarterly spotlight feature' },
           ],
           active: true,
         },
         {
-          name: '26-99 employees',
-          slug: '26-99-employees',
+          name: 'Gold',
+          slug: 'gold',
           annualPrice: 500,
+          sortOrder: 2,
+          displayBadge: true,
           description: {
             root: {
               type: 'root',
@@ -705,7 +703,7 @@ export const seed = async ({
                   children: [
                     {
                       type: 'text',
-                      text: 'For businesses with 26-99 employees',
+                      text: 'Enhanced membership for growing businesses looking to expand their reach',
                     },
                   ],
                 },
@@ -715,16 +713,18 @@ export const seed = async ({
           features: [
             { feature: 'All standard benefits' },
             { feature: 'Priority event registration' },
-            { feature: 'Featured business listing' },
+            { feature: 'Featured business listing with gold badge' },
             { feature: 'Monthly event promotions' },
             { feature: 'Standard advertising opportunities' },
           ],
           active: true,
         },
         {
-          name: '11-25 employees',
-          slug: '11-25-employees',
+          name: 'Silver',
+          slug: 'silver',
           annualPrice: 275,
+          sortOrder: 3,
+          displayBadge: true,
           description: {
             root: {
               type: 'root',
@@ -734,7 +734,7 @@ export const seed = async ({
                   children: [
                     {
                       type: 'text',
-                      text: 'For businesses with 11-25 employees',
+                      text: 'Great value for small businesses committed to community involvement',
                     },
                   ],
                 },
@@ -742,7 +742,7 @@ export const seed = async ({
             },
           },
           features: [
-            { feature: 'Business directory listing' },
+            { feature: 'Business directory listing with silver badge' },
             { feature: 'Event registration' },
             { feature: 'Networking opportunities' },
             { feature: 'Quarterly event promotions' },
@@ -751,9 +751,11 @@ export const seed = async ({
           active: true,
         },
         {
-          name: '3-10 employees',
-          slug: '3-10-employees',
-          annualPrice: 170,
+          name: 'Bronze',
+          slug: 'bronze',
+          annualPrice: 150,
+          sortOrder: 4,
+          displayBadge: false,
           description: {
             root: {
               type: 'root',
@@ -763,7 +765,7 @@ export const seed = async ({
                   children: [
                     {
                       type: 'text',
-                      text: 'For businesses with 3-10 employees',
+                      text: 'Essential membership for sole proprietors and small businesses',
                     },
                   ],
                 },
@@ -778,35 +780,8 @@ export const seed = async ({
           ],
           active: true,
         },
-        {
-          name: '1-2 employees or individuals',
-          slug: '1-2-employees',
-          annualPrice: 75,
-          description: {
-            root: {
-              type: 'root',
-              children: [
-                {
-                  type: 'paragraph',
-                  children: [
-                    {
-                      type: 'text',
-                      text: 'For sole proprietors, individuals, and businesses with 1-2 employees',
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-          features: [
-            { feature: 'Business directory listing' },
-            { feature: 'Event registration' },
-            { feature: 'Networking opportunities' },
-          ],
-          active: true,
-        },
       ],
-    },
+    } as any,
   })
 
   await Promise.all([

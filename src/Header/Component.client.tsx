@@ -31,6 +31,11 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
 
+  // Don't render the main header on portal pages (they have their own header)
+  if (pathname?.startsWith('/portal')) {
+    return null
+  }
+
   return (
     <header
       className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
