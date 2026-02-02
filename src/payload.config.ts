@@ -30,6 +30,11 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     components: {
+      // Custom graphics replace Payload logos on login and in the sidebar
+      graphics: {
+        Logo: '@/components/AdminGraphics/Logo',
+        Icon: '@/components/AdminGraphics/Icon',
+      },
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeLogin: ['@/components/BeforeLogin'],
@@ -38,6 +43,10 @@ export default buildConfig({
       beforeDashboard: ['@/components/BeforeDashboard'],
       // Redirect users based on their role after login
       afterLogin: ['@/components/AfterLogin'],
+      // Logout redirects to home page instead of admin login
+      logout: {
+        Button: '@/components/AdminLogout/LogoutButton',
+      },
     },
     // Custom admin styles are loaded from src/app/(payload)/custom.scss automatically
     autoLogin:
