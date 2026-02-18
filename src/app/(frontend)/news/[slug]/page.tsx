@@ -10,6 +10,8 @@ import RichText from '@/components/RichText'
 import { Button } from '@/components/ui/button'
 import { getOptimizedImageUrl } from '@/utilities/getMediaUrl'
 import type { Media } from '@/payload-types'
+import { headers } from 'next/headers'
+import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -18,6 +20,10 @@ interface PageProps {
 export default async function NewsDetailPage(props: PageProps) {
   const params = await props.params
   const { slug } = params
+
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
 
   const payload = await getPayload({ config })
 
@@ -30,6 +36,7 @@ export default async function NewsDetailPage(props: PageProps) {
     },
     limit: 1,
     depth: 2,
+    locale,
   })
 
   const newsItem = newsItems.docs[0]
@@ -49,21 +56,36 @@ export default async function NewsDetailPage(props: PageProps) {
       ? newsItem.author.name
       : null
 
+  const translations = {
+    en: {
+      featured: 'Featured',
+      backToAllNews: 'Back to all news',
+      by: 'By',
+    },
+    fr: {
+      featured: 'En vedette',
+      backToAllNews: 'Retour aux nouvelles',
+      by: 'Par',
+    },
+  }
+
+  const t = translations[locale]
+
   return (
     <Container className="py-12 md:py-16">
       <div className="max-w-4xl mx-auto">
         <Link
-          href="/news"
+          href={addLocaleToPathname('/news', locale)}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8"
         >
-          ← Back to all news
+          ← {t.backToAllNews}
         </Link>
 
         <article className="space-y-8">
           {/* Header */}
           <div className="space-y-4">
             {newsItem.featured && (
-              <span className="inline-block text-sm font-medium text-primary">★ Featured</span>
+              <span className="inline-block text-sm font-medium text-primary">★ {t.featured}</span>
             )}
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
               {newsItem.title}
@@ -76,7 +98,7 @@ export default async function NewsDetailPage(props: PageProps) {
               )}
               {authorName && (
                 <p className="text-lg">
-                  By {authorName}
+                  {t.by} {authorName}
                 </p>
               )}
             </div>
@@ -103,8 +125,8 @@ export default async function NewsDetailPage(props: PageProps) {
 
           {/* Back Button */}
           <div className="pt-8 border-t">
-            <Link href="/news">
-              <Button variant="outline">← Back to all news</Button>
+            <Link href={addLocaleToPathname('/news', locale)}>
+              <Button variant="outline">← {t.backToAllNews}</Button>
             </Link>
           </div>
         </article>
@@ -117,6 +139,10 @@ export async function generateMetadata(props: PageProps) {
   const params = await props.params
   const { slug } = params
 
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
+
   const payload = await getPayload({ config })
 
   const newsItems = await payload.find({
@@ -127,6 +153,7 @@ export async function generateMetadata(props: PageProps) {
       },
     },
     limit: 1,
+    locale,
   })
 
   const newsItem = newsItems.docs[0]

@@ -18,7 +18,15 @@ import {
 import { DatePicker } from '@/components/ui/date-picker'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
-export default function EventForm({ event }: { event?: any }) {
+interface BusinessLocation {
+  location?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+}
+
+export default function EventForm({ event, businessLocation }: { event?: any; businessLocation?: BusinessLocation }) {
   const router = useRouter()
   const [formData, setFormData] = useState({
     title: event ? (typeof event.title === 'string' ? event.title : event.title?.en || '') : '',
@@ -27,11 +35,11 @@ export default function EventForm({ event }: { event?: any }) {
         ? event.description
         : event.description?.root?.children?.[0]?.children?.[0]?.text || ''
       : '',
-    location: event?.location || '',
-    address: event?.address || '',
-    city: event?.city || '',
-    state: event?.state || 'VT',
-    zipCode: event?.zipCode || '',
+    location: event?.location || (!event && businessLocation?.location) || '',
+    address: event?.address || (!event && businessLocation?.address) || '',
+    city: event?.city || (!event && businessLocation?.city) || '',
+    state: event?.state || (!event && businessLocation?.state) || 'VT',
+    zipCode: event?.zipCode || (!event && businessLocation?.zipCode) || '',
     externalUrl: event?.externalUrl || '',
     linkTitle: event?.linkTitle || '',
   })
@@ -87,10 +95,28 @@ export default function EventForm({ event }: { event?: any }) {
       const description = {
         root: {
           type: 'root',
+          direction: 'ltr',
+          format: '',
+          indent: 0,
+          version: 1,
           children: [
             {
               type: 'paragraph',
-              children: [{ type: 'text', text: formData.description }],
+              direction: 'ltr',
+              format: '',
+              indent: 0,
+              version: 1,
+              children: [
+                {
+                  type: 'text',
+                  text: formData.description,
+                  format: 0,
+                  detail: 0,
+                  mode: 'normal',
+                  style: '',
+                  version: 1,
+                },
+              ],
             },
           ],
         },
@@ -151,7 +177,8 @@ export default function EventForm({ event }: { event?: any }) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save event')
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || 'Failed to save event')
       }
 
       router.push('/portal/events')

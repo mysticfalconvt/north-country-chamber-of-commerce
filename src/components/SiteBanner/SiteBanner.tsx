@@ -111,7 +111,7 @@ export function SiteBanner() {
                 banner.style === 'warning',
             })}
           >
-            <div className="flex-1 text-sm">
+            <div className="flex-1 text-sm text-center">
               <RichText data={banner.message} enableGutter={false} enableProse={false} />
             </div>
 

@@ -9,6 +9,8 @@ import { MapPinIcon, PhoneIcon, MailIcon, GlobeIcon, ClockIcon } from 'lucide-re
 import type { Metadata } from 'next'
 import { BusinessMap } from '@/components/BusinessMap'
 import { serializeLexical } from '@/utilities/serializeLexical'
+import { headers } from 'next/headers'
+import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
 
 interface BusinessPageProps {
   params: Promise<{
@@ -18,6 +20,10 @@ interface BusinessPageProps {
 
 export default async function BusinessPage({ params }: BusinessPageProps) {
   const { slug } = await params
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
+
   const payload = await getPayload({ config })
 
   const businesses = await payload.find({
@@ -29,6 +35,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     },
     depth: 2,
     limit: 1,
+    locale,
   })
 
   const business = businesses.docs[0]
@@ -37,12 +44,39 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     notFound()
   }
 
+  const translations = {
+    en: {
+      about: 'About',
+      hoursOfOperation: 'Hours of Operation',
+      galleryOffers: 'Gallery & Offers',
+      contactInfo: 'Contact Information',
+      followUs: 'Follow Us',
+      visitWebsite: 'Visit Website',
+      getDirections: 'Get Directions',
+      backToDirectory: 'Back to directory',
+      member: 'Member',
+    },
+    fr: {
+      about: 'À propos',
+      hoursOfOperation: "Heures d'ouverture",
+      galleryOffers: 'Galerie et offres',
+      contactInfo: 'Coordonnées',
+      followUs: 'Suivez-nous',
+      visitWebsite: 'Visiter le site web',
+      getDirections: 'Obtenir un itinéraire',
+      backToDirectory: "Retour à l'annuaire",
+      member: 'Membre',
+    },
+  }
+
+  const t = translations[locale]
+
   return (
     <Container className="py-12 md:py-16">
       <div className="space-y-8">
         {/* Back link */}
-        <Link href="/businesses" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back to directory
+        <Link href={addLocaleToPathname('/businesses', locale)} className="text-sm text-muted-foreground hover:text-foreground">
+          ← {t.backToDirectory}
         </Link>
 
         {/* Header */}
@@ -92,7 +126,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             {/* Description */}
             {business.description && (
               <Card className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">About</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t.about}</h2>
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   {serializeLexical(business.description)}
                 </div>
@@ -104,7 +138,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               <Card className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <ClockIcon className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="text-xl font-semibold">Hours of Operation</h2>
+                  <h2 className="text-xl font-semibold">{t.hoursOfOperation}</h2>
                 </div>
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   {serializeLexical(business.hoursOfOperation)}
@@ -117,7 +151,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               Array.isArray(business.advertisingSlots) &&
               business.advertisingSlots.length > 0 && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-semibold">Gallery & Offers</h2>
+                  <h2 className="text-2xl font-semibold">{t.galleryOffers}</h2>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {business.advertisingSlots.map((slot, index) => (
                       <Card key={index} className="p-4">
@@ -151,7 +185,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           {/* Sidebar - Contact Info */}
           <div className="space-y-4">
             <Card className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold">Contact Information</h2>
+              <h2 className="text-xl font-semibold">{t.contactInfo}</h2>
 
               {(business.address || business.city || business.state) && (
                 <div className="flex gap-3">
@@ -196,7 +230,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                     rel="noopener noreferrer"
                     className="hover:text-primary break-all"
                   >
-                    Visit Website →
+                    {t.visitWebsite} →
                   </a>
                 </div>
               )}
@@ -205,7 +239,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 Array.isArray(business.socialLinks) &&
                 business.socialLinks.length > 0 && (
                   <div className="pt-4 border-t">
-                    <h3 className="text-sm font-semibold mb-3">Follow Us</h3>
+                    <h3 className="text-sm font-semibold mb-3">{t.followUs}</h3>
                     <div className="flex flex-wrap gap-2">
                       {business.socialLinks.map((link, index) => (
                         <a
@@ -225,7 +259,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               {business.membershipTier && business.membershipTier !== 'basic' && (
                 <div className="pt-4 border-t">
                   <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium capitalize">
-                    {business.membershipTier} Member
+                    {business.membershipTier} {t.member}
                   </span>
                 </div>
               )}
@@ -258,7 +292,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                   rel="noopener noreferrer"
                   className="block mt-3 text-sm text-primary hover:underline text-center"
                 >
-                  Get Directions →
+                  {t.getDirections} →
                 </a>
               </Card>
             )}
@@ -271,6 +305,10 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
 export async function generateMetadata({ params }: BusinessPageProps): Promise<Metadata> {
   const { slug } = await params
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const locale = getLocaleFromPathname(pathname)
+
   const payload = await getPayload({ config })
 
   const businesses = await payload.find({
@@ -281,6 +319,7 @@ export async function generateMetadata({ params }: BusinessPageProps): Promise<M
       },
     },
     limit: 1,
+    locale,
   })
 
   const business = businesses.docs[0]
