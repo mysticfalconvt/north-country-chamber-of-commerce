@@ -14,27 +14,21 @@ export async function POST(req: NextRequest) {
     const token = cookieStore.get('payload-token')?.value
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
     // Verify the token and get user
     const { user: userData } = await payload.auth({ headers: req.headers })
 
     if (!userData) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
     // Check if user is admin or chamber_staff
     if (userData.role !== 'admin' && userData.role !== 'chamber_staff') {
       return NextResponse.json(
         { error: 'Unauthorized - requires admin or chamber_staff role' },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
@@ -44,14 +38,14 @@ export async function POST(req: NextRequest) {
     if (!businessId || !action) {
       return NextResponse.json(
         { error: 'Missing required fields: businessId and action' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     if (action !== 'approve' && action !== 'reject') {
       return NextResponse.json(
         { error: 'Invalid action. Must be "approve" or "reject"' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -66,10 +60,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (business.approvalStatus === 'approved') {
-      return NextResponse.json(
-        { error: 'Business is already approved' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Business is already approved' }, { status: 400 })
     }
 
     if (action === 'approve') {
@@ -167,7 +158,7 @@ export async function POST(req: NextRequest) {
     payload.logger.error(`Failed to process business approval: ${error}`)
     return NextResponse.json(
       { error: 'Failed to process approval. Please try again.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -82,7 +82,8 @@ export const MembershipTiers: GlobalConfig = {
               required: true,
               defaultValue: 99,
               admin: {
-                description: 'Sort order for directory (1=highest/platinum, 2=gold, 3=silver, 4=bronze)',
+                description:
+                  'Sort order for directory (1=highest/platinum, 2=gold, 3=silver, 4=bronze)',
               },
             },
           ],

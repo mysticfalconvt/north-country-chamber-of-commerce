@@ -6,10 +6,7 @@ import { seed } from '@/endpoints/seed'
 export async function POST(req: NextRequest) {
   // Check if seeding is completely disabled via environment variable
   if (process.env.ENABLE_SEED_ENDPOINT !== 'true') {
-    return NextResponse.json(
-      { error: 'Seed endpoint is disabled' },
-      { status: 403 }
-    )
+    return NextResponse.json({ error: 'Seed endpoint is disabled' }, { status: 403 })
   }
 
   // Require seed token for authentication
@@ -19,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!expectedToken) {
     return NextResponse.json(
       { error: 'Seed endpoint is not configured (SEED_API_TOKEN not set)' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 
@@ -27,17 +24,14 @@ export async function POST(req: NextRequest) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return NextResponse.json(
       { error: 'Missing or invalid Authorization header. Use: Authorization: Bearer <token>' },
-      { status: 401 }
+      { status: 401 },
     )
   }
 
   const providedToken = authHeader.substring(7) // Remove "Bearer " prefix
 
   if (providedToken !== expectedToken) {
-    return NextResponse.json(
-      { error: 'Invalid seed token' },
-      { status: 401 }
-    )
+    return NextResponse.json({ error: 'Invalid seed token' }, { status: 401 })
   }
 
   const payload = await getPayload({ config })
@@ -67,7 +61,7 @@ export async function POST(req: NextRequest) {
     payload.logger.error(`Failed to seed database: ${error}`)
     return NextResponse.json(
       { error: 'Failed to seed database', details: String(error) },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

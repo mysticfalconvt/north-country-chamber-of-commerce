@@ -33,7 +33,11 @@ export const Card: React.FC<{
       ref={card.ref}
     >
       <div className="relative w-full aspect-video">
-        {!image && <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">No image</div>}
+        {!image && (
+          <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">
+            No image
+          </div>
+        )}
         {image && typeof image !== 'string' && <Media resource={image} size="33vw" />}
       </div>
       <div className="p-4">

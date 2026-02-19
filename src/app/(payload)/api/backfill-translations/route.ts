@@ -583,10 +583,7 @@ export async function POST(req: Request) {
                 context: { skipTranslation: true },
               })
               stats.news.translated++
-              sendProgress(
-                controller,
-                `  ✓ Translated news item "${newsTitle || newsItem.id}"`,
-              )
+              sendProgress(controller, `  ✓ Translated news item "${newsTitle || newsItem.id}"`)
             } else {
               stats.news.skipped++
             }
@@ -654,17 +651,21 @@ export async function POST(req: Request) {
                     depth: 0,
                   })
                   // Check if any French labels are missing
-                  needsTranslation = frenchHeader.navItems?.some((item: any) => {
-                    const label = typeof item.link?.label === 'string' ? item.link.label : null
-                    return !label
-                  }) ?? true
+                  needsTranslation =
+                    frenchHeader.navItems?.some((item: any) => {
+                      const label = typeof item.link?.label === 'string' ? item.link.label : null
+                      return !label
+                    }) ?? true
                 } catch {
                   needsTranslation = true
                 }
               }
 
               if (needsTranslation) {
-                sendProgress(controller, `  Translating ${header.navItems.length} header nav items...`)
+                sendProgress(
+                  controller,
+                  `  Translating ${header.navItems.length} header nav items...`,
+                )
                 const translatedNavItems = await Promise.all(
                   header.navItems.map(async (item: any) => {
                     // IMPORTANT: Preserve the original item structure including ID
@@ -676,7 +677,8 @@ export async function POST(req: Request) {
                       },
                     }
                     if (item.link?.label) {
-                      const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
+                      const label =
+                        typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
                       if (label) {
                         translatedItem.link.label = await translateToFrench(label)
                       }
@@ -723,17 +725,21 @@ export async function POST(req: Request) {
                     locale: 'fr',
                     depth: 0,
                   })
-                  needsNavTranslation = frenchFooter.navItems?.some((item: any) => {
-                    const label = typeof item.link?.label === 'string' ? item.link.label : null
-                    return !label
-                  }) ?? true
+                  needsNavTranslation =
+                    frenchFooter.navItems?.some((item: any) => {
+                      const label = typeof item.link?.label === 'string' ? item.link.label : null
+                      return !label
+                    }) ?? true
                 } catch {
                   needsNavTranslation = true
                 }
               }
 
               if (needsNavTranslation) {
-                sendProgress(controller, `  Translating ${footer.navItems.length} footer nav items...`)
+                sendProgress(
+                  controller,
+                  `  Translating ${footer.navItems.length} footer nav items...`,
+                )
                 footerUpdateData.navItems = await Promise.all(
                   footer.navItems.map(async (item: any) => {
                     // IMPORTANT: Preserve the original item structure including ID
@@ -745,7 +751,8 @@ export async function POST(req: Request) {
                       },
                     }
                     if (item.link?.label) {
-                      const label = typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
+                      const label =
+                        typeof item.link.label === 'string' ? item.link.label : item.link.label?.en
                       if (label) {
                         translatedItem.link.label = await translateToFrench(label)
                       }
@@ -767,7 +774,8 @@ export async function POST(req: Request) {
                     locale: 'fr',
                     depth: 0,
                   })
-                  const frenchCopyright = typeof frenchFooter.copyright === 'string' ? frenchFooter.copyright : null
+                  const frenchCopyright =
+                    typeof frenchFooter.copyright === 'string' ? frenchFooter.copyright : null
                   needsCopyrightTranslation = !frenchCopyright
                 } catch {
                   needsCopyrightTranslation = true
@@ -775,7 +783,10 @@ export async function POST(req: Request) {
               }
 
               if (needsCopyrightTranslation) {
-                const copyright = typeof footer.copyright === 'string' ? footer.copyright : (footer.copyright as { en?: string })?.en
+                const copyright =
+                  typeof footer.copyright === 'string'
+                    ? footer.copyright
+                    : (footer.copyright as { en?: string })?.en
                 if (copyright) {
                   sendProgress(controller, '  Translating footer copyright...')
                   footerUpdateData.copyright = await translateToFrench(copyright)

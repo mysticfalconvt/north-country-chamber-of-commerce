@@ -115,10 +115,13 @@ export default async function BenefitsPage() {
 
                     <div className="space-y-2">
                       {benefit.expirationDate && (
-                        <div className={`flex items-center gap-2 text-sm ${expired ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                        <div
+                          className={`flex items-center gap-2 text-sm ${expired ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}
+                        >
                           <Clock className="h-4 w-4" />
                           <span>
-                            {expired ? 'Expired:' : 'Expires:'} {new Date(benefit.expirationDate).toLocaleDateString()}
+                            {expired ? 'Expired:' : 'Expires:'}{' '}
+                            {new Date(benefit.expirationDate).toLocaleDateString()}
                           </span>
                         </div>
                       )}
@@ -126,7 +129,9 @@ export default async function BenefitsPage() {
                       {benefit.externalUrl && (
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <ExternalLink className="h-4 w-4" />
-                          <span className="truncate max-w-xs">{benefit.linkText || benefit.externalUrl}</span>
+                          <span className="truncate max-w-xs">
+                            {benefit.linkText || benefit.externalUrl}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -135,7 +140,9 @@ export default async function BenefitsPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(benefit.benefitStatus)}`}
                       >
-                        {benefit.benefitStatus === 'pending' ? 'Pending Approval' : benefit.benefitStatus}
+                        {benefit.benefitStatus === 'pending'
+                          ? 'Pending Approval'
+                          : benefit.benefitStatus}
                       </span>
                       {expired && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">

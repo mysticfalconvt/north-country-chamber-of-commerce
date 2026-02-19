@@ -66,10 +66,7 @@ export default async function ApproveEventPage({ params }: PageProps) {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               The event you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
-            <Link
-              href="/admin/collections/events"
-              className="text-blue-600 hover:underline"
-            >
+            <Link href="/admin/collections/events" className="text-blue-600 hover:underline">
               Go to Events Admin
             </Link>
           </div>
@@ -81,7 +78,8 @@ export default async function ApproveEventPage({ params }: PageProps) {
   // Get the submitter info
   let submitter = null
   if (event.submittedBy) {
-    const submitterId = typeof event.submittedBy === 'number' ? event.submittedBy : (event.submittedBy as any).id
+    const submitterId =
+      typeof event.submittedBy === 'number' ? event.submittedBy : (event.submittedBy as any).id
     try {
       submitter = await payload.findByID({
         collection: 'users',
@@ -102,15 +100,14 @@ export default async function ApproveEventPage({ params }: PageProps) {
 
   // Get image URL
   const imageUrl =
-    event.image && typeof event.image === 'object' && event.image.url
-      ? event.image.url
-      : null
+    event.image && typeof event.image === 'object' && event.image.url ? event.image.url : null
 
   // Extract description text
   const descriptionText = extractTextFromLexical(event.description)
 
   // Get event title (handle localized)
-  const eventTitle = typeof event.title === 'string' ? event.title : (event.title as any)?.en || 'Untitled Event'
+  const eventTitle =
+    typeof event.title === 'string' ? event.title : (event.title as any)?.en || 'Untitled Event'
 
   // Format date
   const formatDate = (dateStr: string) => {
@@ -132,7 +129,12 @@ export default async function ApproveEventPage({ params }: PageProps) {
             className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back to Events Admin
           </Link>
@@ -143,12 +145,7 @@ export default async function ApproveEventPage({ params }: PageProps) {
           {/* Event Image */}
           {imageUrl && (
             <div className="relative w-full h-64 bg-gray-100 dark:bg-gray-700">
-              <Image
-                src={imageUrl}
-                alt={eventTitle}
-                fill
-                className="object-cover"
-              />
+              <Image src={imageUrl} alt={eventTitle} fill className="object-cover" />
             </div>
           )}
 
@@ -156,9 +153,7 @@ export default async function ApproveEventPage({ params }: PageProps) {
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {eventTitle}
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{eventTitle}</h1>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -211,17 +206,13 @@ export default async function ApproveEventPage({ params }: PageProps) {
                 {event.startTime && (
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Start Time</p>
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      {event.startTime}
-                    </p>
+                    <p className="text-gray-900 dark:text-white font-medium">{event.startTime}</p>
                   </div>
                 )}
                 {event.endTime && (
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">End Time</p>
-                    <p className="text-gray-900 dark:text-white font-medium">
-                      {event.endTime}
-                    </p>
+                    <p className="text-gray-900 dark:text-white font-medium">{event.endTime}</p>
                   </div>
                 )}
               </div>
@@ -234,9 +225,24 @@ export default async function ApproveEventPage({ params }: PageProps) {
                   Location
                 </h2>
                 <div className="flex items-start gap-3">
-                  <svg className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                   <div>
                     {event.location && (
@@ -276,13 +282,22 @@ export default async function ApproveEventPage({ params }: PageProps) {
                   External Link
                 </h2>
                 <a
-                  href={event.externalUrl.startsWith('http') ? event.externalUrl : `https://${event.externalUrl}`}
+                  href={
+                    event.externalUrl.startsWith('http')
+                      ? event.externalUrl
+                      : `https://${event.externalUrl}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-blue-600 hover:underline"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                   {event.externalUrl}
                 </a>
@@ -298,8 +313,18 @@ export default async function ApproveEventPage({ params }: PageProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {business && (
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg
+                        className="h-5 w-5 text-gray-400 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
                       </svg>
                       <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Business</p>
@@ -309,8 +334,18 @@ export default async function ApproveEventPage({ params }: PageProps) {
                   )}
                   {event.organizer && (
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <svg
+                        className="h-5 w-5 text-gray-400 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
                       </svg>
                       <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Organizer</p>
@@ -321,8 +356,18 @@ export default async function ApproveEventPage({ params }: PageProps) {
                   {submitter && (
                     <>
                       <div className="flex items-center gap-3">
-                        <svg className="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className="h-5 w-5 text-gray-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
                         </svg>
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Contact Person</p>
@@ -330,12 +375,25 @@ export default async function ApproveEventPage({ params }: PageProps) {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <svg className="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg
+                          className="h-5 w-5 text-gray-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                          <a href={`mailto:${submitter.email}`} className="text-blue-600 hover:underline">
+                          <a
+                            href={`mailto:${submitter.email}`}
+                            className="text-blue-600 hover:underline"
+                          >
                             {submitter.email}
                           </a>
                         </div>
@@ -353,7 +411,12 @@ export default async function ApproveEventPage({ params }: PageProps) {
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   This event has already been published
                 </div>

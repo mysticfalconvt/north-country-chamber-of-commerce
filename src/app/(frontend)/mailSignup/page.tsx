@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { Container } from '@/design-system/Container'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,11 +71,11 @@ export default function MailSignupPage() {
           </div>
           <h1 className="text-3xl font-bold mb-4">Successfully Subscribed!</h1>
           <p className="text-muted-foreground mb-6">
-            Thank you for subscribing to the North Country Chamber newsletter. You'll receive a
+            Thank you for subscribing to the North Country Chamber newsletter. You&apos;ll receive a
             confirmation email shortly.
           </p>
           <Button asChild variant="outline">
-            <a href="/">Return to Home</a>
+            <Link href="/">Return to Home</Link>
           </Button>
         </div>
       </Container>
@@ -133,8 +134,8 @@ export default function MailSignupPage() {
               required
             />
             <label htmlFor="consent" className="text-sm text-muted-foreground">
-              I agree to receive emails from North Country Chamber of Commerce. I can unsubscribe
-              at any time.
+              I agree to receive emails from North Country Chamber of Commerce. I can unsubscribe at
+              any time.
             </label>
           </div>
 

@@ -93,10 +93,7 @@ export function SiteBanner() {
       {visibleBanners.map((banner, index) => (
         <div
           key={banner.id}
-          className={cn(
-            'animate-in slide-in-from-top duration-300',
-            'border-b last:border-b-0',
-          )}
+          className={cn('animate-in slide-in-from-top duration-300', 'border-b last:border-b-0')}
           style={{ animationDelay: `${index * 100}ms` }}
         >
           <div

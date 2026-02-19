@@ -19,7 +19,6 @@ export const Businesses: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, req, operation, context }) => {
-
         // Auto-link business to the user creating it (for self-registration)
         if (operation === 'create' && req.user?.role === 'business_member' && !data.owner) {
           data.owner = req.user.id
@@ -58,7 +57,8 @@ export const Businesses: CollectionConfig = {
                 const geocodeUrl = `https://nominatim.openstreetmap.org/search?${params.toString()}`
                 const response = await fetch(geocodeUrl, {
                   headers: {
-                    'User-Agent': 'North Country Chamber of Commerce (contact@northcountrychamber.com)',
+                    'User-Agent':
+                      'North Country Chamber of Commerce (contact@northcountrychamber.com)',
                   },
                   signal: controller.signal,
                 })
@@ -94,9 +94,7 @@ export const Businesses: CollectionConfig = {
                   data.coordinates.latitude = parseFloat(lat)
                   data.coordinates.longitude = parseFloat(lon)
 
-                  req.payload.logger.info(
-                    `Geocoded ${data.name}: ${lat}, ${lon}`,
-                  )
+                  req.payload.logger.info(`Geocoded ${data.name}: ${lat}, ${lon}`)
                 }
               } catch (error) {
                 req.payload.logger.error(`Failed to geocode ${data.name}: ${error}`)

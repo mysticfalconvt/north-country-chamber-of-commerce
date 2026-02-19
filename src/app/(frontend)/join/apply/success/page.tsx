@@ -49,7 +49,7 @@ function SuccessContent() {
                 <p className="pt-2 border-t">
                   <strong>Mail Check To:</strong>
                   <br />
-                  Vermont's North Country Chamber of Commerce
+                  Vermont&apos;s North Country Chamber of Commerce
                   <br />
                   246 Causeway
                   <br />

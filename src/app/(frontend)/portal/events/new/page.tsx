@@ -6,7 +6,9 @@ import EventForm from '../EventForm'
 export default async function NewEventPage() {
   const user = await requireBusinessMember()
 
-  let businessLocation: { location?: string; address?: string; city?: string; state?: string; zipCode?: string } | undefined
+  let businessLocation:
+    | { location?: string; address?: string; city?: string; state?: string; zipCode?: string }
+    | undefined
 
   if (user.business) {
     try {

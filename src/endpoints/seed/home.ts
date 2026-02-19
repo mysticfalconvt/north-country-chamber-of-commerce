@@ -6,10 +6,7 @@ type HomeArgs = {
   metaImage: Media
 }
 
-export const home = ({
-  heroImage,
-  metaImage,
-}: HomeArgs): any => {
+export const home = ({ heroImage, metaImage }: HomeArgs): any => {
   return {
     slug: 'home',
     _status: 'published',

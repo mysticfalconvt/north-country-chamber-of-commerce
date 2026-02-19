@@ -10,10 +10,7 @@ interface BenefitsSearchProps {
   initialQuery?: string
 }
 
-export default function BenefitsSearch({
-  locale,
-  initialQuery = '',
-}: BenefitsSearchProps) {
+export default function BenefitsSearch({ locale, initialQuery = '' }: BenefitsSearchProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(initialQuery)

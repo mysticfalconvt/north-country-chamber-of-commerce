@@ -120,14 +120,14 @@ export default async function BenefitDetailPage({ params }: PageProps) {
       backToOffers: 'Retour aux avantages',
       fromBusiness: 'Offert par',
       useCode: 'Code promo',
-      expiresOn: 'Valide jusqu\'au',
+      expiresOn: "Valide jusqu'au",
       expiredOn: 'Expiré le',
       startsOn: 'Commence le',
       redeemOnline: 'Visiter le lien',
       downloadCoupon: 'Télécharger le coupon',
-      viewBusiness: 'Voir l\'entreprise',
+      viewBusiness: "Voir l'entreprise",
       expired: 'Cette offre a expiré',
-      expiredMessage: 'Cet avantage n\'est plus disponible. Découvrez nos autres offres!',
+      expiredMessage: "Cet avantage n'est plus disponible. Découvrez nos autres offres!",
     },
   }
 
@@ -195,13 +195,17 @@ export default async function BenefitDetailPage({ params }: PageProps) {
                 )}
               </div>
 
-              <h1 className={`text-3xl md:text-4xl font-bold ${isExpired ? 'text-muted-foreground' : ''}`}>
+              <h1
+                className={`text-3xl md:text-4xl font-bold ${isExpired ? 'text-muted-foreground' : ''}`}
+              >
                 {benefit.title}
               </h1>
 
               {/* Discount Value */}
               {benefit.discountValue && (
-                <div className={`text-2xl font-bold ${isExpired ? 'text-muted-foreground line-through' : 'text-green-600 dark:text-green-400'}`}>
+                <div
+                  className={`text-2xl font-bold ${isExpired ? 'text-muted-foreground line-through' : 'text-green-600 dark:text-green-400'}`}
+                >
                   {benefit.discountValue}
                 </div>
               )}
@@ -216,12 +220,22 @@ export default async function BenefitDetailPage({ params }: PageProps) {
 
             {/* Promo Code */}
             {benefit.code && (
-              <Card className={`p-6 ${isExpired ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800'}`}>
+              <Card
+                className={`p-6 ${isExpired ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800'}`}
+              >
                 <div className="flex items-center gap-4">
-                  <Gift className={`h-8 w-8 ${isExpired ? 'text-muted-foreground' : 'text-green-600 dark:text-green-400'}`} />
+                  <Gift
+                    className={`h-8 w-8 ${isExpired ? 'text-muted-foreground' : 'text-green-600 dark:text-green-400'}`}
+                  />
                   <div>
-                    <p className={`text-sm ${isExpired ? 'text-muted-foreground' : 'text-green-700 dark:text-green-300'}`}>{t.useCode}</p>
-                    <p className={`text-2xl font-mono font-bold ${isExpired ? 'text-muted-foreground line-through' : 'text-green-800 dark:text-green-200'}`}>
+                    <p
+                      className={`text-sm ${isExpired ? 'text-muted-foreground' : 'text-green-700 dark:text-green-300'}`}
+                    >
+                      {t.useCode}
+                    </p>
+                    <p
+                      className={`text-2xl font-mono font-bold ${isExpired ? 'text-muted-foreground line-through' : 'text-green-800 dark:text-green-200'}`}
+                    >
                       {benefit.code}
                     </p>
                   </div>
@@ -264,7 +278,9 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           <div className="space-y-6">
             {/* Dates Card */}
             {(benefit.startDate || benefit.expirationDate) && (
-              <Card className={`p-6 space-y-4 ${isExpired ? 'border-red-200 dark:border-red-800' : ''}`}>
+              <Card
+                className={`p-6 space-y-4 ${isExpired ? 'border-red-200 dark:border-red-800' : ''}`}
+              >
                 {benefit.startDate && (
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-muted-foreground" />
@@ -276,12 +292,18 @@ export default async function BenefitDetailPage({ params }: PageProps) {
                 )}
                 {benefit.expirationDate && (
                   <div className="flex items-center gap-3">
-                    <Clock className={`h-5 w-5 ${isExpired ? 'text-red-500' : 'text-muted-foreground'}`} />
+                    <Clock
+                      className={`h-5 w-5 ${isExpired ? 'text-red-500' : 'text-muted-foreground'}`}
+                    />
                     <div>
-                      <p className={`text-sm ${isExpired ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>
+                      <p
+                        className={`text-sm ${isExpired ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}
+                      >
                         {isExpired ? t.expiredOn : t.expiresOn}
                       </p>
-                      <p className={`font-medium ${isExpired ? 'text-red-600 dark:text-red-400' : ''}`}>
+                      <p
+                        className={`font-medium ${isExpired ? 'text-red-600 dark:text-red-400' : ''}`}
+                      >
                         {formatDate(benefit.expirationDate)}
                       </p>
                     </div>
@@ -312,9 +334,13 @@ export default async function BenefitDetailPage({ params }: PageProps) {
                     </div>
                   )}
                   <div>
-                    <p className="font-semibold group-hover:text-primary transition-colors">{business.name}</p>
+                    <p className="font-semibold group-hover:text-primary transition-colors">
+                      {business.name}
+                    </p>
                     {business.city && (
-                      <p className="text-sm text-muted-foreground">{business.city}, {business.state || 'VT'}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {business.city}, {business.state || 'VT'}
+                      </p>
                     )}
                   </div>
                 </Link>

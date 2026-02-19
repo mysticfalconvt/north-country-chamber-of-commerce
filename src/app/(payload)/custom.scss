@@ -14,8 +14,8 @@
   position: relative;
 
   /* The lock/unlock button should be above error messages */
-  button[aria-label*="lock"],
-  button[aria-label*="Lock"],
+  button[aria-label*='lock'],
+  button[aria-label*='Lock'],
   .field-type__wrap > button {
     z-index: 20 !important;
     position: relative;
@@ -35,7 +35,7 @@
 
 /* Tooltip adjustments - move error tooltips so they don't cover controls */
 .tooltip--error,
-[data-error="true"] .tooltip-content {
+[data-error='true'] .tooltip-content {
   margin-top: 4px;
 }
 

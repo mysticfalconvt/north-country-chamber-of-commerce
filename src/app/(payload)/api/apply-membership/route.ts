@@ -36,21 +36,29 @@ export async function POST(req: NextRequest) {
     const logoFile = formData.get('logo') as File | null
 
     // Validate required fields
-    if (!businessName || !contactName || !email || !phone || !address || !city || !state || !zipCode || !tier || !categoriesStr) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
+    if (
+      !businessName ||
+      !contactName ||
+      !email ||
+      !phone ||
+      !address ||
+      !city ||
+      !state ||
+      !zipCode ||
+      !tier ||
+      !categoriesStr
+    ) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     // Parse categories (expecting comma-separated IDs)
-    const categories = categoriesStr.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+    const categories = categoriesStr
+      .split(',')
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id))
 
     if (categories.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one category is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'At least one category is required' }, { status: 400 })
     }
 
     // Get tier details for email
@@ -71,7 +79,7 @@ export async function POST(req: NextRequest) {
       if (!validation.valid) {
         return NextResponse.json(
           { error: `Invalid logo file: ${validation.error}` },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
@@ -97,7 +105,8 @@ export async function POST(req: NextRequest) {
           },
         })
 
-        logoId = typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
+        logoId =
+          typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
       } catch (error) {
         payload.logger.error('Failed to upload logo')
         // Continue without logo rather than failing the application
@@ -179,7 +188,8 @@ export async function POST(req: NextRequest) {
     if (adminEmails.length > 0) {
       try {
         await sendBusinessApprovalNotification({
-          businessId: typeof business.id === 'number' ? business.id : parseInt(business.id as string),
+          businessId:
+            typeof business.id === 'number' ? business.id : parseInt(business.id as string),
           businessName,
           tier: tierData.name,
           contactEmail: email,
@@ -205,7 +215,9 @@ export async function POST(req: NextRequest) {
       })
       payload.logger.info(`Sent application received email to ${email}`)
     } catch (error) {
-      payload.logger.error(`Failed to send application received email: ${getSafeErrorMessage(error)}`)
+      payload.logger.error(
+        `Failed to send application received email: ${getSafeErrorMessage(error)}`,
+      )
       // Continue - don't fail the application if email fails
     }
 
@@ -220,7 +232,7 @@ export async function POST(req: NextRequest) {
     payload.logger.error(`Failed to process business application: ${getSafeErrorMessage(error)}`)
     return NextResponse.json(
       { error: 'Failed to process application. Please try again.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

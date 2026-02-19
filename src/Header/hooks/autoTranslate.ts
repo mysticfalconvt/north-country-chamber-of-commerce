@@ -53,12 +53,14 @@ export const autoTranslate: GlobalAfterChangeHook = async ({ doc, req, context }
           }
 
           // Check if French label exists - require non-empty English label
-          const englishLabel = typeof navItem.link?.label === 'string' && navItem.link.label.trim()
-            ? navItem.link.label
-            : null
-          const frenchLabel = typeof frenchNavItem?.link?.label === 'string' && frenchNavItem.link.label.trim()
-            ? frenchNavItem.link.label
-            : null
+          const englishLabel =
+            typeof navItem.link?.label === 'string' && navItem.link.label.trim()
+              ? navItem.link.label
+              : null
+          const frenchLabel =
+            typeof frenchNavItem?.link?.label === 'string' && frenchNavItem.link.label.trim()
+              ? frenchNavItem.link.label
+              : null
 
           if (englishLabel && !frenchLabel) {
             console.log(`[autoTranslate] Translating header nav label: ${englishLabel}`)
@@ -67,7 +69,7 @@ export const autoTranslate: GlobalAfterChangeHook = async ({ doc, req, context }
           }
 
           return translatedItem
-        })
+        }),
       )
 
       if (needsTranslation) {

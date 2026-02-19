@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     if (user.role !== 'admin' && user.role !== 'chamber_staff') {
       return NextResponse.json(
         { error: 'Unauthorized - requires admin or chamber_staff role' },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
     if (newsItem._status !== 'published') {
       return NextResponse.json(
         { error: 'News item must be published before sending' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     if (newsItem.emailSent) {
       return NextResponse.json(
         { error: 'This news item has already been sent as a newsletter' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -122,14 +122,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (allSubscribers.length === 0) {
-      return NextResponse.json(
-        { error: 'No active subscribers found' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No active subscribers found' }, { status: 400 })
     }
 
     payload.logger.info(
-      `Sending newsletter to ${allSubscribers.length} subscribers for news item: ${newsItem.title}`
+      `Sending newsletter to ${allSubscribers.length} subscribers for news item: ${newsItem.title}`,
     )
 
     // Send emails to all subscribers (batch 100 at a time with 1s delay)
@@ -154,7 +151,7 @@ export async function POST(req: NextRequest) {
             payload.logger.error(`Failed to send to subscriber: ${getSafeErrorMessage(error)}`)
             failCount++
           }
-        })
+        }),
       )
 
       // Delay between batches to avoid rate limits
@@ -189,7 +186,7 @@ export async function POST(req: NextRequest) {
     })
 
     payload.logger.info(
-      `Newsletter sent successfully. Success: ${successCount}, Failed: ${failCount}`
+      `Newsletter sent successfully. Success: ${successCount}, Failed: ${failCount}`,
     )
 
     return NextResponse.json({
@@ -204,7 +201,7 @@ export async function POST(req: NextRequest) {
     payload.logger.error(`Failed to send newsletter: ${getSafeErrorMessage(error)}`)
     return NextResponse.json(
       { error: 'Failed to send newsletter. Please try again.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

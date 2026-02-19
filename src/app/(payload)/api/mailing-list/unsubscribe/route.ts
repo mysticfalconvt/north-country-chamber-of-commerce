@@ -33,10 +33,7 @@ async function handleUnsubscribe(req: NextRequest) {
     })
 
     if (subscribers.docs.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid unsubscribe token' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Invalid unsubscribe token' }, { status: 404 })
     }
 
     const subscriber = subscribers.docs[0]
@@ -69,9 +66,6 @@ async function handleUnsubscribe(req: NextRequest) {
     })
   } catch (error) {
     payload.logger.error(`Failed to process unsubscribe: ${error}`)
-    return NextResponse.json(
-      { error: 'Failed to unsubscribe. Please try again.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to unsubscribe. Please try again.' }, { status: 500 })
   }
 }

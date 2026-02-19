@@ -75,7 +75,10 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     <Container className="py-12 md:py-16">
       <div className="space-y-8">
         {/* Back link */}
-        <Link href={addLocaleToPathname('/businesses', locale)} className="text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href={addLocaleToPathname('/businesses', locale)}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
           ← {t.backToDirectory}
         </Link>
 

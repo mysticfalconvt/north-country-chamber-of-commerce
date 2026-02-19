@@ -38,7 +38,5 @@ export async function getAdminNotificationEmails(payload?: Payload): Promise<str
     depth: 0,
   })
 
-  return adminUsers.docs
-    .map((user) => user.email)
-    .filter((email): email is string => !!email)
+  return adminUsers.docs.map((user) => user.email).filter((email): email is string => !!email)
 }

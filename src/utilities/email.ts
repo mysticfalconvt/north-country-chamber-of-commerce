@@ -519,7 +519,6 @@ North Country Chamber of Commerce
   })
 }
 
-
 // Helper function to render rich text to HTML
 const renderRichTextToHTML = (richText: any): string => {
   if (!richText || !richText.root || !richText.root.children) return ''
@@ -581,9 +580,10 @@ export async function sendNewsletterEmail({
   // Get the image URL if available
   let imageHTML = ''
   if (announcement.image) {
-    const imageUrl = typeof announcement.image === 'object' && announcement.image.url
-      ? `${baseUrl}${announcement.image.url}`
-      : null
+    const imageUrl =
+      typeof announcement.image === 'object' && announcement.image.url
+        ? `${baseUrl}${announcement.image.url}`
+        : null
     if (imageUrl) {
       imageHTML = `
         <div style="margin-bottom: 30px;">

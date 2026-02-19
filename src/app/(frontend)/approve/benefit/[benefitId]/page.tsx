@@ -79,7 +79,9 @@ export default async function ApproveBenefitPage({ params }: PageProps) {
   let submitter = null
   if (benefit.submittedBy) {
     const submitterId =
-      typeof benefit.submittedBy === 'number' ? benefit.submittedBy : (benefit.submittedBy as any).id
+      typeof benefit.submittedBy === 'number'
+        ? benefit.submittedBy
+        : (benefit.submittedBy as any).id
     try {
       submitter = await payload.findByID({
         collection: 'users',
@@ -267,12 +269,7 @@ export default async function ApproveBenefitPage({ params }: PageProps) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-blue-600 hover:underline"
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -370,12 +367,7 @@ export default async function ApproveBenefitPage({ params }: PageProps) {
             {isAlreadyPublished ? (
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

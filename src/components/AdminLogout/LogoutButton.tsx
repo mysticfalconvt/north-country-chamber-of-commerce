@@ -13,6 +13,7 @@ const LogoutButton: React.FC<{ tabIndex?: number }> = ({ tabIndex = 0 }) => {
   const { t } = useTranslation()
 
   return (
+    // eslint-disable-next-line @next/next/no-html-link-for-pages
     <a
       aria-label={t('authentication:logOut')}
       className={`${baseClass}__log-out`}

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       if (subscriber.subscribed) {
         return NextResponse.json(
           { message: 'This email is already subscribed to our newsletter' },
-          { status: 200 }
+          { status: 200 },
         )
       }
 
@@ -104,9 +104,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     payload.logger.error(`Failed to process subscription: ${error}`)
-    return NextResponse.json(
-      { error: 'Failed to subscribe. Please try again.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to subscribe. Please try again.' }, { status: 500 })
   }
 }

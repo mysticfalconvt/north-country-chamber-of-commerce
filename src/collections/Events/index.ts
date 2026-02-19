@@ -5,7 +5,10 @@ import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
-import { sendEventApprovalNotification, sendEventSubmissionConfirmation } from '../../utilities/email'
+import {
+  sendEventApprovalNotification,
+  sendEventSubmissionConfirmation,
+} from '../../utilities/email'
 import { autoTranslate } from './hooks'
 import { getAdminNotificationEmails } from '../../utilities/getAdminEmails'
 
@@ -144,7 +147,6 @@ export const Events: CollectionConfig = {
             })
 
             req.payload.logger.info(`Sent event approval notification for "${doc.title}"`)
-
 
             // Send confirmation email to the submitter
             if (submitterEmail && submitterEmail !== 'Unknown') {

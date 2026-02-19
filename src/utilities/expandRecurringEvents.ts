@@ -39,7 +39,7 @@ function getNthWeekdayOfMonth(
   if (weekOfMonth === -1) {
     // Last occurrence: start from end of month
     const lastDay = new Date(year, month + 1, 0)
-    let current = new Date(lastDay)
+    const current = new Date(lastDay)
     while (current.getDay() !== dayOfWeek) {
       current.setDate(current.getDate() - 1)
     }
@@ -48,7 +48,7 @@ function getNthWeekdayOfMonth(
 
   // Find the first occurrence of the weekday
   const firstOfMonth = new Date(year, month, 1)
-  let firstOccurrence = new Date(firstOfMonth)
+  const firstOccurrence = new Date(firstOfMonth)
   while (firstOccurrence.getDay() !== dayOfWeek) {
     firstOccurrence.setDate(firstOccurrence.getDate() + 1)
   }
@@ -86,7 +86,7 @@ function generateWeeklyOccurrences(
   const startDayOfWeek = eventStartDate.getDay()
 
   // Start from the later of range start or event start date
-  let current = new Date(Math.max(rangeStart.getTime(), eventStartDate.getTime()))
+  const current = new Date(Math.max(rangeStart.getTime(), eventStartDate.getTime()))
 
   // Align to the correct day of week
   while (current.getDay() !== startDayOfWeek) {
@@ -136,7 +136,7 @@ function generateMonthlyOccurrences(
   const startIsLastWeekday = isLastWeekdayOfMonth(eventStartDate)
 
   // Start from the month of the later of range start or event start
-  let currentMonth = new Date(Math.max(rangeStart.getTime(), eventStartDate.getTime()))
+  const currentMonth = new Date(Math.max(rangeStart.getTime(), eventStartDate.getTime()))
   currentMonth.setDate(1) // Start at beginning of month
 
   while (currentMonth <= rangeEnd && currentMonth <= recurrenceEnd) {
@@ -144,7 +144,11 @@ function generateMonthlyOccurrences(
 
     if (monthlyType === 'dayOfMonth') {
       // Same day of month (e.g., 15th)
-      occurrenceDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), startDayOfMonth)
+      occurrenceDate = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth(),
+        startDayOfMonth,
+      )
       // Handle months with fewer days
       if (occurrenceDate.getMonth() !== currentMonth.getMonth()) {
         occurrenceDate = null

@@ -33,14 +33,14 @@ export const SendNewsletterButton = () => {
         futureDate.setDate(futureDate.getDate() + 45)
 
         const eventsRes = await fetch(
-          `/api/events?where[and][0][date][greater_than_equal]=${now.toISOString()}&where[and][1][date][less_than_equal]=${futureDate.toISOString()}&where[and][2][eventStatus][equals]=published&limit=5`
+          `/api/events?where[and][0][date][greater_than_equal]=${now.toISOString()}&where[and][1][date][less_than_equal]=${futureDate.toISOString()}&where[and][2][eventStatus][equals]=published&limit=5`,
         )
         const eventsData = await eventsRes.json()
         setUpcomingEvents(eventsData.docs || [])
 
         // Fetch subscriber count
         const subscribersRes = await fetch(
-          `/api/mailing-list?where[subscribed][equals]=true&limit=0`
+          `/api/mailing-list?where[subscribed][equals]=true&limit=0`,
         )
         const subscribersData = await subscribersRes.json()
         setSubscriberCount(subscribersData.totalDocs || 0)
@@ -164,12 +164,7 @@ export const SendNewsletterButton = () => {
         )}
 
         <div className="flex gap-2">
-          <Button
-            onClick={handleSend}
-            disabled={sending || success}
-            className="flex-1"
-            size="sm"
-          >
+          <Button onClick={handleSend} disabled={sending || success} className="flex-1" size="sm">
             {sending ? 'Sending...' : 'Confirm Send'}
           </Button>
           <Button
@@ -209,9 +204,7 @@ export const SendNewsletterButton = () => {
           Send as Newsletter
         </Button>
 
-        {subscriberCount === 0 && (
-          <p className="text-xs text-gray-500">No active subscribers</p>
-        )}
+        {subscriberCount === 0 && <p className="text-xs text-gray-500">No active subscribers</p>}
       </div>
     </div>
   )

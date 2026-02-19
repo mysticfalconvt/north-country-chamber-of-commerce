@@ -50,9 +50,7 @@ export default async function NewsDetailPage(props: PageProps) {
 
   // Get author name if available
   const authorName =
-    newsItem.author &&
-    typeof newsItem.author === 'object' &&
-    'name' in newsItem.author
+    newsItem.author && typeof newsItem.author === 'object' && 'name' in newsItem.author
       ? newsItem.author.name
       : null
 
@@ -87,14 +85,10 @@ export default async function NewsDetailPage(props: PageProps) {
             {newsItem.featured && (
               <span className="inline-block text-sm font-medium text-primary">★ {t.featured}</span>
             )}
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-              {newsItem.title}
-            </h1>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{newsItem.title}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground">
               {newsItem.publishDate && (
-                <p className="text-lg">
-                  {formatDateTime(newsItem.publishDate)}
-                </p>
+                <p className="text-lg">{formatDateTime(newsItem.publishDate)}</p>
               )}
               {authorName && (
                 <p className="text-lg">

@@ -106,7 +106,7 @@ export async function PATCH(req: NextRequest) {
       if (!validation.valid) {
         return NextResponse.json(
           { error: `Invalid logo file: ${validation.error}` },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
@@ -128,7 +128,8 @@ export async function PATCH(req: NextRequest) {
           },
         })
 
-        updateData.logo = typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
+        updateData.logo =
+          typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
       } catch (error) {
         payload.logger.error(`Failed to upload logo: ${error}`)
         return NextResponse.json({ error: 'Failed to upload logo' }, { status: 500 })
@@ -141,7 +142,7 @@ export async function PATCH(req: NextRequest) {
       if (!validation.valid) {
         return NextResponse.json(
           { error: `Invalid cover image file: ${validation.error}` },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
@@ -163,7 +164,8 @@ export async function PATCH(req: NextRequest) {
           },
         })
 
-        updateData.coverImage = typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
+        updateData.coverImage =
+          typeof mediaResult.id === 'number' ? mediaResult.id : parseInt(mediaResult.id as string)
       } catch (error) {
         payload.logger.error(`Failed to upload cover image: ${error}`)
         return NextResponse.json({ error: 'Failed to upload cover image' }, { status: 500 })

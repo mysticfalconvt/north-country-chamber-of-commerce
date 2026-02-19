@@ -145,7 +145,12 @@ export function BusinessDirectory({
 
     switch (tierSlug) {
       case 'platinum':
-        return { icon: Crown, label: t.platinumMember, shortLabel: t.platinum, color: 'text-slate-400' }
+        return {
+          icon: Crown,
+          label: t.platinumMember,
+          shortLabel: t.platinum,
+          color: 'text-slate-400',
+        }
       case 'gold':
         return { icon: Award, label: t.goldMember, shortLabel: t.gold, color: 'text-yellow-500' }
       case 'silver':

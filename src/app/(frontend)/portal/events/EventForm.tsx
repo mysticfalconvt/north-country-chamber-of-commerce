@@ -26,7 +26,13 @@ interface BusinessLocation {
   zipCode?: string
 }
 
-export default function EventForm({ event, businessLocation }: { event?: any; businessLocation?: BusinessLocation }) {
+export default function EventForm({
+  event,
+  businessLocation,
+}: {
+  event?: any
+  businessLocation?: BusinessLocation
+}) {
   const router = useRouter()
   const [formData, setFormData] = useState({
     title: event ? (typeof event.title === 'string' ? event.title : event.title?.en || '') : '',
@@ -427,7 +433,7 @@ export default function EventForm({ event, businessLocation }: { event?: any; bu
               placeholder="e.g., Buy Tickets, Register, RSVP"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Custom text for the link button (defaults to "Register Now")
+              Custom text for the link button (defaults to &quot;Register Now&quot;)
             </p>
           </div>
         )}

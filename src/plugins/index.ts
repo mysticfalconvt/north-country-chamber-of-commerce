@@ -13,7 +13,9 @@ import { Page, News } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 
 const generateTitle: GenerateTitle<News | Page> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | North Country Chamber of Commerce` : 'North Country Chamber of Commerce'
+  return doc?.title
+    ? `${doc.title} | North Country Chamber of Commerce`
+    : 'North Country Chamber of Commerce'
 }
 
 const generateURL: GenerateURL<News | Page> = ({ doc }) => {

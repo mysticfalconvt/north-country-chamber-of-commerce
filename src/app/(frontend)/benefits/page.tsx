@@ -140,7 +140,9 @@ export default async function BenefitsPage({
 
     return (
       <Link href={benefitUrl} className="group">
-        <Card className={`h-full overflow-hidden transition-all hover:shadow-lg ${expired ? 'opacity-75' : ''}`}>
+        <Card
+          className={`h-full overflow-hidden transition-all hover:shadow-lg ${expired ? 'opacity-75' : ''}`}
+        >
           {/* Image */}
           {benefitImageUrl && (
             <div className="relative w-full h-40 bg-gray-100 dark:bg-gray-800">
@@ -165,13 +167,17 @@ export default async function BenefitsPage({
               )}
 
               {/* Title */}
-              <h3 className={`text-xl font-semibold group-hover:text-primary transition-colors ${expired ? 'text-muted-foreground' : ''}`}>
+              <h3
+                className={`text-xl font-semibold group-hover:text-primary transition-colors ${expired ? 'text-muted-foreground' : ''}`}
+              >
                 {benefit.title}
               </h3>
 
               {/* Discount value */}
               {benefit.discountValue && (
-                <span className={`inline-flex items-center text-sm font-bold ${expired ? 'text-muted-foreground line-through' : 'text-green-600 dark:text-green-400'}`}>
+                <span
+                  className={`inline-flex items-center text-sm font-bold ${expired ? 'text-muted-foreground line-through' : 'text-green-600 dark:text-green-400'}`}
+                >
                   {benefit.discountValue}
                 </span>
               )}
@@ -204,7 +210,9 @@ export default async function BenefitsPage({
                   <Gift className="h-4 w-4" />
                   <span>
                     {t.useCode}{' '}
-                    <code className={`bg-muted px-1.5 py-0.5 rounded font-mono text-xs ${expired ? 'line-through' : ''}`}>
+                    <code
+                      className={`bg-muted px-1.5 py-0.5 rounded font-mono text-xs ${expired ? 'line-through' : ''}`}
+                    >
                       {benefit.code}
                     </code>
                   </span>
@@ -223,7 +231,9 @@ export default async function BenefitsPage({
 
               {/* Expiration */}
               {benefit.expirationDate && (
-                <div className={`flex items-center gap-2 ${expired ? 'text-red-600 dark:text-red-400' : ''}`}>
+                <div
+                  className={`flex items-center gap-2 ${expired ? 'text-red-600 dark:text-red-400' : ''}`}
+                >
                   <Clock className="h-4 w-4" />
                   <span>
                     {expired ? t.expired : t.expiresOn} {formatDate(benefit.expirationDate)}
@@ -307,7 +317,7 @@ export async function generateMetadata() {
     en: {
       title: 'Member Benefits | North Country Chamber of Commerce',
       description:
-        'Discover exclusive deals, discounts, and special offers from chamber member businesses in Vermont\'s Northeast Kingdom.',
+        "Discover exclusive deals, discounts, and special offers from chamber member businesses in Vermont's Northeast Kingdom.",
     },
     fr: {
       title: 'Avantages membres | Chambre de commerce du North Country',

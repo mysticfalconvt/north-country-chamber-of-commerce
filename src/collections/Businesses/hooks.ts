@@ -64,7 +64,8 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
 
           // Translate offerTitle if it exists and French version doesn't
           if (slot.offerTitle && slot.type === 'offer') {
-            const hasFrenchOfferTitle = frenchSlot?.offerTitle && typeof frenchSlot.offerTitle === 'string'
+            const hasFrenchOfferTitle =
+              frenchSlot?.offerTitle && typeof frenchSlot.offerTitle === 'string'
             if (!hasFrenchOfferTitle) {
               translatedSlot.offerTitle = await translateToFrench(slot.offerTitle)
               slotNeedsUpdate = true
@@ -73,7 +74,8 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
 
           // Translate offerDescription if it exists and French version doesn't
           if (slot.offerDescription && slot.type === 'offer') {
-            const hasFrenchOfferDesc = (frenchSlot?.offerDescription?.root?.children?.length ?? 0) > 0
+            const hasFrenchOfferDesc =
+              (frenchSlot?.offerDescription?.root?.children?.length ?? 0) > 0
             if (!hasFrenchOfferDesc) {
               translatedSlot.offerDescription = await translateLexicalJSON(slot.offerDescription)
               slotNeedsUpdate = true
@@ -93,7 +95,7 @@ export const autoTranslate: CollectionAfterChangeHook = async ({
             needsUpdate = true
           }
           return translatedSlot
-        })
+        }),
       )
 
       if (needsUpdate) {

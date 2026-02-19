@@ -163,7 +163,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               return (
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {businessLogoUrl && business?.slug && (
-                    <Link href={addLocaleToPathname(`/directory/${business.slug}`, locale)} title={business?.name || ''}>
+                    <Link
+                      href={addLocaleToPathname(`/directory/${business.slug}`, locale)}
+                      title={business?.name || ''}
+                    >
                       <Image
                         src={businessLogoUrl}
                         alt={business?.name || 'Business'}
@@ -212,12 +215,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           if (!imageUrl) return null
           return (
             <div className="relative w-full h-96 rounded-lg overflow-hidden">
-              <Image
-                src={imageUrl}
-                alt={image?.alt || event.title}
-                fill
-                className="object-cover"
-              />
+              <Image src={imageUrl} alt={image?.alt || event.title} fill className="object-cover" />
             </div>
           )
         })()}

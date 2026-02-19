@@ -35,7 +35,9 @@ export default function BusinessEditForm({ business }: { business: any }) {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(getMediaUrl(business.logo))
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(getMediaUrl(business.coverImage))
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    getMediaUrl(business.coverImage),
+  )
   const logoInputRef = useRef<HTMLInputElement>(null)
   const coverImageInputRef = useRef<HTMLInputElement>(null)
 
@@ -143,7 +145,8 @@ export default function BusinessEditForm({ business }: { business: any }) {
       // Build coordinates object
       // Always send coordinates when address fields are present to ensure geocoding can populate them
       const hasCoordinatesNow = formData.latitude || formData.longitude
-      const hasAddressFields = formData.address || formData.city || formData.state || formData.zipCode
+      const hasAddressFields =
+        formData.address || formData.city || formData.state || formData.zipCode
 
       let coordinates: { latitude: number | null; longitude: number | null } | undefined
       if (hasCoordinatesNow) {

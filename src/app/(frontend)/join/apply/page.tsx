@@ -362,7 +362,8 @@ function MembershipApplicationForm() {
                     {loading ? 'Submitting Application...' : 'Submit Application'}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    Your application will be reviewed by chamber staff. You&apos;ll receive payment instructions via email once approved.
+                    Your application will be reviewed by chamber staff. You&apos;ll receive payment
+                    instructions via email once approved.
                   </p>
                 </div>
               </>
