@@ -18,7 +18,7 @@ export const Businesses: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ data, req, operation, context }) => {
+      async ({ data, req, operation, context, originalDoc }) => {
         // Auto-link business to the user creating it (for self-registration)
         if (operation === 'create' && req.user?.role === 'business_member' && !data.owner) {
           data.owner = req.user.id
@@ -31,8 +31,34 @@ export const Businesses: CollectionConfig = {
           const hasAddressData = data.address || data.city || data.state || data.zipCode
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 
-          // Only geocode if we have address data but no coordinates
-          if (hasAddressData && !hasCoordinates) {
+          // Determine if we should geocode
+          let shouldGeocode = false
+
+          if (operation === 'create') {
+            // On create, geocode if we have address data but no coordinates
+            shouldGeocode = hasAddressData && !hasCoordinates
+          } else if (operation === 'update' && originalDoc) {
+            // On update, geocode if address changed and coordinates weren't explicitly set
+            const addressChanged =
+              data.address !== originalDoc.address ||
+              data.city !== originalDoc.city ||
+              data.state !== originalDoc.state ||
+              data.zipCode !== originalDoc.zipCode
+
+            // Check if coordinates were explicitly provided in this update
+            // (user manually set them via map picker or direct input)
+            const coordinatesExplicitlySet = data.coordinates?.latitude && data.coordinates?.longitude
+
+            if (addressChanged && !coordinatesExplicitlySet) {
+              // Clear old coordinates so geocoding runs
+              shouldGeocode = true
+            } else if (hasAddressData && !hasCoordinates) {
+              // No coordinates at all, try to geocode
+              shouldGeocode = true
+            }
+          }
+
+          if (shouldGeocode) {
             const addressParts = [data.address, data.city, data.state, data.zipCode].filter(Boolean)
 
             if (addressParts.length > 0) {
@@ -261,6 +287,16 @@ export const Businesses: CollectionConfig = {
       ],
       admin: {
         description: 'Coordinates for map display. Leave empty to geocode from address.',
+      },
+    },
+    {
+      name: 'locationPicker',
+      type: 'ui',
+      admin: {
+        components: {
+          Field:
+            '@/components/admin/LocationPickerField#LocationPickerField',
+        },
       },
     },
     {

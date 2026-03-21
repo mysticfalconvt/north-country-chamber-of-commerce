@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { AlertCircle, CheckCircle, Info, Upload, X } from 'lucide-react'
 import Image from 'next/image'
+import { LocationPicker } from '@/components/LocationPicker'
 
 // Helper to get media URL
 function getMediaUrl(media: any): string | null {
@@ -526,39 +527,29 @@ export default function BusinessEditForm({ business }: { business: any }) {
 
         <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md">
           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-            Map Coordinates
+            Map Location
           </h4>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            Leave blank to auto-detect from address, or enter manually for precise map placement.
+            Use &quot;Lookup Address&quot; to find your location from the address above, or click
+            &quot;Edit Location&quot; to place the pin manually on the map.
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                name="latitude"
-                type="number"
-                step="any"
-                value={formData.latitude}
-                onChange={handleChange}
-                className="mt-1"
-                placeholder="e.g., 44.9369"
-              />
-            </div>
-            <div>
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                name="longitude"
-                type="number"
-                step="any"
-                value={formData.longitude}
-                onChange={handleChange}
-                className="mt-1"
-                placeholder="e.g., -72.2052"
-              />
-            </div>
-          </div>
+          <LocationPicker
+            latitude={formData.latitude ? parseFloat(formData.latitude) : null}
+            longitude={formData.longitude ? parseFloat(formData.longitude) : null}
+            onCoordinatesChange={(lat, lng) => {
+              setFormData((prev) => ({
+                ...prev,
+                latitude: lat.toString(),
+                longitude: lng.toString(),
+              }))
+              setSuccess(false)
+              setError('')
+            }}
+            address={formData.address}
+            city={formData.city}
+            state={formData.state}
+            zipCode={formData.zipCode}
+          />
         </div>
 
         <hr className="my-6 border-gray-200 dark:border-gray-700" />

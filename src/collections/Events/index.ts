@@ -37,15 +37,42 @@ export const Events: CollectionConfig = {
 
         return data
       },
-      async ({ data, req, operation }) => {
+      async ({ data, req, operation, originalDoc }) => {
         // Auto-geocode address to get coordinates
         if (operation === 'create' || operation === 'update') {
           const hasAddressData =
             data.address || data.city || data.state || data.zipCode || data.location
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 
-          // Only geocode if we have address data but no coordinates
-          if (hasAddressData && !hasCoordinates) {
+          // Determine if we should geocode
+          let shouldGeocode = false
+
+          if (operation === 'create') {
+            // On create, geocode if we have address data but no coordinates
+            shouldGeocode = hasAddressData && !hasCoordinates
+          } else if (operation === 'update' && originalDoc) {
+            // On update, geocode if address changed and coordinates weren't explicitly set
+            const addressChanged =
+              data.address !== originalDoc.address ||
+              data.city !== originalDoc.city ||
+              data.state !== originalDoc.state ||
+              data.zipCode !== originalDoc.zipCode ||
+              data.location !== originalDoc.location
+
+            // Check if coordinates were explicitly provided in this update
+            // (user manually set them via map picker or direct input)
+            const coordinatesExplicitlySet = data.coordinates?.latitude && data.coordinates?.longitude
+
+            if (addressChanged && !coordinatesExplicitlySet) {
+              // Clear old coordinates so geocoding runs
+              shouldGeocode = true
+            } else if (hasAddressData && !hasCoordinates) {
+              // No coordinates at all, try to geocode
+              shouldGeocode = true
+            }
+          }
+
+          if (shouldGeocode) {
             // Build address string from separate fields (preferred) or fall back to location
             const addressParts = [data.address, data.city, data.state, data.zipCode].filter(Boolean)
 
@@ -318,6 +345,16 @@ export const Events: CollectionConfig = {
           ],
         },
       ],
+    },
+    {
+      name: 'locationPicker',
+      type: 'ui',
+      admin: {
+        components: {
+          Field:
+            '@/components/admin/LocationPickerField#LocationPickerField',
+        },
+      },
     },
     {
       type: 'row',

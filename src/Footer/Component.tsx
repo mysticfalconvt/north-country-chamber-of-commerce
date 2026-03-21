@@ -130,9 +130,9 @@ export async function Footer() {
               <Link href="/admin" className="text-xs hover:text-foreground transition-colors">
                 Admin
               </Link>
-              <p className="text-xs">
+              <a href="https://boskind.tech" className="text-xs hover:text-foreground transition-colors">
                 Built with <span className="text-red-500">♥</span> for Vermont
-              </p>
+              </a>
             </div>
           </div>
         </div>
