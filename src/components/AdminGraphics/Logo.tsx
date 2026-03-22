@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 
 /**
@@ -7,13 +8,13 @@ import React from 'react'
 const AdminLogo: React.FC = () => {
   return (
     /* eslint-disable @next/next/no-img-element */
-    <a href="/">
+    <Link href="/">
       <img
         alt="North Country Chamber of Commerce"
         src="/north-country-chamber-logo.png"
         className="h-10 w-auto object-contain"
       />
-    </a>
+    </Link>
   )
 }
 
