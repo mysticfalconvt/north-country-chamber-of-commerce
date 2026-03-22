@@ -425,7 +425,6 @@ export const Events: CollectionConfig = {
         {
           name: 'recurrenceType',
           type: 'select',
-          required: true,
           options: [
             { label: 'Weekly', value: 'weekly' },
             { label: 'Monthly', value: 'monthly' },

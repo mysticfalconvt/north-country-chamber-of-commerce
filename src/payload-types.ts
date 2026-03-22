@@ -1148,7 +1148,7 @@ export interface Event {
     /**
      * How often this event repeats (pattern from start date, ends on end date)
      */
-    recurrenceType: 'weekly' | 'monthly';
+    recurrenceType?: ('weekly' | 'monthly') | null;
     /**
      * How to determine the monthly date (auto-calculated from start date)
      */

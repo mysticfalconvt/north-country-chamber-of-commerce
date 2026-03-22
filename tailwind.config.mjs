@@ -61,6 +61,7 @@ const config = {
           foreground: 'hsl(var(--accent-foreground))',
         },
         background: 'hsl(var(--background))',
+        header: 'hsl(var(--header))',
         border: 'hsla(var(--border))',
         card: {
           DEFAULT: 'hsl(var(--card))',

@@ -7,11 +7,13 @@ import React from 'react'
 const AdminLogo: React.FC = () => {
   return (
     /* eslint-disable @next/next/no-img-element */
-    <img
-      alt="North Country Chamber of Commerce"
-      src="/north-country-chamber-logo.png"
-      className="h-10 w-auto object-contain"
-    />
+    <a href="/">
+      <img
+        alt="North Country Chamber of Commerce"
+        src="/north-country-chamber-logo.png"
+        className="h-10 w-auto object-contain"
+      />
+    </a>
   )
 }
 

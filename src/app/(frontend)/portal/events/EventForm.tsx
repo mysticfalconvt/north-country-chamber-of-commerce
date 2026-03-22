@@ -168,10 +168,8 @@ export default function EventForm({
       if (isRecurring) {
         eventData.recurrence = {
           recurrenceType,
-          monthlyType: recurrenceType === 'monthly' ? monthlyType : null,
+          monthlyType: recurrenceType === 'monthly' ? monthlyType : undefined,
         }
-      } else {
-        eventData.recurrence = null
       }
 
       const response = await fetch('/api/portal/events', {

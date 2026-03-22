@@ -85,7 +85,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Redirect to the benefit in admin panel
+    // If called via fetch (AJAX), return JSON; otherwise redirect for direct browser navigation
+    const acceptHeader = req.headers.get('accept') || ''
+    if (acceptHeader.includes('application/json') || req.headers.get('sec-fetch-mode') === 'cors') {
+      return NextResponse.json({ success: true })
+    }
+
+    // Redirect to the benefit in admin panel (for direct email link clicks)
     return NextResponse.redirect(new URL(`/admin/collections/benefits/${benefitId}`, req.url))
   } catch (error) {
     payload.logger.error(`Failed to approve benefit: ${error}`)

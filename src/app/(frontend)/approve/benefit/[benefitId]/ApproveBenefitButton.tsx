@@ -31,10 +31,10 @@ export function ApproveBenefitButton({ benefitId, benefitTitle }: ApproveBenefit
       const response = await fetch(`/api/benefits/approve?id=${benefitId}`, {
         method: 'GET',
         credentials: 'include',
+        headers: { 'Accept': 'application/json' },
       })
 
-      // The endpoint redirects on success, so we need to check if it's a redirect
-      if (response.redirected || response.ok) {
+      if (response.ok) {
         setSuccess(true)
 
         // Refresh the page data after a short delay
