@@ -13,7 +13,7 @@ export const MediumImpactHero: React.FC<Page['hero']> = ({ links, media, richTex
         {richText && <RichText className="mb-6" data={richText} enableGutter={false} />}
 
         {Array.isArray(links) && links.length > 0 && (
-          <ul className="flex gap-4">
+          <ul className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {links.map(({ link }, i) => {
               return (
                 <li key={i}>
