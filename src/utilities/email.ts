@@ -442,7 +442,7 @@ Login Credentials:
 Email: ${to}
 Temporary Password: ${tempPassword}
 
-Member Portal: ${portalUrl}
+Sign in here: ${baseUrl}/admin/login?redirect=/portal
 
 Please save these credentials - you'll need them to log in after approval.
 
@@ -487,6 +487,9 @@ North Country Chamber of Commerce
         <p>We've created an account for you. Save these credentials for when your application is approved:</p>
         <p><strong>Email:</strong> ${to}</p>
         <p style="margin-bottom: 0;"><strong>Temporary Password:</strong> <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${tempPassword}</code></p>
+        <p style="margin-top: 15px; margin-bottom: 0;">
+          <a href="${baseUrl}/admin/login?redirect=/portal" class="button">Sign In to Member Portal</a>
+        </p>
       </div>
 
       <div class="info-box">
