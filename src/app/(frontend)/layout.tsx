@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
+import Script from 'next/script'
 import React from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
@@ -26,6 +27,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <InitTheme />
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+          <Script
+            async
+            defer
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            src={`${process.env.NEXT_PUBLIC_UMAMI_URL}/script.js`}
+            strategy="afterInteractive"
+          />
+        )}
       </head>
       <body className="flex min-h-screen flex-col">
         <Providers>

@@ -423,7 +423,6 @@ export async function sendApplicationReceivedEmail({
   tierPrice: number
 }) {
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-  const portalUrl = `${baseUrl}/portal`
 
   await transporter.sendMail({
     from: process.env.SMTP_FROM || 'noreply@vtnorthcountry.org',
