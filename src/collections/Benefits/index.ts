@@ -23,7 +23,12 @@ export const Benefits: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, operation, req }) => {
-        // Send notification email when a new benefit is created with pending status
+        // Send notification email when a new benefit is created with pending status.
+        // Skip when the actor is an admin/chamber staff — those creates happen in the
+        // admin UI and don't need approval-request or submitter-confirmation emails.
+        const actorRole = (req.user as { role?: string } | undefined)?.role
+        if (actorRole === 'admin' || actorRole === 'chamber_staff') return
+
         if (operation === 'create' && doc.benefitStatus === 'pending') {
           try {
             // Get admin notification emails (from env var or fallback to database)
