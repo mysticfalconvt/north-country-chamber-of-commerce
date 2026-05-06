@@ -241,10 +241,6 @@ export const Benefits: CollectionConfig = {
     slugField(),
   ],
   versions: {
-    drafts: {
-      autosave: {
-        interval: 100,
-      },
-    },
+    drafts: true,
   },
 }

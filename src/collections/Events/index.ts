@@ -1,7 +1,6 @@
-import type { CollectionConfig } from 'payload'
+import type { Access, CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
-import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { chamberStaffOrAdmin } from '../../access/chamberStaffOrAdmin'
 import { adminPanelAccess } from '../../access/adminPanelAccess'
 import { slugField } from 'payload'
@@ -12,13 +11,22 @@ import {
 import { autoTranslate } from './hooks'
 import { getAdminNotificationEmails } from '../../utilities/getAdminEmails'
 
+// Public visibility is gated by the custom `eventStatus` field
+// (the single source of truth for events). Authenticated users see all events.
+const authenticatedOrEventPublished: Access = ({ req: { user } }) => {
+  if (user) return true
+  return {
+    eventStatus: { equals: 'published' },
+  }
+}
+
 export const Events: CollectionConfig = {
   slug: 'events',
   access: {
     admin: adminPanelAccess,
     create: authenticated,
     delete: chamberStaffOrAdmin,
-    read: authenticatedOrPublished,
+    read: authenticatedOrEventPublished,
     update: authenticated,
   },
   hooks: {
@@ -488,11 +496,4 @@ export const Events: CollectionConfig = {
     },
     slugField(),
   ],
-  versions: {
-    drafts: {
-      autosave: {
-        interval: 100,
-      },
-    },
-  },
 }

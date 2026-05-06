@@ -99,12 +99,22 @@ export default async function EventsPage() {
                   <div className="mt-3">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        event._status === 'published'
+                        event.eventStatus === 'published'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                          : event.eventStatus === 'cancelled'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            : event.eventStatus === 'draft'
+                              ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                       }`}
                     >
-                      {event._status}
+                      {event.eventStatus === 'published'
+                        ? 'Published'
+                        : event.eventStatus === 'cancelled'
+                          ? 'Cancelled'
+                          : event.eventStatus === 'draft'
+                            ? 'Draft'
+                            : 'Pending Approval'}
                     </span>
                   </div>
                 </div>

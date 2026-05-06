@@ -171,9 +171,6 @@ export const News: CollectionConfig = {
   ],
   versions: {
     drafts: {
-      autosave: {
-        interval: 100,
-      },
       schedulePublish: true,
     },
   },

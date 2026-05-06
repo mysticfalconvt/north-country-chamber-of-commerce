@@ -161,7 +161,6 @@ export default function EventForm({
         linkTitle: formData.linkTitle || null,
         isRecurring,
         eventStatus: 'pending',
-        _status: 'published',
       }
 
       // Add recurrence data if recurring
