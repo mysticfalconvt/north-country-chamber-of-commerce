@@ -35,9 +35,9 @@ export default async function EventsPage({
   const oneWeekFromNow = new Date(now)
   oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7)
 
-  // Get date for 6 months from now (for recurring event expansion)
-  const sixMonthsFromNow = new Date(now)
-  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
+  // Forward window for recurring-event expansion (12 months out).
+  const recurrenceHorizon = new Date(now)
+  recurrenceHorizon.setMonth(recurrenceHorizon.getMonth() + 12)
 
   // Build query
   const baseQuery: any = {
@@ -69,11 +69,17 @@ export default async function EventsPage({
             { date: { greater_than_equal: now.toISOString() } },
           ],
         },
-        // Recurring events where end date (when recurrence ends) is in the future
+        // Recurring events where the recurrence end is in the future,
+        // or the recurrence has no end date (ongoing series).
         {
           and: [
             { isRecurring: { equals: true } },
-            { endDate: { greater_than_equal: now.toISOString() } },
+            {
+              or: [
+                { endDate: { greater_than_equal: now.toISOString() } },
+                { endDate: { exists: false } },
+              ],
+            },
           ],
         },
       ],
@@ -85,7 +91,7 @@ export default async function EventsPage({
   })
 
   // Expand recurring events
-  const expandedFutureEvents = expandRecurringEvents(futureEvents.docs, now, sixMonthsFromNow)
+  const expandedFutureEvents = expandRecurringEvents(futureEvents.docs, now, recurrenceHorizon)
 
   // Split into this week and upcoming
   const thisWeekOccurrences = expandedFutureEvents.filter((occ) => {

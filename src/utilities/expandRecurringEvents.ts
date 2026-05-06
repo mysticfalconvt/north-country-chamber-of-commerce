@@ -76,13 +76,14 @@ function generateWeeklyOccurrences(
 ): EventOccurrence[] {
   const occurrences: EventOccurrence[] = []
 
-  if (!event.date || !event.endDate) {
+  if (!event.date) {
     return occurrences
   }
 
-  // Use the main event date as the start and pattern source
+  // Use the main event date as the start and pattern source.
+  // No endDate means the series is ongoing — cap generation at rangeEnd.
   const eventStartDate = new Date(event.date)
-  const recurrenceEnd = new Date(event.endDate)
+  const recurrenceEnd = event.endDate ? new Date(event.endDate) : rangeEnd
   const startDayOfWeek = eventStartDate.getDay()
 
   // Start from the later of range start or event start date
@@ -120,13 +121,14 @@ function generateMonthlyOccurrences(
   const occurrences: EventOccurrence[] = []
   const recurrence = event.recurrence
 
-  if (!event.date || !event.endDate) {
+  if (!event.date) {
     return occurrences
   }
 
-  // Use the main event date as the start and pattern source
+  // Use the main event date as the start and pattern source.
+  // No endDate means the series is ongoing — cap generation at rangeEnd.
   const eventStartDate = new Date(event.date)
-  const recurrenceEnd = new Date(event.endDate)
+  const recurrenceEnd = event.endDate ? new Date(event.endDate) : rangeEnd
   const monthlyType = recurrence?.monthlyType || 'dayOfMonth'
 
   // Determine the pattern from the event start date

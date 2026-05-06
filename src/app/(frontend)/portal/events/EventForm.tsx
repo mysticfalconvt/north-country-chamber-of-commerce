@@ -89,9 +89,6 @@ export default function EventForm({
         if (!recurrenceType) {
           throw new Error('Please select a recurrence pattern')
         }
-        if (!endDate) {
-          throw new Error('End date is required for recurring events')
-        }
         if (date && endDate && date > endDate) {
           throw new Error('End date must be after start date')
         }
@@ -245,11 +242,11 @@ export default function EventForm({
           </div>
 
           <div>
-            <Label>End Date {isRecurring ? '*' : '(optional)'}</Label>
+            <Label>End Date (optional)</Label>
             <DatePicker
               date={endDate}
               onDateChange={setEndDate}
-              placeholder={isRecurring ? 'When recurrence ends' : 'Pick an end date'}
+              placeholder={isRecurring ? 'When recurrence ends (optional)' : 'Pick an end date'}
               className="mt-1"
             />
           </div>
@@ -336,7 +333,8 @@ export default function EventForm({
               )}
 
               <p className="text-xs text-muted-foreground">
-                Use the <strong>End Date</strong> field above to set when the recurring series ends.
+                Use the <strong>End Date</strong> field above to set when the recurring series ends,
+                or leave it blank for an ongoing series.
               </p>
             </div>
           )}
