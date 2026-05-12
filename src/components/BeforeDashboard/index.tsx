@@ -3,6 +3,7 @@ import React from 'react'
 
 import { TranslationButton } from './TranslationButton'
 import { CreateBusinessButton } from './CreateBusinessButton'
+import { PendingApprovals } from './PendingApprovals'
 import './index.scss'
 
 const baseClass = 'before-dashboard'
@@ -28,6 +29,7 @@ const BeforeDashboard: React.FC = () => {
           }
         </li>
       </ul>
+      <PendingApprovals />
     </div>
   )
 }
