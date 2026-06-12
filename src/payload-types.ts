@@ -1071,9 +1071,9 @@ export interface Event {
   };
   image?: (number | null) | Media;
   /**
-   * PDF flyer or event document
+   * PDF flyers or event documents (you can add more than one)
    */
-  attachment?: (number | null) | Media;
+  attachment?: (number | Media)[] | null;
   date: string;
   /**
    * End of multi-day event, or when recurring series ends

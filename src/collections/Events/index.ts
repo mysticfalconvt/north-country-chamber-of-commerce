@@ -240,8 +240,9 @@ export const Events: CollectionConfig = {
       name: 'attachment',
       type: 'upload',
       relationTo: 'media',
+      hasMany: true,
       admin: {
-        description: 'PDF flyer or event document',
+        description: 'PDF flyers or event documents (you can add more than one)',
       },
     },
     {

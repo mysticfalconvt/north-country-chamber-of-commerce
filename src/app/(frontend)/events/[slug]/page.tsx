@@ -119,6 +119,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       chamberEvent: 'Chamber Event',
       recurringEvent: 'Recurring Event',
       attachment: 'Attachment',
+      attachments: 'Attachments',
       downloadPdf: 'Download PDF',
     },
     fr: {
@@ -131,6 +132,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       chamberEvent: 'Événement de la chambre',
       recurringEvent: 'Événement récurrent',
       attachment: 'Pièce jointe',
+      attachments: 'Pièces jointes',
       downloadPdf: 'Télécharger le PDF',
     },
   }
@@ -243,29 +245,46 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               </a>
             )}
 
-            {/* PDF Attachment */}
-            {event.attachment && typeof event.attachment === 'object' && event.attachment.url && (
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">{t.attachment}</h3>
-                <a
-                  href={event.attachment.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-primary hover:underline"
-                >
-                  <FileText className="h-5 w-5" />
-                  {event.attachment.filename || t.downloadPdf}
-                </a>
-                {/* Inline PDF viewer for larger screens */}
-                <div className="hidden lg:block mt-4 h-96 border rounded overflow-hidden">
-                  <iframe
-                    src={`${event.attachment.url}#view=FitH`}
-                    className="w-full h-full"
-                    title={t.attachment}
-                  />
-                </div>
-              </Card>
-            )}
+            {/* PDF Attachments */}
+            {(() => {
+              const attachments = (
+                Array.isArray(event.attachment) ? event.attachment : [event.attachment]
+              ).filter(
+                (a): a is Extract<typeof a, { url?: string | null }> =>
+                  !!a && typeof a === 'object' && !!a.url,
+              )
+
+              if (attachments.length === 0) return null
+
+              return (
+                <Card className="p-6 space-y-6">
+                  <h3 className="font-semibold">
+                    {attachments.length > 1 ? t.attachments : t.attachment}
+                  </h3>
+                  {attachments.map((attachment) => (
+                    <div key={attachment.id}>
+                      <a
+                        href={attachment.url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-primary hover:underline"
+                      >
+                        <FileText className="h-5 w-5" />
+                        {attachment.filename || t.downloadPdf}
+                      </a>
+                      {/* Inline PDF viewer for larger screens */}
+                      <div className="hidden lg:block mt-4 h-96 border rounded overflow-hidden">
+                        <iframe
+                          src={`${attachment.url!}#view=FitH`}
+                          className="w-full h-full"
+                          title={attachment.filename || t.attachment}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </Card>
+              )
+            })()}
           </div>
 
           {/* Sidebar */}

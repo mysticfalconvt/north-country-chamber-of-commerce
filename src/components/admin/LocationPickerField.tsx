@@ -12,6 +12,10 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import { Style, Circle, Fill, Stroke } from 'ol/style'
 import { Modify } from 'ol/interaction'
+// OpenLayers' own stylesheet — without it `.ol-control` isn't absolutely positioned,
+// so the control container renders as a full-width block at the top of the map and
+// swallows clicks. globals.css loads this on the frontend, but not in the Payload admin.
+import 'ol/ol.css'
 import { useForm, useFormFields } from '@payloadcms/ui'
 
 // Default center: Newport, VT
