@@ -5,6 +5,14 @@ declare global {
       DATABASE_URL: string
       NEXT_PUBLIC_SERVER_URL: string
       VERCEL_PROJECT_PRODUCTION_URL: string
+      NEXT_PUBLIC_BUGSINK_DSN?: string
+      NEXT_PUBLIC_BUGSINK_ENVIRONMENT?: string
+      NEXT_PUBLIC_SENTRY_RELEASE?: string
+      BUGSINK_DSN?: string
+      BUGSINK_AUTH_TOKEN?: string
+      BUGSINK_URL?: string
+      BUGSINK_ORG?: string
+      BUGSINK_PROJECT?: string
     }
   }
 }

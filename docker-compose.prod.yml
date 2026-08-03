@@ -48,6 +48,14 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM:-noreply@vtnorthcountry.org}
 
+      # Error tracking (Bugsink). The image builds Next.js on container start, so
+      # BUGSINK_AUTH_TOKEN being present here is what enables sourcemap upload.
+      NEXT_PUBLIC_BUGSINK_DSN: ${NEXT_PUBLIC_BUGSINK_DSN}
+      NEXT_PUBLIC_BUGSINK_ENVIRONMENT: production
+      BUGSINK_URL: ${BUGSINK_URL:-https://bugsink.rboskind.com/}
+      BUGSINK_PROJECT: ${BUGSINK_PROJECT:-north-country-chamber-of-commerce}
+      BUGSINK_AUTH_TOKEN: ${BUGSINK_AUTH_TOKEN}
+
       # Seeding - disable auto-seed in production after initial setup
       DISABLE_AUTO_SEED: true
 
