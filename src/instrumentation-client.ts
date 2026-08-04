@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 
+import { installChunkReloadHandler } from '@/utilities/chunkReload'
+
 // Bugsink is Sentry-SDK compatible, so we use @sentry/nextjs pointed at our own instance.
 // Reporting is opt-in: with no DSN set, init() never runs and every Sentry.* call is a no-op.
 const dsn = process.env.NEXT_PUBLIC_BUGSINK_DSN
@@ -20,6 +22,10 @@ if (dsn) {
     sendDefaultPii: false,
   })
 }
+
+// Installed after init so the error is captured before we flush and reload. This
+// entry point covers every route, including the Payload admin panel.
+installChunkReloadHandler()
 
 // Required by the SDK so client-side navigations are instrumented. With
 // tracesSampleRate at 0 this sends nothing, but the SDK warns at build time if
