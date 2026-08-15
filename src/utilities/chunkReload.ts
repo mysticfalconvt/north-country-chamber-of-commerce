@@ -26,11 +26,12 @@ export function isChunkLoadError(error: unknown): boolean {
 }
 
 // sessionStorage throws in some privacy modes, so never let it break recovery.
-function readLastAttempt(): number {
+// null means "can't tell" -- distinct from 0, which means "no attempt yet".
+function readLastAttempt(): number | null {
   try {
     return Number(window.sessionStorage.getItem(RELOAD_KEY)) || 0
   } catch {
-    return 0
+    return null
   }
 }
 
@@ -50,8 +51,10 @@ function markAttempt(at: number): boolean {
  */
 export function recoverFromChunkLoadError(): boolean {
   const now = Date.now()
+  const lastAttempt = readLastAttempt()
 
-  if (now - readLastAttempt() < RELOAD_WINDOW_MS) return false
+  if (lastAttempt === null) return false
+  if (now - lastAttempt < RELOAD_WINDOW_MS) return false
   if (!markAttempt(now)) return false
 
   // The error is already captured by the SDK's global handlers; flush before the
@@ -61,6 +64,27 @@ export function recoverFromChunkLoadError(): boolean {
     .finally(() => window.location.reload())
 
   return true
+}
+
+/**
+ * Whether a chunk load error is worth sending to Bugsink.
+ *
+ * A chunk error that a reload fixes is just a deploy in progress -- the container
+ * rebuilds .next on start, so open tabs briefly reference chunk hashes the server
+ * no longer serves. Reporting those buries the ones that matter.
+ *
+ * Called from `beforeSend`, which runs while the SDK's global handlers capture the
+ * error -- i.e. before `installChunkReloadHandler`'s listener reloads. So a *stale*
+ * attempt timestamp means an earlier reload already failed to fix this.
+ */
+export function shouldReportChunkLoadError(): boolean {
+  const lastAttempt = readLastAttempt()
+
+  // No storage means no auto-recovery, so this error is the user's actual outcome.
+  if (lastAttempt === null) return true
+
+  // We already reloaded for this and it came back: a genuinely missing chunk.
+  return Date.now() - lastAttempt < RELOAD_WINDOW_MS
 }
 
 export function installChunkReloadHandler(): void {

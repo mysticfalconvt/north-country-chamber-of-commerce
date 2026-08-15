@@ -1,6 +1,10 @@
 import * as Sentry from '@sentry/nextjs'
 
-import { installChunkReloadHandler } from '@/utilities/chunkReload'
+import {
+  installChunkReloadHandler,
+  isChunkLoadError,
+  shouldReportChunkLoadError,
+} from '@/utilities/chunkReload'
 
 // Bugsink is Sentry-SDK compatible, so we use @sentry/nextjs pointed at our own instance.
 // Reporting is opt-in: with no DSN set, init() never runs and every Sentry.* call is a no-op.
@@ -20,6 +24,16 @@ if (dsn) {
     tracesSampleRate: 0,
 
     sendDefaultPii: false,
+
+    beforeSend(event, hint) {
+      // Drop chunk load errors that installChunkReloadHandler is about to fix by
+      // reloading; keep the ones a reload has already failed to fix.
+      if (isChunkLoadError(hint?.originalException) && !shouldReportChunkLoadError()) {
+        return null
+      }
+
+      return event
+    },
   })
 }
 
