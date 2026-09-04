@@ -25,9 +25,9 @@ export const Businesses: CollectionConfig = {
           req.payload.logger.info(`Auto-linked business ${data.name} to user ${req.user.id}`)
         }
 
-        // Auto-geocode address to get coordinates
-        // Skip geocoding if called from membership hook to prevent hangs
-        if ((operation === 'create' || operation === 'update') && !context?.skipMembershipUpdate) {
+        // Auto-geocode address to get coordinates. Review/approval requests deliberately
+        // skip this external request so approving a member does not depend on Nominatim.
+        if ((operation === 'create' || operation === 'update') && !context?.skipGeocoding) {
           const hasAddressData = data.address || data.city || data.state || data.zipCode
           const hasCoordinates = data.coordinates?.latitude && data.coordinates?.longitude
 

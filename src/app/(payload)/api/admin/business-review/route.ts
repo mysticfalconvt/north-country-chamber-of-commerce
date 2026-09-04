@@ -117,6 +117,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Business name is required' }, { status: 400 })
     }
 
+    if (!description) {
+      return NextResponse.json(
+        { error: 'Business description is required before this business can be saved or approved' },
+        { status: 400 },
+      )
+    }
+
     const categories = categoriesStr
       .split(',')
       .map((id) => parseInt(id.trim()))
@@ -156,6 +163,13 @@ export async function POST(req: NextRequest) {
       } catch {
         return NextResponse.json({ error: 'Invalid coordinates format' }, { status: 400 })
       }
+    }
+
+    if (
+      (coordinates.latitude !== null && !Number.isFinite(coordinates.latitude)) ||
+      (coordinates.longitude !== null && !Number.isFinite(coordinates.longitude))
+    ) {
+      return NextResponse.json({ error: 'Coordinates must be valid numbers' }, { status: 400 })
     }
 
     // ---- Owner resolution (match-by-email-else-create) ----
@@ -251,9 +265,7 @@ export async function POST(req: NextRequest) {
       zipCode,
       coordinates,
       category: categories,
-      // Only overwrite richText fields when text was provided; an empty value would
-      // produce an invalid (empty) Lexical document and is rejected by Payload.
-      description: description ? buildLexical(description) : undefined,
+      description: buildLexical(description),
       hoursOfOperation: hoursOfOperation ? buildLexical(hoursOfOperation) : undefined,
     }
 
@@ -308,7 +320,10 @@ export async function POST(req: NextRequest) {
       collection: 'businesses',
       id: businessId,
       data: updateData,
-      context: { skipUserUpdate: true },
+      context: {
+        skipGeocoding: true,
+        skipUserUpdate: true,
+      },
     })
 
     // ---- Welcome email ----

@@ -176,6 +176,10 @@ export default function ApproveBusinessForm({
       setError('Business name is required.')
       return
     }
+    if (!formData.description.trim()) {
+      setError('Business description is required before this business can be saved or approved.')
+      return
+    }
     if (selectedCategories.length === 0) {
       setError('Please select at least one category.')
       return
