@@ -11,6 +11,7 @@ import { BusinessMap } from '@/components/BusinessMap'
 import { serializeLexical } from '@/utilities/serializeLexical'
 import { headers } from 'next/headers'
 import { getLocaleFromPathname, addLocaleToPathname } from '@/utilities/getLocale'
+import { ExpandableBusinessImage } from './ExpandableBusinessImage'
 
 interface BusinessPageProps {
   params: Promise<{
@@ -119,7 +120,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           <div className="lg:col-span-2 space-y-8">
             {/* Cover Image */}
             {business.coverImage && typeof business.coverImage === 'object' && (
-              <img
+              <ExpandableBusinessImage
                 src={business.coverImage.url || ''}
                 alt={business.coverImage.alt || business.name}
                 className="w-full h-64 object-cover rounded-lg"
@@ -159,7 +160,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                     {business.advertisingSlots.map((slot, index) => (
                       <Card key={index} className="p-4">
                         {slot.type === 'image' && slot.media && typeof slot.media === 'object' && (
-                          <img
+                          <ExpandableBusinessImage
                             src={slot.media.url || ''}
                             alt={slot.caption || ''}
                             className="w-full h-48 object-cover rounded-lg mb-2"
