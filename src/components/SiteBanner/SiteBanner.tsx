@@ -24,7 +24,14 @@ export function SiteBanner() {
 
   useEffect(() => {
     // Load dismissed banners from localStorage
-    const dismissed = localStorage.getItem('dismissedBanners')
+    let dismissed: string | null = null
+
+    try {
+      dismissed = window.localStorage.getItem('dismissedBanners')
+    } catch {
+      // Sandboxed embeds can deny access to Web Storage.
+    }
+
     if (dismissed) {
       try {
         setDismissedBanners(JSON.parse(dismissed))
@@ -76,7 +83,12 @@ export function SiteBanner() {
   const dismissBanner = (bannerId: string) => {
     const newDismissed = [...dismissedBanners, bannerId]
     setDismissedBanners(newDismissed)
-    localStorage.setItem('dismissedBanners', JSON.stringify(newDismissed))
+
+    try {
+      window.localStorage.setItem('dismissedBanners', JSON.stringify(newDismissed))
+    } catch {
+      // Sandboxed embeds can deny access to Web Storage.
+    }
   }
 
   // Filter out dismissed banners

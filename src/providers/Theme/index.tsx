@@ -22,20 +22,34 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const setTheme = useCallback((themeToSet: Theme | null) => {
     if (themeToSet === null) {
-      window.localStorage.removeItem(themeLocalStorageKey)
+      try {
+        window.localStorage.removeItem(themeLocalStorageKey)
+      } catch {
+        // Sandboxed embeds can deny access to Web Storage.
+      }
       const implicitPreference = getImplicitPreference()
       document.documentElement.setAttribute('data-theme', implicitPreference || '')
       if (implicitPreference) setThemeState(implicitPreference)
     } else {
       setThemeState(themeToSet)
-      window.localStorage.setItem(themeLocalStorageKey, themeToSet)
+      try {
+        window.localStorage.setItem(themeLocalStorageKey, themeToSet)
+      } catch {
+        // Sandboxed embeds can deny access to Web Storage.
+      }
       document.documentElement.setAttribute('data-theme', themeToSet)
     }
   }, [])
 
   useEffect(() => {
     let themeToSet: Theme = defaultTheme
-    const preference = window.localStorage.getItem(themeLocalStorageKey)
+    let preference: string | null = null
+
+    try {
+      preference = window.localStorage.getItem(themeLocalStorageKey)
+    } catch {
+      // Sandboxed embeds can deny access to Web Storage.
+    }
 
     if (themeIsValid(preference)) {
       themeToSet = preference

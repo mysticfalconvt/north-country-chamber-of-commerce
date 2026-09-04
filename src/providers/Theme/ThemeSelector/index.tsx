@@ -29,7 +29,14 @@ export const ThemeSelector: React.FC = () => {
   }
 
   React.useEffect(() => {
-    const preference = window.localStorage.getItem(themeLocalStorageKey)
+    let preference: string | null = null
+
+    try {
+      preference = window.localStorage.getItem(themeLocalStorageKey)
+    } catch {
+      // Sandboxed embeds can deny access to Web Storage.
+    }
+
     setValue(preference ?? 'auto')
   }, [])
 

@@ -27,7 +27,13 @@ export const InitTheme: React.FC = () => {
     }
 
     var themeToSet = '${defaultTheme}'
-    var preference = window.localStorage.getItem('${themeLocalStorageKey}')
+    var preference = null
+
+    try {
+      preference = window.localStorage.getItem('${themeLocalStorageKey}')
+    } catch {
+      // Sandboxed embeds can deny access to Web Storage.
+    }
 
     if (themeIsValid(preference)) {
       themeToSet = preference
