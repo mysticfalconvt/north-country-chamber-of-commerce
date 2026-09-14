@@ -1,5 +1,5 @@
 import { withPayload } from '@payloadcms/next/withPayload'
-import { withSentryConfig } from '@sentry/nextjs'
+import { withSentryConfig } from '@sentry/nextjs/config'
 
 import redirects from './redirects.js'
 
@@ -38,6 +38,9 @@ const nextConfig = {
     ],
   },
   experimental: {
+    // Next 16's CLI type checker can close before its captured --showConfig
+    // output is flushed in this container. Use the compiler API instead.
+    useTypeScriptCli: false,
     serverActions: {
       bodySizeLimit: '10mb',
     },
