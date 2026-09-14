@@ -4,6 +4,7 @@ node_modules
 .DS_Store
 .env
 .next
+tsconfig.tsbuildinfo
 .vercel
 
 # Payload default media upload directory

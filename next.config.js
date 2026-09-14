@@ -22,6 +22,16 @@ const BUGSINK_AUTH_TOKEN = process.env.BUGSINK_AUTH_TOKEN
 const nextConfig = {
   output: 'standalone',
   images: {
+    localPatterns: [
+      {
+        pathname: '/**',
+        search: '',
+      },
+      {
+        // Payload appends the media document's updatedAt value as a cache-busting query.
+        pathname: '/api/media/file/**',
+      },
+    ],
     remotePatterns: [
       {
         hostname: 'chamber.rboskind.com',
