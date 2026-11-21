@@ -1,9 +1,9 @@
 import * as Sentry from '@sentry/nextjs'
 
 // A ChunkLoadError means the browser asked for a JS chunk the server no longer
-// serves. In this app that happens during a deploy: docker-entrypoint.sh rebuilds
-// .next on container start and only then starts the server, so a page that was
-// already open can lazy-load a chunk while the origin is still unavailable.
+// serves. In this app that happens across a deploy: a page that was already open
+// keeps the old build's chunk hashes, and after the new container takes over it
+// can lazy-load a chunk the new build doesn't have.
 //
 // Reloading picks up freshly generated HTML with correct chunk hashes, which fixes
 // it. We reload at most once per window so a chunk that is genuinely gone can never

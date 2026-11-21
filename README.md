@@ -204,23 +204,7 @@ pnpm payload migrate:create
 
 This creates the migration files you will need to push alongside with your new configuration.
 
-On the server after building and before running `pnpm start` you will want to run your migrations
-
-```bash
-pnpm payload migrate
-```
-
-This command will check for any migrations that have not yet been run and try to run them and it will keep a record of migrations that have been run in the database.
-
-### Docker
-
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
-
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
-
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
+Production does **not** run migrations on deploy. Apply them to the production database by hand before pushing; see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Seed
 

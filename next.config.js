@@ -20,7 +20,6 @@ const BUGSINK_AUTH_TOKEN = process.env.BUGSINK_AUTH_TOKEN
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   images: {
     localPatterns: [
       {
@@ -33,10 +32,6 @@ const nextConfig = {
       },
     ],
     remotePatterns: [
-      {
-        hostname: 'chamber.rboskind.com',
-        protocol: 'https',
-      },
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
         const url = new URL(item)
 
