@@ -18,14 +18,18 @@ su-exec nextjs sh -c '
   echo "Running database migrations..."
   echo "================================"
 
-  # Run migrations with pnpm - let it fail loudly if there are real issues
-  # Use yes command to pipe "y" responses to handle any interactive prompts
-  if yes y | pnpm payload migrate 2>&1 | tee /tmp/migrate.log; then
+  # Run migrations with pnpm - let it fail loudly if there are real issues.
+  # `yes y` answers any interactive prompt. Output goes to a file rather than
+  # through `tee`: a pipeline reports its last command, and with `| tee` that
+  # was tee (always 0), so a failed migration was reported as success.
+  if yes y | pnpm payload migrate > /tmp/migrate.log 2>&1; then
+    cat /tmp/migrate.log
     echo "================================"
     echo "Migrations completed successfully"
     echo "================================"
   else
     MIGRATE_EXIT_CODE=$?
+    cat /tmp/migrate.log
     echo "================================"
     echo "ERROR: Migration failed with exit code $MIGRATE_EXIT_CODE"
     echo "================================"

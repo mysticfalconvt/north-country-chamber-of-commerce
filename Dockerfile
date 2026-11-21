@@ -1,13 +1,16 @@
 # Runtime build Dockerfile - builds Next.js when container starts with database access
-FROM node:22.17.0-alpine AS base
+# Payload 3.92+ requires Node >=22.23.4; 22.23.5 is the latest security release.
+FROM node:22.23.5-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+# Install dependencies based on the preferred package manager.
+# pnpm-workspace.yaml holds pnpm settings (overrides, allowed build scripts,
+# minimumReleaseAge); without it the frozen install rejects the lockfile.
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \

@@ -12,6 +12,15 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import { Style, Circle, Fill, Stroke, Text } from 'ol/style'
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export interface BusinessLocation {
   id: string
   name: string
@@ -124,10 +133,12 @@ export function BusinessMap({
       } else {
         // For multiple locations, fit to extent
         const extent = vectorSource.getExtent()
-        map.getView().fit(extent, {
-          padding: [50, 50, 50, 50],
-          maxZoom: 15,
-        })
+        if (extent) {
+          map.getView().fit(extent, {
+            padding: [50, 50, 50, 50],
+            maxZoom: 15,
+          })
+        }
       }
     }
 
@@ -146,13 +157,14 @@ export function BusinessMap({
     // Change cursor and show tooltip on hover
     map.on('pointermove', (event) => {
       const feature = map.forEachFeatureAtPixel(event.pixel, (feat) => feat)
+      const target = map.getTargetElement()
 
       if (feature) {
-        map.getTargetElement().style.cursor = 'pointer'
+        if (target) target.style.cursor = 'pointer'
 
-        // Show tooltip
-        const name = feature.get('name')
-        const phone = feature.get('phone')
+        // Show tooltip. Business data is inserted as HTML, so escape it.
+        const name = escapeHtml(feature.get('name'))
+        const phone = escapeHtml(feature.get('phone'))
 
         if (tooltipRef.current) {
           tooltipRef.current.innerHTML = `
@@ -171,7 +183,7 @@ export function BusinessMap({
           }
         }
       } else {
-        map.getTargetElement().style.cursor = ''
+        if (target) target.style.cursor = ''
         if (tooltipRef.current) {
           tooltipRef.current.style.display = 'none'
         }
