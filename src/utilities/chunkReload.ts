@@ -22,6 +22,10 @@ export function isChunkLoadError(error: unknown): boolean {
 
   if (name === 'ChunkLoadError') return true
 
+  // Firefox reports a stale dynamically imported chunk as this otherwise-generic
+  // network error instead of the Chrome-style "Loading chunk ... failed" message.
+  if (name === 'NetworkError' && message === 'A network error occurred.') return true
+
   return typeof message === 'string' && CHUNK_ERROR_PATTERN.test(message)
 }
 

@@ -28,6 +28,13 @@ describe('isChunkLoadError', () => {
     expect(isChunkLoadError(error)).toBe(true)
   })
 
+  it('matches Firefox stale chunk network errors', () => {
+    const error = new Error('A network error occurred.')
+    error.name = 'NetworkError'
+
+    expect(isChunkLoadError(error)).toBe(true)
+  })
+
   it('matches by message when the name has been lost', () => {
     expect(isChunkLoadError(new Error('Loading chunk 5189 failed.'))).toBe(true)
     expect(isChunkLoadError(new Error('Loading CSS chunk 42 failed.'))).toBe(true)
@@ -39,6 +46,7 @@ describe('isChunkLoadError', () => {
   it('ignores unrelated errors and non-errors', () => {
     expect(isChunkLoadError(new Error('Cannot read properties of undefined'))).toBe(false)
     expect(isChunkLoadError(new TypeError('fetch failed'))).toBe(false)
+    expect(isChunkLoadError(new Error('A network error occurred.'))).toBe(false)
     expect(isChunkLoadError(null)).toBe(false)
     expect(isChunkLoadError(undefined)).toBe(false)
     expect(isChunkLoadError('Loading chunk 1 failed.')).toBe(false)
