@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { getPayload, Payload } from 'payload'
 import config from '@/payload.config'
 
@@ -5,7 +7,9 @@ import { describe, it, beforeAll, expect } from 'vitest'
 
 let payload: Payload
 
-describe('API', () => {
+const canRunPayloadIntegration = Boolean(process.env.DATABASE_URL && process.env.PAYLOAD_SECRET)
+
+describe.skipIf(!canRunPayloadIntegration)('API', () => {
   beforeAll(async () => {
     const payloadConfig = await config
     payload = await getPayload({ config: payloadConfig })
